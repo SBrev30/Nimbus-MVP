@@ -1,420 +1,215 @@
-// =============================================================================
-// AI ANALYSIS SERVICE
-// File: src/services/aiAnalysisService.ts
-// =============================================================================
+// supabase/functions/analyze-content/index.ts
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { supabase } from '../lib/supabase';
-import type { 
-  AnalysisRequest, 
-  AnalysisResponse, 
-  AIUsageStats,
-  AIAnalysisProgress,
-  BulkAnalysisRequest,
-  ImportedItemWithAI 
-} from '../types/ai-analysis';
-
-class AIAnalysisService {
-  private analysisQueue: Map<string, AIAnalysisProgress> = new Map();
-  private readonly RATE_LIMIT_DELAY = 1000; // 1 second between requests
-  private lastRequestTime = 0;
-
-  /**
-   * Analyze a single content item
-   */
-  async analyzeContent(request: AnalysisRequest): Promise<AnalysisResponse> {
-    try {
-      // Check rate limiting
-      await this.enforceRateLimit();
-      
-      // Check daily usage limit
-      const usageStats = await this.getUsageStats();
-      if (usageStats.remainingAnalyses <= 0) {
-        throw new Error(`Daily analysis limit reached (${usageStats.dailyLimit}). Try again tomorrow.`);
-      }
-
-      // Update progress
-      this.updateProgress(request.itemId, {
-        itemId: request.itemId,
-        status: 'analyzing',
-        progress: 0,
-        startTime: new Date().toISOString()
-      });
-
-      // Call Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('analyze-content', {
-        body: request
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Analysis failed');
-      }
-
-      // Update progress to completed
-      this.updateProgress(request.itemId, {
-        itemId: request.itemId,
-        status: 'completed',
-        progress: 100,
-        startTime: this.analysisQueue.get(request.itemId)?.startTime || new Date().toISOString()
-      });
-
-      return data as AnalysisResponse;
-
-    } catch (error) {
-      // Update progress to failed
-      this.updateProgress(request.itemId, {
-        itemId: request.itemId,
-        status: 'failed',
-        progress: 0,
-        startTime: this.analysisQueue.get(request.itemId)?.startTime || new Date().toISOString()
-      });
-
-      throw error;
-    }
-  }
-
-  /**
-   * Analyze multiple items in sequence
-   */
-  async analyzeBulk(request: BulkAnalysisRequest): Promise<{
-    successful: AnalysisResponse[];
-    failed: Array<{ itemId: string; error: string }>;
-    progress: AIAnalysisProgress[];
-  }> {
-    const { itemIds, analysisType = 'full', maxConcurrent = 1 } = request;
-    const successful: AnalysisResponse[] = [];
-    const failed: Array<{ itemId: string; error: string }> = [];
-
-    // Initialize progress for all items
-    itemIds.forEach(itemId => {
-      this.updateProgress(itemId, {
-        itemId,
-        status: 'pending',
-        progress: 0,
-        startTime: new Date().toISOString()
-      });
-    });
-
-    // Process items sequentially (to avoid rate limits)
-    for (let i = 0; i < itemIds.length; i++) {
-      const itemId = itemIds[i];
-      
-      try {
-        // Get item details
-        const { data: item } = await supabase
-          .from('imported_items')
-          .select('*')
-          .eq('id', itemId)
-          .single();
-
-        if (!item) {
-          throw new Error('Item not found');
-        }
-
-        // Create analysis request
-        const analysisRequest: AnalysisRequest = {
-          itemId: item.id,
-          content: item.content,
-          contentType: item.content_type,
-          analysisType
-        };
-
-        // Analyze item
-        const result = await this.analyzeContent(analysisRequest);
-        successful.push(result);
-
-        // Add delay between requests
-        if (i < itemIds.length - 1) {
-          await this.delay(this.RATE_LIMIT_DELAY);
-        }
-
-      } catch (error) {
-        failed.push({
-          itemId,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-
-        this.updateProgress(itemId, {
-          itemId,
-          status: 'failed',
-          progress: 0,
-          startTime: this.analysisQueue.get(itemId)?.startTime || new Date().toISOString()
-        });
-      }
-    }
-
-    return {
-      successful,
-      failed,
-      progress: Array.from(this.analysisQueue.values())
-    };
-  }
-
-  /**
-   * Get current usage statistics
-   */
-  async getUsageStats(): Promise<AIUsageStats> {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      
-      if (!user.user) {
-        throw new Error('User not authenticated');
-      }
-
-      // Get current usage
-      const { data: usage } = await supabase
-        .from('ai_usage_tracking')
-        .select('*')
-        .eq('user_id', user.user.id)
-        .eq('usage_date', new Date().toISOString().split('T')[0])
-        .single();
-
-      const dailyLimit = 10; // Default daily limit
-      const dailyUsage = usage?.analysis_count || 0;
-
-      return {
-        dailyUsage,
-        dailyLimit,
-        remainingAnalyses: Math.max(0, dailyLimit - dailyUsage),
-        lastAnalysis: usage?.last_analysis_at,
-        totalAnalyses: usage?.analysis_count || 0
-      };
-
-    } catch (error) {
-      // Return default stats if error
-      return {
-        dailyUsage: 0,
-        dailyLimit: 10,
-        remainingAnalyses: 10,
-        totalAnalyses: 0
-      };
-    }
-  }
-
-  /**
-   * Get analysis progress for specific items
-   */
-  getAnalysisProgress(itemIds?: string[]): AIAnalysisProgress[] {
-    if (!itemIds) {
-      return Array.from(this.analysisQueue.values());
-    }
-    
-    return itemIds
-      .map(id => this.analysisQueue.get(id))
-      .filter(Boolean) as AIAnalysisProgress[];
-  }
-
-  /**
-   * Cancel analysis for specific item
-   */
-  cancelAnalysis(itemId: string): boolean {
-    const progress = this.analysisQueue.get(itemId);
-    if (progress && progress.status === 'analyzing') {
-      this.updateProgress(itemId, {
-        ...progress,
-        status: 'failed',
-        progress: 0
-      });
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Clear completed/failed analyses from queue
-   */
-  clearCompletedAnalyses(): void {
-    for (const [itemId, progress] of this.analysisQueue.entries()) {
-      if (progress.status === 'completed' || progress.status === 'failed') {
-        this.analysisQueue.delete(itemId);
-      }
-    }
-  }
-
-  /**
-   * Retry failed analysis
-   */
-  async retryAnalysis(itemId: string): Promise<AnalysisResponse> {
-    const progress = this.analysisQueue.get(itemId);
-    
-    if (!progress || progress.status !== 'failed') {
-      throw new Error('Cannot retry: analysis not in failed state');
-    }
-
-    // Get item details for retry
-    const { data: item } = await supabase
-      .from('imported_items')
-      .select('*')
-      .eq('id', itemId)
-      .single();
-
-    if (!item) {
-      throw new Error('Item not found');
-    }
-
-    const request: AnalysisRequest = {
-      itemId: item.id,
-      content: item.content,
-      contentType: item.content_type,
-      analysisType: 'full'
-    };
-
-    return this.analyzeContent(request);
-  }
-
-  /**
-   * Update item's AI status manually
-   */
-  async updateAIStatus(
-    itemId: string, 
-    status: ImportedItemWithAI['ai_status']
-  ): Promise<void> {
-    const { error } = await supabase
-      .from('imported_items')
-      .update({ ai_status: status })
-      .eq('id', itemId);
-
-    if (error) {
-      throw new Error(`Failed to update AI status: ${error.message}`);
-    }
-  }
-
-  /**
-   * Dismiss specific insight from item
-   */
-  async dismissInsight(itemId: string, insightId: string): Promise<void> {
-    try {
-      // Get current item
-      const { data: item } = await supabase
-        .from('imported_items')
-        .select('ai_insights')
-        .eq('id', itemId)
-        .single();
-
-      if (!item) {
-        throw new Error('Item not found');
-      }
-
-      // Filter out dismissed insight
-      const updatedInsights = (item.ai_insights || []).filter(
-        (insight: any) => insight.id !== insightId
-      );
-
-      // Update item
-      const { error } = await supabase
-        .from('imported_items')
-        .update({ ai_insights: updatedInsights })
-        .eq('id', itemId);
-
-      if (error) {
-        throw new Error(`Failed to dismiss insight: ${error.message}`);
-      }
-
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Private helper methods
-
-  private async enforceRateLimit(): Promise<void> {
-    const now = Date.now();
-    const timeSinceLastRequest = now - this.lastRequestTime;
-    
-    if (timeSinceLastRequest < this.RATE_LIMIT_DELAY) {
-      const waitTime = this.RATE_LIMIT_DELAY - timeSinceLastRequest;
-      await this.delay(waitTime);
-    }
-    
-    this.lastRequestTime = Date.now();
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  private updateProgress(itemId: string, progress: AIAnalysisProgress): void {
-    this.analysisQueue.set(itemId, progress);
-  }
-
-  /**
-   * Get analysis history for user
-   */
-  async getAnalysisHistory(limit = 50): Promise<ImportedItemWithAI[]> {
-    const { data, error } = await supabase
-      .from('imported_items')
-      .select('*')
-      .not('ai_status', 'eq', 'unanalyzed')
-      .order('last_analyzed', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      throw new Error(`Failed to get analysis history: ${error.message}`);
-    }
-
-    return data || [];
-  }
-
-  /**
-   * Get items that need analysis
-   */
-  async getUnanalyzedItems(): Promise<ImportedItemWithAI[]> {
-    const { data, error } = await supabase
-      .from('imported_items')
-      .select('*')
-      .eq('ai_status', 'unanalyzed')
-      .order('imported_at', { ascending: false });
-
-    if (error) {
-      throw new Error(`Failed to get unanalyzed items: ${error.message}`);
-    }
-
-    return data || [];
-  }
-
-  /**
-   * Get analysis statistics
-   */
-  async getAnalysisStatistics(): Promise<{
-    totalAnalyzed: number;
-    byStatus: Record<string, number>;
-    byContentType: Record<string, number>;
-    averageInsightsPerItem: number;
-  }> {
-    const { data, error } = await supabase
-      .from('imported_items')
-      .select('ai_status, content_type, ai_insights')
-      .not('ai_status', 'eq', 'unanalyzed');
-
-    if (error) {
-      throw new Error(`Failed to get statistics: ${error.message}`);
-    }
-
-    const stats = {
-      totalAnalyzed: data.length,
-      byStatus: {} as Record<string, number>,
-      byContentType: {} as Record<string, number>,
-      averageInsightsPerItem: 0
-    };
-
-    let totalInsights = 0;
-
-    data.forEach(item => {
-      // Count by status
-      stats.byStatus[item.ai_status] = (stats.byStatus[item.ai_status] || 0) + 1;
-      
-      // Count by content type
-      stats.byContentType[item.content_type] = (stats.byContentType[item.content_type] || 0) + 1;
-      
-      // Count insights
-      totalInsights += (item.ai_insights || []).length;
-    });
-
-    stats.averageInsightsPerItem = data.length > 0 ? totalInsights / data.length : 0;
-
-    return stats;
-  }
+interface AnalysisRequest {
+  content: string;
+  contentType: 'character' | 'plot' | 'research' | 'chapter';
+  itemId: string;
 }
 
-// Export singleton instance
-export const aiAnalysisService = new AIAnalysisService();
-export default aiAnalysisService;
+interface AIInsight {
+  type: string;
+  summary: string;
+  suggestions: string[];
+  confidence: number;
+  details?: Record<string, any>;
+}
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { content, contentType, itemId } = await req.json() as AnalysisRequest;
+    
+    if (!content || !contentType || !itemId) {
+      throw new Error('Missing required fields');
+    }
+
+    // Update status to analyzing
+    await supabase
+      .from('imported_items')
+      .update({ ai_status: 'analyzing' })
+      .eq('id', itemId);
+
+    // Analyze content based on type
+    const insights = await analyzeContent(content, contentType);
+
+    // Update with results
+    await supabase
+      .from('imported_items')
+      .update({ 
+        ai_insights: insights,
+        ai_status: 'completed',
+        last_analyzed: new Date().toISOString()
+      })
+      .eq('id', itemId);
+
+    return new Response(
+      JSON.stringify({ success: true, insights }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    );
+
+  } catch (error) {
+    console.error('Analysis error:', error);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || 'Analysis failed' 
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    );
+  }
+});
+
+async function analyzeContent(content: string, contentType: string): Promise<AIInsight[]> {
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+  
+  if (!openaiApiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  const prompts = {
+    character: `Analyze this character content and provide insights:
+    
+Content: ${content.slice(0, 2000)}
+
+Provide analysis in this JSON format:
+{
+  "insights": [
+    {
+      "type": "character_development",
+      "summary": "Brief summary of character analysis",
+      "suggestions": ["suggestion1", "suggestion2"],
+      "confidence": 0.8,
+      "details": {
+        "strengths": ["strength1"],
+        "weaknesses": ["weakness1"],
+        "development_potential": ["potential1"]
+      }
+    }
+  ]
+}`,
+
+    plot: `Analyze this plot content for story structure and coherence:
+    
+Content: ${content.slice(0, 2000)}
+
+Provide analysis in this JSON format:
+{
+  "insights": [
+    {
+      "type": "plot_structure",
+      "summary": "Brief summary of plot analysis", 
+      "suggestions": ["suggestion1", "suggestion2"],
+      "confidence": 0.8,
+      "details": {
+        "pacing": "assessment",
+        "conflicts": ["conflict1"],
+        "resolution": "assessment"
+      }
+    }
+  ]
+}`,
+
+    research: `Analyze this research content for completeness and organization:
+    
+Content: ${content.slice(0, 2000)}
+
+Provide analysis in this JSON format:
+{
+  "insights": [
+    {
+      "type": "research_quality",
+      "summary": "Brief summary of research analysis",
+      "suggestions": ["suggestion1", "suggestion2"], 
+      "confidence": 0.8,
+      "details": {
+        "completeness": "assessment",
+        "sources": ["source1"],
+        "gaps": ["gap1"]
+      }
+    }
+  ]
+}`,
+
+    chapter: `Analyze this chapter content for writing quality and narrative flow:
+    
+Content: ${content.slice(0, 2000)}
+
+Provide analysis in this JSON format:
+{
+  "insights": [
+    {
+      "type": "writing_quality",
+      "summary": "Brief summary of chapter analysis",
+      "suggestions": ["suggestion1", "suggestion2"],
+      "confidence": 0.8,
+      "details": {
+        "narrative_flow": "assessment",
+        "dialogue": "assessment", 
+        "description": "assessment"
+      }
+    }
+  ]
+}`
+  };
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'user',
+          content: prompts[contentType as keyof typeof prompts]
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.7
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  const aiResponse = result.choices[0].message.content;
+  
+  try {
+    const parsed = JSON.parse(aiResponse);
+    return parsed.insights || [];
+  } catch {
+    // Fallback if JSON parsing fails
+    return [{
+      type: 'analysis_error',
+      summary: 'Unable to parse AI response',
+      suggestions: ['Try analyzing again'],
+      confidence: 0.1
+    }];
+  }
+}
