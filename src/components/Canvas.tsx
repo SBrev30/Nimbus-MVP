@@ -293,14 +293,17 @@ const CanvasFlow = () => {
   // Default user ID - in a real app, this would come from authentication
   const userId = 'default-user';
   
-  // Canvas state for auto-save
+  // Get react flow instance and viewport
+  const reactFlowInstance = useReactFlow();
   const viewport = reactFlowInstance?.getViewport() || { x: 0, y: 0, zoom: 1 };
-  const canvasState = useMemo(() => ({
+  
+  // Canvas state for auto-save - automatically updates when dependencies change
+  const canvasState: CanvasState = useMemo(() => ({
     nodes,
     edges,
     viewport,
     lastModified: Date.now()
-  });
+  }), [nodes, edges, viewport]);
 
   // Enhanced auto-save hook
   const {
@@ -324,18 +327,6 @@ const CanvasFlow = () => {
       console.error('Canvas auto-save failed:', error);
     }
   });
-  
-  const reactFlowInstance = useReactFlow();
-
-  // Update canvas state when nodes or edges change
-  useEffect(() => {
-    setCanvasState({
-      nodes,
-      edges,
-      viewport: { x: 0, y: 0, zoom: 1 },
-      lastModified: Date.now()
-    });
-  }, [nodes, edges]);
 
   // Load canvas data on mount
   useEffect(() => {
