@@ -1,0 +1,531 @@
+For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.
+
+EXECUTIVE SUMMARY
+================
+
+Product: Nimbus Note - A visual writing platform that combines focused prose creation with infinite canvas organization and AI-powered story development assistance.
+
+Target Launch: MVP in 6-8 months, full platform in 12-15 months
+Business Model: $10/month subscription with 250,000 AI credits included
+Primary Users: Novelists (ICP), with secondary support for screenwriters and game writers
+
+PROBLEM STATEMENT
+================
+
+Visual-thinking writers struggle with traditional linear writing tools that don't support spatial organization of story elements. Current solutions either focus on pure writing (Google Docs, Scrivener) or pure visual organization (Milanote, Miro) but don't integrate both with AI assistance for creative development. Writers need a unified platform that lets them:
+
+- Visually map relationships between characters, plot points, and world-building elements
+- Seamlessly transition between focused writing and visual brainstorming
+- Get AI assistance for plot holes and character development without over-reliance
+- Import existing work from Notion and Word documents
+- Collaborate with beta readers and editors with appropriate permissions
+
+TARGET AUDIENCE
+===============
+
+Primary (ICP): Novelists
+- Genre fiction writers (fantasy, sci-fi, mystery, romance)
+- Visual thinkers who benefit from spatial organization
+- Writers with existing work in Notion or Word docs
+- Authors seeking AI assistance for creative enhancement
+
+Secondary: Screenwriters & Game Writers
+- Screenwriters plotting visual scenes and character arcs
+- Game writers developing narrative branches and world-building
+- Anyone creating complex fictional universes with interconnected elements
+
+CORE FEATURES & FUNCTIONALITY
+=============================
+
+PHASE 1: MVP FOUNDATION
+----------------------
+
+1. User Authentication & Smart Onboarding
+- Google OAuth integration for frictionless signup
+- Email/password authentication as alternative
+- 4-step guided onboarding (30 seconds - 5 minutes):
+  * Goal setting and experience level
+  * Content import options (Notion, Google Docs, Word)
+  * Interface orientation with interactive tutorials
+  * First writing session with AI assistance demo
+
+2. Intelligent Content Import System
+- Multi-platform integration:
+  * Notion API for database and page import
+  * Google Workspace (Docs, Drive) via OAuth
+  * Microsoft Word (.docx) file upload
+- AI-powered content classification:
+  * Automatic categorization: character profiles, plot outlines, research notes, chapters
+  * User review and confirmation before import
+  * Smart field mapping with confidence scoring
+
+3. Project Management - Kanban Interface
+- Customizable workflow columns with writer-focused defaults:
+  \"Ideas → Character Development → Plot Structure → Writing → Revision\"
+- Card-based organization for story elements
+- Drag-and-drop workflow management
+- Progress tracking dashboard with visual metrics
+
+4. Library View - Book Spine Visualization
+- Virtual bookshelf representation of completed chapters
+- Customizable book spine styling (colors, labels, themes)
+- Quick chapter access and reorganization
+- Progress visualization across entire project
+
+5. Focused Writing Mode
+- Distraction-free interface with large writing canvas
+- Minimal formatting toolbar (bold, italic, headers, lists)
+- Real-time statistics (word count, reading time, writing pace)
+- Auto-save with version history
+- Dual theme support:
+  * Light mode: Muted white canvas with light grey background
+  * Dark mode: Warm writing canvas with bluish-black background
+
+6. Advanced Character Management System
+- Smart character detection in active chapter
+- Collapsible character sidebar with quick access
+- Character profile cards featuring:
+  * Comprehensive character completeness scoring algorithm
+  * Personality traits, backstory, relationships
+  * Visual tags for mind mapping connections
+  * Quick-reference snippets
+- Character relationship tracking across chapters
+
+Character Completeness Algorithm:
+- Basic Info: 20% (Name, age, role)
+- Physical Description: 15% (Appearance details)
+- Personality: 25% (Traits, motivations, flaws)
+- Backstory: 20% (History, origins)
+- Relationships: 10% (Character connections)
+- Development: 10% (Character arc progression)
+
+7. AI-Powered Story Development Assistant
+- Multi-provider AI support (OpenAI, Claude, user-configurable)
+- Context-aware assistance based on current writing
+- Character development suggestions with completeness analysis
+- Plot hole detection and resolution brainstorming
+- Genre-specific writing prompts and style guidance
+- Credit-based system (250,000 credits monthly = ~1,000 AI interactions)
+
+8. Smart Sidebar Features
+- Notion integration for mobile-captured notes
+- Tangent notes with approve/dismiss functionality
+- Context-aware suggestions based on current writing session
+- Collapsible/muted design for distraction-free writing
+
+PHASE 2: VISUAL CANVAS & ADVANCED FEATURES
+------------------------------------------
+
+9. Infinite Canvas System (React Flow)
+- Visual story mapping with drag-and-drop nodes
+- Node types: Characters, plot points, locations, AI assistants, notes, images
+- Relationship connections between story elements
+- Zoom and pan capabilities for large story universes
+- Color coding and tagging for organization
+- AI nodes with contextual story assistance
+
+10. Grammar & Style Integration
+- Primary: LanguageTool API for comprehensive checking
+- Real-time suggestions with non-intrusive highlighting
+- Genre-specific style guides (fantasy, romance, thriller conventions)
+- Custom rules for creative writing dialogue and stylistic choices
+
+11. Collaboration & Sharing System
+- Granular permission levels:
+  * Beta readers: Read-only access to specific projects
+  * Editors: Markup and comment permissions
+  * Collaborators: Full editing access
+- Version control for shared documents
+- Comment system similar to Google Docs
+- Shareable links with expiration options
+
+12. Export & Publishing Pipeline
+- Smart export templates:
+  * Traditional publishing format (Times New Roman, double-spaced)
+  * Self-publishing formats (EPUB, Kindle-ready)
+  * Collaboration formats (Google Docs, Word with comments)
+- Automatic formatting based on submission type
+- Character appendix generation for beta readers
+- Manuscript statistics and submission packages
+
+TECHNICAL ARCHITECTURE
+======================
+
+Frontend Stack
+- React 18 with TypeScript for type safety
+- React Flow for infinite canvas functionality
+- Tailwind CSS for responsive UI design
+- React Query for server state management
+- React Hook Form for form handling
+- Progressive Web App with mobile optimization
+
+Backend Infrastructure
+- Supabase as primary backend service:
+  * PostgreSQL database with full-text search
+  * Real-time subscriptions for collaboration
+  * Built-in authentication (Google OAuth + email/password)
+  * Row Level Security for data protection
+  * File storage for images and documents
+  * Edge Functions for AI processing
+
+DATABASE SCHEMA
+===============
+
+Core Tables:
+
+users Table:
+- id: UUID PRIMARY KEY
+- email: TEXT UNIQUE NOT NULL
+- name: TEXT NOT NULL
+- subscription_tier: TEXT DEFAULT 'free'
+- ai_credits_remaining: INTEGER DEFAULT 250000
+- genre_preferences: TEXT[] DEFAULT '{}'
+- created_at: TIMESTAMPTZ DEFAULT NOW()
+
+projects Table:
+- id: UUID PRIMARY KEY
+- user_id: UUID REFERENCES users(id)
+- title: TEXT NOT NULL
+- genre: TEXT
+- word_count_target: INTEGER
+- word_count_current: INTEGER DEFAULT 0
+- status: TEXT DEFAULT 'planning'
+
+chapters Table:
+- id: UUID PRIMARY KEY
+- project_id: UUID REFERENCES projects(id)
+- title: TEXT NOT NULL
+- content: JSONB NOT NULL
+- word_count: INTEGER DEFAULT 0
+- order_index: INTEGER NOT NULL
+- characters_present: UUID[] DEFAULT '{}'
+
+characters Table:
+- id: UUID PRIMARY KEY
+- project_id: UUID REFERENCES projects(id)
+- name: TEXT NOT NULL
+- personality_traits: TEXT[] DEFAULT '{}'
+- completeness_score: INTEGER DEFAULT 0
+- character_data: JSONB DEFAULT '{}'
+
+Canvas System:
+
+canvas_nodes Table:
+- id: UUID PRIMARY KEY
+- project_id: UUID REFERENCES projects(id)
+- node_type: TEXT NOT NULL
+- position_x: REAL NOT NULL
+- position_y: REAL NOT NULL
+- content: JSONB DEFAULT '{}'
+
+canvas_connections Table:
+- id: UUID PRIMARY KEY
+- project_id: UUID REFERENCES projects(id)
+- source_node_id: UUID REFERENCES canvas_nodes(id)
+- target_node_id: UUID REFERENCES canvas_nodes(id)
+- connection_type: TEXT DEFAULT 'related'
+- label: TEXT
+
+SECURITY & PRIVACY
+==================
+
+- Row Level Security (RLS) for all user data
+- API rate limiting to prevent abuse
+- GDPR compliance with data export/deletion
+- Data encryption at rest and in transit
+- Content moderation for shared projects
+
+Security Policies:
+- Users can only access their own projects or shared projects
+- Collaborators have appropriate permission levels
+- AI processing handles data securely with no storage
+- Audit logging for sensitive operations
+
+DEVELOPMENT TIMELINE
+===================
+
+Phase 1: MVP Foundation (Months 1-6)
+
+Month 1-2: Core Infrastructure
+- Supabase setup and database schema
+- User authentication and onboarding flow
+- Basic project and chapter CRUD operations
+
+Month 3-4: Writing Interface
+- Focused writing mode with formatting
+- Kanban project management
+- Character management system
+- Import functionality
+
+Month 5-6: AI Integration & Polish
+- AI service integration with credit system
+- Character completeness analysis
+- Export functionality
+- Beta testing and optimization
+
+Phase 2: Visual Canvas (Months 7-9)
+- React Flow infinite canvas implementation
+- Visual node system for story elements
+- AI nodes with context awareness
+- Enhanced collaboration features
+
+Phase 3: Advanced Features (Months 10-12)
+- Advanced AI features and presets
+- Mobile responsiveness optimization
+- Performance enhancements
+- Publishing pipeline integration
+
+BUSINESS MODEL & METRICS
+========================
+
+Pricing Strategy:
+- Free Tier: Basic writing tools, 50,000 AI credits monthly
+- Premium Tier: $10/month, 250,000 AI credits, full feature access
+- Team Plans: $25/month for up to 5 collaborators
+
+Success Metrics:
+- User Engagement: DAU/WAU/MAU ratios
+- Business Metrics: MRR growth, CAC vs LTV, churn rate
+- Product Metrics: Time to first chapter, project completion rates
+- AI Usage: Credit utilization patterns, feature adoption
+
+Revenue Projections:
+- Year 1: 1,000 users, 100 paid subscribers ($1,000 MRR)
+- Year 2: 10,000 users, 1,000 paid subscribers ($10,000 MRR)
+- Year 3: 50,000 users, 5,000 paid subscribers ($50,000 MRR)
+
+COMPETITIVE POSITIONING
+======================
+
+Unique Value Proposition:
+- Only platform combining focused writing with visual organization
+- AI-powered story development without over-reliance
+- Seamless import from existing writing tools
+- Writer-specific collaboration features
+
+Key Differentiators:
+- Visual thinking optimization for complex story structures
+- Context-aware AI assistance tailored to creative writing
+- Intelligent content import and organization
+- Real-time collaboration designed for creative feedback
+
+Direct Competitors Analysis:
+
+Scrivener:
+- Strengths: Powerful organization, offline-first, research tools
+- Weaknesses: Complex interface, no real-time collaboration, no AI assistance
+- Pricing: $59 one-time
+- Target: Traditional authors, academics
+
+Notion:
+- Strengths: Flexible workspace, good collaboration, template library
+- Weaknesses: Not writing-focused, no visual canvas, limited formatting
+- Pricing: $0-15/month
+- Target: Knowledge workers, teams
+
+Milanote:
+- Strengths: Visual organization, great for inspiration, simple interface
+- Weaknesses: Not writing-focused, no AI features, limited text editing
+- Pricing: $0-20/month
+- Target: Creative professionals, designers
+
+Writer's Space Positioning:
+- Writing-first visual organization
+- AI-powered story development
+- Seamless import from existing tools
+- Real-time collaboration for writers
+- Visual thinking optimized interface
+
+RISK MITIGATION
+===============
+
+Technical Risks:
+- Canvas performance: Implement virtualization and lazy loading
+- Real-time collaboration: Use operational transformation for conflict resolution
+- AI cost management: Implement precise credit tracking and usage optimization
+
+Market Risks:
+- User acquisition: Focus on writing communities and content marketing
+- Feature complexity: Prioritize core writing experience in MVP
+- Competition: Maintain focus on visual-thinking writers as primary niche
+
+USER EXPERIENCE DESIGN PRINCIPLES
+=================================
+
+Writing-First Approach:
+- Minimal cognitive load during writing sessions
+- Contextual assistance without interruption
+- Seamless mode switching between focused writing and visual brainstorming
+
+Visual Thinking Support:
+- Spatial relationship mapping for story elements
+- Color coding and tagging systems for organization
+- Zoom and pan capabilities for large story universes
+
+AI as Assistant, Not Replacement:
+- Opt-in AI suggestions rather than automatic generation
+- Transparent credit usage so users understand costs
+- Multiple AI provider support for user choice and flexibility
+
+Mobile Responsiveness Strategy:
+
+Progressive Web App Features:
+- Installable on mobile devices with app-like experience
+- Offline writing with local storage sync when reconnected
+- Touch-optimized canvas with gesture controls for infinite canvas
+- Mobile-specific UI adaptations:
+  * Collapsible sidebar navigation
+  * Touch-friendly character panel
+  * Swipe gestures for chapter navigation
+  * Voice-to-text integration for mobile writing
+
+Responsive Breakpoints:
+- Mobile (max-width: 768px): Scaled canvas, fixed sidebar, compact writing area
+- Tablet (769px-1024px): Sticky canvas tools, medium character panel
+- Desktop (1025px+): Full grid layout with three-column design
+
+IMPLEMENTATION DETAILS
+======================
+
+Character Completeness Scoring Algorithm:
+
+Basic Info Score (20%):
+- Name present: 25%
+- Age defined: 25%
+- Role/occupation: 25%
+- Basic demographics: 25%
+
+Physical Description Score (15%):
+- Height/build: 20%
+- Distinctive features: 30%
+- Clothing style: 20%
+- General appearance: 30%
+
+Personality Score (25%):
+- Core traits (3+ required): 30%
+- Motivations: 25%
+- Fears/flaws: 25%
+- Speech patterns: 20%
+
+Backstory Score (20%):
+- Childhood/origins: 30%
+- Formative events: 30%
+- Family background: 20%
+- Education/training: 20%
+
+Relationships Score (10%):
+- Character connections: 50%
+- Relationship dynamics: 50%
+
+Development Score (10%):
+- Character arc defined: 50%
+- Growth throughout story: 50%
+
+AI Credit System:
+
+Credit Costs:
+- Character analysis: 500-1,500 credits
+- Plot assistance: 1,000-3,000 credits
+- Grammar checking: 100-500 credits
+- Content classification: 50-200 credits
+- Story brainstorming: 2,000-5,000 credits
+
+Monthly Allocations:
+- Free tier: 50,000 credits (~200 interactions)
+- Premium tier: 250,000 credits (~1,000 interactions)
+- Additional credits: $5 per 100,000 credits
+
+Import System Workflow:
+
+1. Platform Detection:
+   - Notion: API integration with workspace permission
+   - Google Docs: OAuth scope for Drive access
+   - Word: File upload with .docx parsing
+
+2. Content Analysis:
+   - AI-powered classification of imported content
+   - Confidence scoring for each classification
+   - User review interface for confirmation
+
+3. Smart Mapping:
+   - Character sheets → Character management system
+   - Plot outlines → Project kanban cards
+   - Research notes → Reference materials
+   - Prose content → Chapter system
+
+4. Import Completion:
+   - Data validation and cleanup
+   - Relationship detection between elements
+   - Initial project structure creation
+
+FUTURE EXPANSION POSSIBILITIES
+=============================
+
+Phase 4 Features (Year 2+):
+- Advanced world-building tools with maps and timelines
+- Integration with publishing platforms (Amazon KDP, IngramSpark)
+- Advanced analytics and writing insights
+- Template marketplace for genre-specific structures
+- AI voice and style training on user's existing work
+- Advanced collaboration with professional editing tools
+- API for third-party integrations
+
+Potential Integrations:
+- Scapple for additional mind mapping
+- ProWritingAid for advanced grammar
+- Adobe Creative Suite for cover design
+- Social media platforms for author marketing
+- Book tracking platforms (Goodreads, StoryGraph)
+
+SUPPORT & DOCUMENTATION
+=======================
+
+Knowledge Base Categories:
+- Getting Started: Onboarding, first project setup
+- Features: Detailed feature documentation
+- Troubleshooting: Common issues and solutions
+- Collaboration: Sharing and permissions guide
+- AI Assistance: Best practices for AI usage
+
+Support Channels:
+- In-app help system with contextual guidance
+- Email support with 24-hour response time
+- Community forum for user-to-user assistance
+- Video tutorials for complex features
+- Weekly office hours for direct developer access
+
+Quality Assurance:
+- Automated testing for critical user paths
+- Manual testing for creative workflows
+- User feedback collection and prioritization
+- A/B testing for feature improvements
+- Performance monitoring and optimization
+
+COMPLIANCE & LEGAL
+==================
+
+Data Protection:
+- GDPR compliance with data portability
+- CCPA compliance for California users
+- User data anonymization options
+- Right to be forgotten implementation
+- Data retention policies (7 years for user data, 2 years for analytics)
+
+Terms of Service:
+- Clear intellectual property rights for user content
+- AI training data usage policies
+- Collaboration and sharing guidelines
+- Acceptable use policy for AI features
+- Dispute resolution procedures
+
+Privacy Policy:
+- Transparent data collection practices
+- Third-party service disclosure (AI providers, analytics)
+- Cookie policy and tracking preferences
+- Data sharing limitations and user control
+- Security breach notification procedures
+
+This comprehensive PRD serves as the complete blueprint for developing and scaling the Writer's Space platform, balancing ambitious vision with practical execution steps while maintaining focus on the core user experience of visual-thinking writers.
+
+END OF DOCUMENT
+===============`
