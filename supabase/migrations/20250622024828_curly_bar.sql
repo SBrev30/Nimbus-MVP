@@ -48,12 +48,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for updated_at if it doesn't exist
+-- Create trigger for updated_at
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_profiles_updated_at'
-  ) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_profiles_updated_at') THEN
     CREATE TRIGGER update_user_profiles_updated_at
       BEFORE UPDATE ON user_profiles
       FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -92,12 +90,28 @@ $$;
 -- Enable Row Level Security
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies
-CREATE POLICY "Users can view own profile" ON user_profiles
-  FOR SELECT USING (auth.uid() = id);
+-- Create RLS policies (FIXED: Now checks if policies exist first)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'user_profiles' 
+    AND policyname = 'Users can view own profile'
+  ) THEN
+    CREATE POLICY "Users can view own profile" ON user_profiles
+      FOR SELECT USING (auth.uid() = id);
+  END IF;
 
-CREATE POLICY "Users can update own profile" ON user_profiles
-  FOR UPDATE USING (auth.uid() = id);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'user_profiles' 
+    AND policyname = 'Users can update own profile'
+  ) THEN
+    CREATE POLICY "Users can update own profile" ON user_profiles
+      FOR UPDATE USING (auth.uid() = id);
+  END IF;
+END
+$$;
 
 -- Create indexes for performance
-CREATE INDEX user_profiles_email_idx ON user_profiles(email);
+CREATE INDEX IF NOT EXISTS user_profiles_email_idx ON user_profiles(email);
