@@ -58,20 +58,35 @@ const sampleNotesByCategory = {
   ],
 };
 
-export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isCollapsed, onToggleCollapse }: NotesPanelProps) {
+export function NotesPanel({ 
+  notes = [], // Default to empty array to prevent undefined errors
+  onAddNote, 
+  onEditNote, 
+  onDeleteNote, 
+  isCollapsed, 
+  onToggleCollapse 
+}: NotesPanelProps) {
   const [activeCategory, setActiveCategory] = useState<NoteCategory>('Person');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', category: 'Person' as const });
   const [displayedNotes, setDisplayedNotes] = useState(sampleNotesByCategory.Person);
   const [scrollPercentage, setScrollPercentage] = useState(0);
 
-  const filteredNotes = activeCategory === 'All' 
-    ? notes 
-    : notes.filter(note => note.category === activeCategory);
+  // Safely filter notes with null check
+  const filteredNotes = React.useMemo(() => {
+    if (!notes || !Array.isArray(notes)) {
+      return [];
+    }
+    
+    return activeCategory === 'All' 
+      ? notes 
+      : notes.filter(note => note.category === activeCategory);
+  }, [notes, activeCategory]);
 
   // Update displayed notes when category changes
   useEffect(() => {
-    setDisplayedNotes(sampleNotesByCategory[activeCategory] || []);
+    const categoryNotes = sampleNotesByCategory[activeCategory];
+    setDisplayedNotes(categoryNotes || []);
   }, [activeCategory]);
 
   const handleCategoryChange = (category: NoteCategory) => {
@@ -81,7 +96,7 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
   };
 
   const handleAddNote = () => {
-    if (newNote.title.trim()) {
+    if (newNote.title.trim() && onAddNote) {
       onAddNote(newNote);
       setNewNote({ title: '', content: '', category: activeCategory });
       setIsAddingNote(false);
@@ -117,7 +132,7 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
   }
 
   const maxNotes = 25;
-  const currentNoteCount = displayedNotes.length;
+  const currentNoteCount = displayedNotes?.length || 0;
   const hasMaxNotes = currentNoteCount >= maxNotes;
 
   return (
@@ -203,25 +218,39 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
         )}
 
         {/* Display notes based on active category */}
-        {displayedNotes.map((note, index) => (
-          <div 
-            key={note.id} 
-            className={`p-4 rounded ${
-              note.highlighted ? 'bg-[#A5F7AC]' : 'bg-[#FAF9F9]'
-            }`}
-          >
-            <p className={`text-sm mb-2 font-inter leading-relaxed ${
-              note.highlighted ? 'text-black' : 'text-[#898989]'
-            }`}>
-              {note.content}
+        {displayedNotes && displayedNotes.length > 0 ? (
+          displayedNotes.map((note, index) => (
+            <div 
+              key={note.id} 
+              className={`p-4 rounded ${
+                note.highlighted ? 'bg-[#A5F7AC]' : 'bg-[#FAF9F9]'
+              }`}
+            >
+              <p className={`text-sm mb-2 font-inter leading-relaxed ${
+                note.highlighted ? 'text-black' : 'text-[#898989]'
+              }`}>
+                {note.content}
+              </p>
+              <p className={`text-xs font-inter ${
+                note.highlighted ? 'text-[#090808]' : 'text-[#898989]'
+              }`}>
+                {note.date}
+              </p>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-[#889096] font-inter">
+              No notes in this category yet.
             </p>
-            <p className={`text-xs font-inter ${
-              note.highlighted ? 'text-[#090808]' : 'text-[#898989]'
-            }`}>
-              {note.date}
-            </p>
+            <button
+              onClick={() => setIsAddingNote(true)}
+              className="mt-2 text-xs text-[#A5F7AC] hover:underline font-inter"
+            >
+              Add your first note
+            </button>
           </div>
-        ))}
+        )}
 
         {/* Show message when max notes reached */}
         {hasMaxNotes && (
