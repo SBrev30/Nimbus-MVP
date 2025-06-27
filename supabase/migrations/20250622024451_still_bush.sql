@@ -68,14 +68,14 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE polname = 'Users can view own profile'
+    SELECT 1 FROM pg_policies WHERE policyname = 'Users can view own profile'
   ) THEN
     CREATE POLICY "Users can view own profile" ON users
       FOR SELECT USING (auth.uid() = id);
   END IF;
   
   IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE polname = 'Users can update own profile'
+    SELECT 1 FROM pg_policies WHERE policyname = 'Users can update own profile'
   ) THEN
     CREATE POLICY "Users can update own profile" ON users
       FOR UPDATE USING (auth.uid() = id);
