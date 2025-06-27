@@ -678,8 +678,30 @@ const CanvasFlow = () => {
         return;
       }
 
-      setNodes(sample.nodes || []);
-      setEdges(sample.edges || []);
+      // Create ID mapping for regeneration
+      const nodeIdMap = new Map<string, string>();
+
+      // Generate new nodes with fresh UUIDs
+      const newNodes = (sample.nodes || []).map((node: any) => {
+        const newId = uuidv4();
+        nodeIdMap.set(node.id, newId);
+        return { ...node, id: newId };
+      });
+
+      // Generate new edges with updated node references
+      const newEdges = (sample.edges || []).map((edge: any) => {
+        const newSourceId = nodeIdMap.get(edge.source) || edge.source;
+        const newTargetId = nodeIdMap.get(edge.target) || edge.target;
+        return {
+          ...edge,
+          id: uuidv4(),
+          source: newSourceId,
+          target: newTargetId
+        };
+      });
+
+      setNodes(newNodes);
+      setEdges(newEdges);
       
       setTimeout(() => {
         if (reactFlowInstance) {
