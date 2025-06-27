@@ -388,19 +388,38 @@ const CanvasFlow = () => {
         reader.onload = (e) => {
           try {
             const data = JSON.parse(e.target?.result as string);
-            if (data?.nodes && data?.edges) {
+            // Validate the loaded data structure
+            if (
+              data?.nodes &&
+              Array.isArray(data.nodes) &&
+              data?.edges &&
+              Array.isArray(data.edges)
+            ) {
               setNodes(data.nodes);
               setEdges(data.edges);
+              // Restore viewport if available
+              if (data.viewport && reactFlowInstance) {
+                reactFlowInstance.setViewport(data.viewport);
+              }
+            } else {
+              throw new Error('Invalid canvas file format');
             }
           } catch (error) {
             console.error('Error loading file:', error);
+            alert(
+              'Failed to load file: ' +
+                (error instanceof Error ? error.message : 'Invalid file format')
+            );
           }
+        };
+        reader.onerror = () => {
+          alert('Failed to read file');
         };
         reader.readAsText(file);
       }
     };
     input.click();
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, reactFlowInstance]);
 
   const clearCanvas = useCallback(() => {
     setNodes([]);
