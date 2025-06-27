@@ -47,33 +47,171 @@ const aiService = {
   }
 };
 
-// Simplified Node Components
-const SimpleCharacterNode = ({ data, onDataChange }: any) => (
-  <div className="bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[150px] shadow-sm">
-    <Handle type="target" position={Position.Top} className="w-2 h-2" />
-    <div className="font-semibold text-green-800 text-sm">{data.name || 'Character'}</div>
-    <div className="text-xs text-green-600 mt-1">{data.role || 'Role'}</div>
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-  </div>
-);
+// Enhanced Node Components with dropdowns
+const SimpleCharacterNode = ({ data, onDataChange }: any) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [planningCharacters] = useState([
+    { id: '1', name: 'John Doe', role: 'protagonist' },
+    { id: '2', name: 'Jane Smith', role: 'antagonist' },
+    { id: '3', name: 'Bob Wilson', role: 'supporting' }
+  ]);
 
-const SimplePlotNode = ({ data, onDataChange }: any) => (
-  <div className="bg-blue-100 border-2 border-blue-300 rounded-lg p-3 min-w-[150px] shadow-sm">
-    <Handle type="target" position={Position.Top} className="w-2 h-2" />
-    <div className="font-semibold text-blue-800 text-sm">{data.title || 'Plot Point'}</div>
-    <div className="text-xs text-blue-600 mt-1">{data.type || 'Event'}</div>
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-  </div>
-);
+  const handleCharacterSelect = (character: any) => {
+    onDataChange({
+      name: character.name,
+      role: character.role,
+      fromPlanning: true,
+      planningId: character.id
+    });
+    setShowDropdown(false);
+  };
 
-const SimpleLocationNode = ({ data, onDataChange }: any) => (
-  <div className="bg-purple-100 border-2 border-purple-300 rounded-lg p-3 min-w-[150px] shadow-sm">
-    <Handle type="target" position={Position.Top} className="w-2 h-2" />
-    <div className="font-semibold text-purple-800 text-sm">{data.name || 'Location'}</div>
-    <div className="text-xs text-purple-600 mt-1">{data.type || 'Place'}</div>
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-  </div>
-);
+  return (
+    <div className="bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[150px] shadow-sm relative">
+      <Handle type="target" position={Position.Top} className="w-2 h-2" />
+      <div className="font-semibold text-green-800 text-sm">{data.name || 'Character'}</div>
+      <div className="text-xs text-green-600 mt-1">{data.role || 'Role'}</div>
+      
+      {!data.fromPlanning && (
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1"
+        >
+          📋
+        </button>
+      )}
+
+      {showDropdown && (
+        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[140px]">
+          <div className="p-2 text-xs font-medium text-gray-700 border-b">From Planning:</div>
+          {planningCharacters.map((char) => (
+            <button
+              key={char.id}
+              onClick={() => handleCharacterSelect(char)}
+              className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100 flex flex-col"
+            >
+              <span className="font-medium">{char.name}</span>
+              <span className="text-gray-500">{char.role}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+    </div>
+  );
+};
+
+const SimplePlotNode = ({ data, onDataChange }: any) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [plotPoints] = useState([
+    { id: '1', title: 'Opening Hook', type: 'setup' },
+    { id: '2', title: 'Inciting Incident', type: 'event' },
+    { id: '3', title: 'First Plot Point', type: 'turning_point' },
+    { id: '4', title: 'Midpoint', type: 'turning_point' },
+    { id: '5', title: 'Climax', type: 'climax' }
+  ]);
+
+  const handlePlotSelect = (plot: any) => {
+    onDataChange({
+      title: plot.title,
+      type: plot.type,
+      fromPlanning: true,
+      planningId: plot.id
+    });
+    setShowDropdown(false);
+  };
+
+  return (
+    <div className="bg-blue-100 border-2 border-blue-300 rounded-lg p-3 min-w-[150px] shadow-sm relative">
+      <Handle type="target" position={Position.Top} className="w-2 h-2" />
+      <div className="font-semibold text-blue-800 text-sm">{data.title || 'Plot Point'}</div>
+      <div className="text-xs text-blue-600 mt-1">{data.type || 'Event'}</div>
+      
+      {!data.fromPlanning && (
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="absolute top-1 right-1 text-xs bg-blue-200 hover:bg-blue-300 rounded px-1"
+        >
+          📋
+        </button>
+      )}
+
+      {showDropdown && (
+        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[140px]">
+          <div className="p-2 text-xs font-medium text-gray-700 border-b">From Plot:</div>
+          {plotPoints.map((plot) => (
+            <button
+              key={plot.id}
+              onClick={() => handlePlotSelect(plot)}
+              className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100 flex flex-col"
+            >
+              <span className="font-medium">{plot.title}</span>
+              <span className="text-gray-500">{plot.type}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+    </div>
+  );
+};
+
+const SimpleLocationNode = ({ data, onDataChange }: any) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [worldBuildingLocations] = useState([
+    { id: '1', name: 'The Capital City', type: 'city' },
+    { id: '2', name: 'Ancient Forest', type: 'wilderness' },
+    { id: '3', name: 'Royal Palace', type: 'building' },
+    { id: '4', name: 'Hidden Cave', type: 'landmark' }
+  ]);
+
+  const handleLocationSelect = (location: any) => {
+    onDataChange({
+      name: location.name,
+      type: location.type,
+      fromPlanning: true,
+      planningId: location.id
+    });
+    setShowDropdown(false);
+  };
+
+  return (
+    <div className="bg-purple-100 border-2 border-purple-300 rounded-lg p-3 min-w-[150px] shadow-sm relative">
+      <Handle type="target" position={Position.Top} className="w-2 h-2" />
+      <div className="font-semibold text-purple-800 text-sm">{data.name || 'Location'}</div>
+      <div className="text-xs text-purple-600 mt-1">{data.type || 'Place'}</div>
+      
+      {!data.fromPlanning && (
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="absolute top-1 right-1 text-xs bg-purple-200 hover:bg-purple-300 rounded px-1"
+        >
+          📋
+        </button>
+      )}
+
+      {showDropdown && (
+        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[140px]">
+          <div className="p-2 text-xs font-medium text-gray-700 border-b">From World Building:</div>
+          {worldBuildingLocations.map((location) => (
+            <button
+              key={location.id}
+              onClick={() => handleLocationSelect(location)}
+              className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100 flex flex-col"
+            >
+              <span className="font-medium">{location.name}</span>
+              <span className="text-gray-500">{location.type}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+    </div>
+  );
+};
 
 const SimpleThemeNode = ({ data, onDataChange }: any) => (
   <div className="bg-yellow-100 border-2 border-yellow-300 rounded-lg p-3 min-w-[150px] shadow-sm">
@@ -111,7 +249,7 @@ const SimpleTimelineNode = ({ data, onDataChange }: any) => (
   </div>
 );
 
-// Simplified Menu Component
+// Simplified Menu Component with Templates and Samples
 const SimplifiedMenu = ({ 
   isCollapsed, 
   onToggleCollapsed,
@@ -119,17 +257,34 @@ const SimplifiedMenu = ({
   onSave,
   onLoad,
   onClear,
+  onLoadTemplate,
+  onLoadSample,
   lastSaved,
   isSaving
 }: any) => {
+  const [activeTab, setActiveTab] = useState('elements');
+  
   const nodeTypes = [
-    { type: 'character', label: 'Character', icon: '👤', color: 'green' },
-    { type: 'plot', label: 'Plot', icon: '📖', color: 'blue' },
-    { type: 'location', label: 'Location', icon: '📍', color: 'purple' },
-    { type: 'theme', label: 'Theme', icon: '💭', color: 'yellow' },
-    { type: 'conflict', label: 'Conflict', icon: '⚔️', color: 'red' },
-    { type: 'research', label: 'Research', icon: '📚', color: 'indigo' },
-    { type: 'timeline', label: 'Timeline', icon: '⏰', color: 'cyan' }
+    { type: 'character', label: 'Character', color: 'green' },
+    { type: 'plot', label: 'Plot', color: 'blue' },
+    { type: 'location', label: 'Location', color: 'purple' },
+    { type: 'theme', label: 'Theme', color: 'yellow' },
+    { type: 'conflict', label: 'Conflict', color: 'red' },
+    { type: 'research', label: 'Research', color: 'indigo' },
+    { type: 'timeline', label: 'Timeline', color: 'cyan' }
+  ];
+
+  const templateList = [
+    { id: 'heroJourney', name: "Hero's Journey", description: 'Classic monomyth structure' },
+    { id: 'threeAct', name: 'Three-Act Structure', description: 'Traditional screenplay format' },
+    { id: 'mysteryStructure', name: 'Mystery Structure', description: 'Detective story template' },
+    { id: 'romanceStructure', name: 'Romance Arc', description: 'Love story progression' }
+  ];
+
+  const sampleList = [
+    { id: 'mysteryNovel', name: 'Mystery Novel', description: 'Complete detective story example' },
+    { id: 'fantasyEpic', name: 'Fantasy Epic', description: 'High fantasy adventure' },
+    { id: 'sciFiThriller', name: 'Sci-Fi Thriller', description: 'Futuristic thriller story' }
   ];
 
   return (
@@ -151,53 +306,116 @@ const SimplifiedMenu = ({
 
       {!isCollapsed && (
         <>
-          {/* Node Creation Section */}
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Add Elements</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {nodeTypes.map(({ type, label, icon, color }) => (
-                <button
-                  key={type}
-                  onClick={() => onCreateNode(type)}
-                  className={`p-2 text-xs rounded-lg border-2 border-${color}-300 bg-${color}-100 hover:bg-${color}-200 transition-colors flex flex-col items-center gap-1`}
-                >
-                  <span className="text-lg">{icon}</span>
-                  <span className={`text-${color}-800 font-medium`}>{label}</span>
-                </button>
-              ))}
-            </div>
+          {/* Tab Navigation */}
+          <div className="flex bg-gray-100 m-2 rounded-lg p-1">
+            {[
+              { id: 'elements', label: 'Elements' },
+              { id: 'templates', label: 'Templates' },
+              { id: 'samples', label: 'Samples' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto">
+            {activeTab === 'elements' && (
+              <div className="p-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Add Elements</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {nodeTypes.map(({ type, label, color }) => (
+                    <button
+                      key={type}
+                      onClick={() => onCreateNode(type)}
+                      className={`p-3 text-xs rounded-lg border-2 border-${color}-300 bg-${color}-100 hover:bg-${color}-200 transition-colors flex items-center justify-center font-medium`}
+                    >
+                      <span className={`text-${color}-800`}>{label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <div className="text-xs text-blue-700 font-medium mb-1">💡 Tip</div>
+                  <div className="text-xs text-blue-600">
+                    Click the 📋 button on nodes to link them to your Planning data!
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'templates' && (
+              <div className="p-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Story Templates</h3>
+                <div className="space-y-2">
+                  {templateList.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => onLoadTemplate(template.id)}
+                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="font-medium text-sm">{template.name}</div>
+                      <div className="text-xs text-gray-600 mt-1">{template.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'samples' && (
+              <div className="p-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Sample Stories</h3>
+                <div className="space-y-2">
+                  {sampleList.map((sample) => (
+                    <button
+                      key={sample.id}
+                      onClick={() => onLoadSample(sample.id)}
+                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="font-medium text-sm">{sample.name}</div>
+                      <div className="text-xs text-gray-600 mt-1">{sample.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Actions Section */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-700 mb-3">Actions</h3>
             <div className="space-y-2">
               <button
                 onClick={onSave}
                 disabled={isSaving}
-                className="w-full p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
+                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
               <button
                 onClick={onLoad}
-                className="w-full p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
               >
                 Load
               </button>
               <button
                 onClick={onClear}
-                className="w-full p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
               >
                 Clear All
               </button>
             </div>
-          </div>
-
-          {/* Status Section */}
-          <div className="p-4 mt-auto">
+            
             {lastSaved && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 mt-3">
                 Last saved: {lastSaved.toLocaleTimeString()}
               </div>
             )}
@@ -270,16 +488,42 @@ const CanvasFlow = () => {
     loadCanvasData();
   }, [loadData, setNodes, setEdges]);
 
-  // Node Types with simplified components
+  // Node data change handler
+  const handleNodeDataChange = useCallback((nodeId: string, newData: any) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, ...newData } }
+          : node
+      )
+    );
+  }, [setNodes]);
+
+  // Node Types with enhanced components
   const nodeTypes: NodeTypes = useMemo(() => ({
-    character: SimpleCharacterNode,
-    plot: SimplePlotNode,
-    location: SimpleLocationNode,
+    character: (props: any) => (
+      <SimpleCharacterNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+      />
+    ),
+    plot: (props: any) => (
+      <SimplePlotNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+      />
+    ),
+    location: (props: any) => (
+      <SimpleLocationNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+      />
+    ),
     theme: SimpleThemeNode,
     conflict: SimpleConflictNode,
     research: SimpleResearchNode,
     timeline: SimpleTimelineNode,
-  }), []);
+  }), [handleNodeDataChange]);
 
   // Node creation with proper TypeScript interfaces
   const getDefaultNodeData = (type: string) => {
@@ -364,6 +608,89 @@ const CanvasFlow = () => {
     setNodes((nds) => [...nds, newNode]);
   }, [reactFlowInstance, setNodes, nodes]);
 
+  // Template loading with proper UUID regeneration
+  const loadTemplate = useCallback((templateId: string) => {
+    console.log('Loading template:', templateId);
+    
+    try {
+      const template = templates[templateId as keyof typeof templates];
+      
+      if (!template) {
+        console.error(`Template "${templateId}" not found`);
+        return;
+      }
+
+      // Clear existing nodes and edges
+      setNodes([]);
+      setEdges([]);
+      
+      // Create ID mapping for regeneration
+      const nodeIdMap = new Map<string, string>();
+      
+      // Generate new nodes with fresh UUIDs
+      const newNodes = template.nodes.map((node: any) => {
+        const newId = uuidv4();
+        nodeIdMap.set(node.id, newId);
+        
+        return {
+          ...node,
+          id: newId
+        };
+      });
+      
+      // Generate new edges with updated node references
+      const newEdges = template.edges.map((edge: any) => {
+        const newSourceId = nodeIdMap.get(edge.source) || edge.source;
+        const newTargetId = nodeIdMap.get(edge.target) || edge.target;
+        
+        return {
+          ...edge,
+          id: uuidv4(),
+          source: newSourceId,
+          target: newTargetId
+        };
+      });
+      
+      // Set nodes and edges with delay for proper rendering
+      setTimeout(() => {
+        setNodes(newNodes);
+        setEdges(newEdges);
+        
+        setTimeout(() => {
+          if (reactFlowInstance) {
+            reactFlowInstance.fitView({ padding: 0.2 });
+          }
+        }, 100);
+      }, 50);
+      
+    } catch (error) {
+      console.error('Error loading template:', error);
+    }
+  }, [setNodes, setEdges, reactFlowInstance]);
+
+  // Load sample data
+  const loadSample = useCallback((sampleId: string) => {
+    try {
+      const sample = sampleStories[sampleId as keyof typeof sampleStories];
+      
+      if (!sample) {
+        console.error(`Sample "${sampleId}" not found`);
+        return;
+      }
+
+      setNodes(sample.nodes || []);
+      setEdges(sample.edges || []);
+      
+      setTimeout(() => {
+        if (reactFlowInstance) {
+          reactFlowInstance.fitView({ padding: 0.2 });
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error loading sample data:', error);
+    }
+  }, [setNodes, setEdges, reactFlowInstance]);
+
   const onConnect = useCallback((params: Connection) => {
     setEdges((eds) => addEdge({ 
       ...params, 
@@ -418,120 +745,4 @@ const CanvasFlow = () => {
               Array.isArray(data.edges)
             ) {
               setNodes(data.nodes);
-              setEdges(data.edges);
-              // Restore viewport if available
-              if (data.viewport && reactFlowInstance) {
-                reactFlowInstance.setViewport(data.viewport);
-              }
-            } else {
-              throw new Error('Invalid canvas file format');
-            }
-          } catch (error) {
-            console.error('Error loading file:', error);
-            alert(
-              'Failed to load file: ' +
-                (error instanceof Error ? error.message : 'Invalid file format')
-            );
-          }
-        };
-        reader.onerror = () => {
-          alert('Failed to read file');
-        };
-        reader.readAsText(file);
-      }
-    };
-    input.click();
-  }, [setNodes, setEdges, reactFlowInstance]);
-
-  const clearCanvas = useCallback(() => {
-    setNodes([]);
-    setEdges([]);
-  }, [setNodes, setEdges]);
-
-  return (
-    <div className="h-screen bg-gray-50 flex">
-      {/* Main Canvas Area */}
-      <div className="flex-1 relative">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          connectionLineType={ConnectionLineType.SmoothStep}
-          fitView
-          className="bg-gray-50"
-          nodesDraggable={true}
-          nodesConnectable={true}
-          elementsSelectable={true}
-        >
-          <Background 
-            variant="dots" 
-            gap={20} 
-            size={1} 
-            color="#d1d5db"
-          />
-          <Controls />
-          <MiniMap 
-            nodeColor={(node) => {
-              switch (node.type) {
-                case 'character': return '#dcfce7';
-                case 'plot': return '#dbeafe';
-                case 'research': return '#e0e7ff';
-                case 'location': return '#f3e8ff';
-                case 'theme': return '#fef3c7';
-                case 'conflict': return '#fee2e2';
-                case 'timeline': return '#cffafe';
-                default: return '#f3f4f6';
-              }
-            }}
-          />
-        </ReactFlow>
-
-        {/* Welcome Message */}
-        {nodes.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center p-8 bg-white rounded-lg shadow-lg border border-gray-200 max-w-md">
-              <div className="text-4xl mb-4">🎨</div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Visual Story Canvas
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Create and visualize your story elements with an intuitive node-based interface.
-              </p>
-              <div className="text-sm text-gray-500 space-y-1">
-                <p>• Add characters, plots, locations, and themes</p>
-                <p>• Connect elements to show relationships</p>
-                <p>• Use the menu on the right to get started</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Right Side Menu */}
-      <SimplifiedMenu
-        isCollapsed={isMenuCollapsed}
-        onToggleCollapsed={() => setIsMenuCollapsed(!isMenuCollapsed)}
-        onCreateNode={createNode}
-        onSave={handleSave}
-        onLoad={handleLoad}
-        onClear={clearCanvas}
-        lastSaved={lastSaved}
-        isSaving={isSaving}
-      />
-    </div>
-  );
-};
-
-// Main Canvas Component with Provider
-const Canvas = () => {
-  return (
-    <ReactFlowProvider>
-      <CanvasFlow />
-    </ReactFlowProvider>
-  );
-};
-
-export default Canvas;
+              setEdges(data.
