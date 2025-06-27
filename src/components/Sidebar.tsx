@@ -443,8 +443,9 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
               <li>✅ Tooltips when collapsed</li>
               <li>✅ Mini dropdown menus for collapsed state</li>
               <li>✅ User profile section with non-gradient avatar</li>
+              <li>✅ User profile section with non-gradient avatar</li>
               <li>✅ Responsive icons with Lucide React</li>
-              <li>✅ Responsive icons with Lucide React</li>
+              <li>✅ Collapse button with border and hover shadow</li>
               <li>✅ Collapse button with border and hover shadow</li>
             </ul>
 
