@@ -1,56 +1,40 @@
 import React, { useState, useCallback, Suspense, lazy } from 'react';
-import { Sidebar } from './Sidebar';
-import { Breadcrumb } from './Breadcrumb';
-import { Editor } from './Editor';
-import { NotesPanel } from './NotesPanel';
-import { Files } from './Files';
-import { ProjectsPage } from './projects-page';
-import { DashboardPage } from './DashboardPage'; // Import the file-based component
+import { Sidebar } from './components/Sidebar';
+import { Breadcrumb } from './components/Breadcrumb';
+import { Editor } from './components/Editor';
+import { NotesPanel } from './components/NotesPanel';
 import { Search } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { useAutoSave } from '../hooks/useAutoSave';
-import { ThemeProvider } from '../contexts/ThemeContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AppDataProvider, useAppData } from './contexts/AppDataContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 
-// Define types directly in this file to avoid import issues
-interface EditorContent {
-  title: string;
-  content: string;
-  wordCount: number;
-  lastSaved: Date;
-}
+// Lightweight immediate components
+import { OutlinePage } from './components/planning/OutlinePage';
+import { PlotPage } from './components/planning/PlotPage';
+import { CharactersPage } from './components/planning/CharactersPage';
+import { WorldBuildingPage } from './components/planning/WorldBuildingPage';
+import { HelpTopicsPage } from './components/help/HelpTopicsPage';
+import { GetStartedPage } from './components/help/GetStartedPage';
+import { AskQuestionPage } from './components/help/AskQuestionPage';
+import { GetFeedbackPage } from './components/help/GetFeedbackPage';
 
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  category: 'Person' | 'Place' | 'Plot' | 'Misc';
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Heavy lazy-loaded components
+const Canvas = lazy(() => import('./components/Canvas'));
+const KanbanApp = lazy(() => import('./components/KanbanApp'));
+const Files = lazy(() => import('./components/Files'));
+const ProjectsPage = lazy(() => import('./components/projects-page'));
 
-// Import planning components
-import { OutlinePage } from './planning/OutlinePage';
-import { PlotPage } from './planning/PlotPage';
-import { CharactersPage } from './planning/CharactersPage';
-import { WorldBuildingPage } from './planning/WorldBuildingPage';
+// FIXED: Settings components with proper import handling
+const History = lazy(() => import('./components/History'));
+const Integration = lazy(() => import('./components/Integration'));
 
-// Import help components
-import { HelpTopicsPage } from './help/HelpTopicsPage';
-import { GetStartedPage } from './help/GetStartedPage';
-import { AskQuestionPage } from './help/AskQuestionPage';
-import { GetFeedbackPage } from './help/GetFeedbackPage';
-
-// Lazy load heavy components
-const Canvas = lazy(() => import('./Canvas').then(module => ({ default: module.default || module })));
-const Integration = lazy(() => import('./Integration').then(module => ({ default: module.default || module })));
-const History = lazy(() => import('./History').then(module => ({ default: module.default || module })));
-
-// Loading component
-const LoadingSpinner = () => (
+// Enhanced loading components with specific messages
+const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
   <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
     <div className="text-center">
-      <div className="w-8 h-8 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-      <p className="text-[#889096]">Loading...</p>
+      <div className="w-12 h-12 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-[#889096] font-medium">{message}</p>
+      <p className="text-sm text-gray-400 mt-2">This may take a moment...</p>
     </div>
   </div>
 );
@@ -58,7 +42,7 @@ const LoadingSpinner = () => (
 // Error boundary component
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback?: React.ReactNode },
-  { hasError: boolean }
+  { hasError: boolean; error?: Error }
 > {
   constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
     super(props);
@@ -66,7 +50,7 @@ class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -77,19 +61,19 @@ class ErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return this.props.fallback || (
         <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
-          <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-center p-8">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24">
-                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
-            <p className="text-gray-600 mb-4">An unexpected error occurred</p>
+            <p className="text-gray-600 mb-4">We encountered an error loading this component.</p>
             <button
-              onClick={() => this.setState({ hasError: false })}
-              className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
             >
-              Try again
+              Refresh Page
             </button>
           </div>
         </div>
@@ -100,272 +84,74 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-// Planning Page Component
-const PlanningPage = ({ onViewChange }: { onViewChange: (view: string) => void }) => (
-  <div className="h-full w-full bg-white">
-    <div className="border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Story Planning</h1>
-          <p className="text-gray-600">Organize your story structure, characters, and world</p>
+// Define view types
+type ViewType = 'dashboard' | 'projects' | 'canvas' | 'library' | 'planning' | 'outline' | 'plot' | 
+               'characters' | 'world-building' | 'files' | 'settings' | 'history' | 'integrations' | 
+               'help' | 'help-topics' | 'get-started' | 'ask-question' | 'get-feedback';
+
+function AppContent() {
+  const [activeView, setActiveView] = useState<ViewType>('dashboard');
+  const [selectedChapter, setSelectedChapter] = useState<any>(null);
+
+  const handleViewChange = useCallback((view: ViewType) => {
+    setActiveView(view);
+  }, []);
+
+  const handleSelectChapter = useCallback((chapter: any) => {
+    setSelectedChapter(chapter);
+    setActiveView('dashboard');
+  }, []);
+
+  const handleBackToSettings = useCallback(() => {
+    setActiveView('settings');
+  }, []);
+
+  const WritePage = () => {
+    return (
+      <div className="flex-1 flex">
+        <div className="flex-1 flex flex-col">
+          <Editor 
+            selectedChapter={selectedChapter}
+            onSelectChapter={handleSelectChapter}
+          />
         </div>
+        <NotesPanel />
       </div>
-    </div>
+    );
+  };
 
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-      <div
-        onClick={() => onViewChange('outline')}
-        className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Story Outline</h3>
-        <p className="text-gray-600 text-sm">Structure your story with acts, chapters, and scenes</p>
-      </div>
-
-      <div
-        onClick={() => onViewChange('plot')}
-        className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Plot Development</h3>
-        <p className="text-gray-600 text-sm">Develop plot points, conflicts, and story arcs</p>
-      </div>
-
-      <div
-        onClick={() => onViewChange('characters')}
-        className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Characters</h3>
-        <p className="text-gray-600 text-sm">Create and develop your story characters</p>
-      </div>
-
-      <div
-        onClick={() => onViewChange('world-building')}
-        className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">World Building</h3>
-        <p className="text-gray-600 text-sm">Design settings, cultures, and story world</p>
-      </div>
-    </div>
-  </div>
-);
-
-// Settings Page Component
-const SettingsPage = ({ onViewChange }: { onViewChange: (view: string) => void }) => (
-  <div className="h-full w-full bg-white">
-    <div className="border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600">Configure your preferences and manage your account</p>
-        </div>
-      </div>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-      <div
-        onClick={() => onViewChange('history')}
-        className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Version History</h3>
-        <p className="text-gray-600 text-sm">View and restore previous versions of your work</p>
-      </div>
-
-      <div
-        onClick={() => onViewChange('integrations')}
-        className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Integrations</h3>
-        <p className="text-gray-600 text-sm">Connect with external tools and services</p>
-      </div>
-    </div>
-  </div>
-);
-
-// Help Page Component
-const HelpPage = ({ onViewChange }: { onViewChange: (view: string) => void }) => (
-  <div className="h-full w-full bg-white">
-    <div className="border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Help & Support</h1>
-          <p className="text-gray-600">Get help and learn how to use WritersBlock effectively</p>
-        </div>
-      </div>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-      <div
-        onClick={() => onViewChange('help-topics')}
-        className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Help Topics</h3>
-        <p className="text-gray-600 text-sm">Browse common questions and tutorials</p>
-      </div>
-
-      <div
-        onClick={() => onViewChange('get-started')}
-        className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Get Started</h3>
-        <p className="text-gray-600 text-sm">Learn the basics and set up your first project</p>
-      </div>
-
-      <div
-        onClick={() => onViewChange('ask-question')}
-        className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Ask a Question</h3>
-        <p className="text-gray-600 text-sm">Get personalized help from our support team</p>
-      </div>
-
-      <div
-        onClick={() => onViewChange('get-feedback')}
-        className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
-      >
-        <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Get Feedback</h3>
-        <p className="text-gray-600 text-sm">Share your ideas and help us improve</p>
-      </div>
-    </div>
-  </div>
-);
-
-// Main App Component
-function App() {
-  const [activeView, setActiveView] = useState('write');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
-
-  const [editorContent, setEditorContent] = useLocalStorage<EditorContent>('editorContent', {
-    title: 'Chapter 1',
-    content: '',
-    wordCount: 0,
-    lastSaved: new Date(),
-  });
-
-  const [notes, setNotes] = useLocalStorage<Note[]>('notes', []);
-
-  useAutoSave(editorContent, 'editorContent', 2000);
-
-  const handleEditorChange = useCallback((content: any) => {
-    setEditorContent(content);
-  }, [setEditorContent]);
-
-  const handleAddNote = useCallback((note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newNote: Note = {
-      ...note,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setNotes(prev => [newNote, ...prev]);
-  }, [setNotes]);
-
-  const handleEditNote = useCallback((id: string, updatedNote: Partial<Note>) => {
-    setNotes(prev => prev.map(note => 
-      note.id === id ? { ...note, ...updatedNote, updatedAt: new Date() } : note
-    ));
-  }, [setNotes]);
-
-  const handleDeleteNote = useCallback((id: string) => {
-    setNotes(prev => prev.filter(note => note.id !== id));
-  }, [setNotes]);
-
-  const handleBackToWrite = useCallback(() => setActiveView('write'), []);
-  const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
-  const handleBackToSettings = useCallback(() => setActiveView('settings'), []);
-  const handleBackToHelp = useCallback(() => setActiveView('help'), []);
-
-  const renderMainContent = () => {
+  const renderContent = () => {
     switch (activeView) {
-      case 'write':
-      case 'editor':
+      case 'dashboard':
         return (
-          <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 flex flex-col">
-              <Editor
-                content={editorContent}
-                onChange={handleEditorChange}
-              />
-            </div>
-            <NotesPanel
-              notes={notes}
-              onAddNote={handleAddNote}
-              onEditNote={handleEditNote}
-              onDeleteNote={handleDeleteNote}
-              isCollapsed={notesPanelCollapsed}
-              onToggleCollapse={() => setNotesPanelCollapsed(!notesPanelCollapsed)}
-            />
-          </div>
+          <ErrorBoundary>
+            <WritePage />
+          </ErrorBoundary>
         );
 
       case 'projects':
         return (
           <ErrorBoundary>
-            <ProjectsPage onBack={handleBackToWrite} />
+            <Suspense fallback={<LoadingSpinner message="Loading projects..." />}>
+              <ProjectsPage />
+            </Suspense>
           </ErrorBoundary>
         );
-      
-      case 'dashboard':
-        return (
-          <ErrorBoundary>
-            <DashboardPage onViewChange={setActiveView} />
-          </ErrorBoundary>
-        );
-      
+
       case 'canvas':
         return (
           <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner />}>
+            <Suspense fallback={<LoadingSpinner message="Loading canvas..." />}>
               <Canvas />
+            </Suspense>
+          </ErrorBoundary>
+        );
+
+      case 'library':
+        return (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading library..." />}>
+              <KanbanApp />
             </Suspense>
           </ErrorBoundary>
         );
@@ -373,142 +159,248 @@ function App() {
       case 'files':
         return (
           <ErrorBoundary>
-            <Files onBack={handleBackToWrite} />
-          </ErrorBoundary>
-        );
-
-      case 'planning':
-        return (
-          <ErrorBoundary>
-            <PlanningPage onViewChange={setActiveView} />
-          </ErrorBoundary>
-        );
-
-      case 'outline':
-        return (
-          <ErrorBoundary>
-            <OutlinePage onBack={handleBackToPlanning} />
-          </ErrorBoundary>
-        );
-
-      case 'plot':
-        return (
-          <ErrorBoundary>
-            <PlotPage onBack={handleBackToPlanning} />
-          </ErrorBoundary>
-        );
-
-      case 'characters':
-        return (
-          <ErrorBoundary>
-            <CharactersPage onBack={handleBackToPlanning} />
-          </ErrorBoundary>
-        );
-
-      case 'world-building':
-        return (
-          <ErrorBoundary>
-            <WorldBuildingPage onBack={handleBackToPlanning} />
+            <Suspense fallback={<LoadingSpinner message="Loading files..." />}>
+              <Files />
+            </Suspense>
           </ErrorBoundary>
         );
 
       case 'settings':
         return (
-          <ErrorBoundary>
-            <SettingsPage onViewChange={setActiveView} />
-          </ErrorBoundary>
+          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
+                  <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Settings</h2>
+              <p className="text-gray-600 mb-6">Choose a setting category</p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setActiveView('history')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                >
+                  View History
+                </button>
+                <button
+                  onClick={() => setActiveView('integrations')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                >
+                  Manage Integrations
+                </button>
+              </div>
+            </div>
+          </div>
         );
-      
+
+      // FIXED: Integration component with proper error handling
       case 'integrations':
         return (
           <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner />}>
-              <Integration onBack={handleBackToSettings} />
-            </Suspense>
+            <SettingsProvider>
+              <Suspense fallback={<LoadingSpinner message="Loading integrations..." />}>
+                <Integration onBack={handleBackToSettings} />
+              </Suspense>
+            </SettingsProvider>
           </ErrorBoundary>
         );
-
+      
+      // FIXED: History component with proper error handling
       case 'history':
         return (
           <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner />}>
-              <History onBack={handleBackToSettings} />
-            </Suspense>
-          </ErrorBoundary>
-        );
-
-      case 'help':
-        return (
-          <ErrorBoundary>
-            <HelpPage onViewChange={setActiveView} />
+            <SettingsProvider>
+              <Suspense fallback={<LoadingSpinner message="Loading history..." />}>
+                <History onBack={handleBackToSettings} />
+              </Suspense>
+            </SettingsProvider>
           </ErrorBoundary>
         );
 
       case 'help-topics':
         return (
           <ErrorBoundary>
-            <HelpTopicsPage onBack={handleBackToHelp} />
+            <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );
 
       case 'get-started':
         return (
           <ErrorBoundary>
-            <GetStartedPage onBack={handleBackToHelp} />
+            <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );
 
       case 'ask-question':
         return (
           <ErrorBoundary>
-            <AskQuestionPage onBack={handleBackToHelp} />
+            <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );
 
       case 'get-feedback':
         return (
           <ErrorBoundary>
-            <GetFeedbackPage onBack={handleBackToHelp} />
+            <GetFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
+        );
+
+      case 'planning':
+        return (
+          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Planning</h2>
+              <p className="text-gray-600 mb-6">Choose a planning tool to get started</p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setActiveView('outline')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                >
+                  Story Outline
+                </button>
+                <button
+                  onClick={() => setActiveView('plot')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                >
+                  Plot Development
+                </button>
+                <button
+                  onClick={() => setActiveView('characters')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                >
+                  Characters
+                </button>
+                <button
+                  onClick={() => setActiveView('world-building')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                >
+                  World Building
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'outline':
+        return (
+          <ErrorBoundary>
+            <OutlinePage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );
+
+      case 'plot':
+        return (
+          <ErrorBoundary>
+            <PlotPage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );
+
+      case 'characters':
+        return (
+          <ErrorBoundary>
+            <CharactersPage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );
+
+      case 'world-building':
+        return (
+          <ErrorBoundary>
+            <WorldBuildingPage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );
+
+      case 'help':
+        return (
+          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
+                  <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Help & Support</h2>
+              <p className="text-gray-600 mb-6">Choose how we can help you</p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setActiveView('help-topics')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                >
+                  Browse Help Topics
+                </button>
+                <button
+                  onClick={() => setActiveView('get-started')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                >
+                  Get Started Guide
+                </button>
+                <button
+                  onClick={() => setActiveView('ask-question')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                >
+                  Ask a Question
+                </button>
+                <button
+                  onClick={() => setActiveView('get-feedback')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                >
+                  Send Feedback
+                </button>
+              </div>
+            </div>
+          </div>
         );
 
       default:
         return (
-          <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 flex flex-col">
-              <Editor
-                content={editorContent}
-                onChange={handleEditorChange}
-              />
-            </div>
-            <NotesPanel
-              notes={notes}
-              onAddNote={handleAddNote}
-              onEditNote={handleEditNote}
-              onDeleteNote={handleDeleteNote}
-              isCollapsed={notesPanelCollapsed}
-              onToggleCollapse={() => setNotesPanelCollapsed(!notesPanelCollapsed)}
-            />
-          </div>
+          <ErrorBoundary>
+            <WritePage />
+          </ErrorBoundary>
         );
     }
   };
 
   return (
-    <ThemeProvider>
-      <div className="h-screen bg-[#FAF9F9] flex overflow-hidden">
-        <Sidebar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Breadcrumb activeView={activeView} onViewChange={setActiveView} />
-          {renderMainContent()}
+    <div className="min-h-screen bg-[#F8F7F7] flex">
+      <Sidebar 
+        activeView={activeView} 
+        onViewChange={handleViewChange}
+      />
+      
+      <div className="flex-1 flex flex-col">
+        <div className="h-[80px] bg-white border-b border-[#C6C5C5] flex items-center justify-between px-6">
+          <Breadcrumb activeView={activeView} />
+          
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#889096] w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="pl-10 pr-4 py-2 border border-[#C6C5C5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent w-64"
+              />
+            </div>
+          </div>
         </div>
+        
+        {renderContent()}
       </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppDataProvider>
+        <AppContent />
+      </AppDataProvider>
     </ThemeProvider>
   );
 }
