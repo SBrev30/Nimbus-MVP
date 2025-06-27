@@ -12,7 +12,7 @@ export function DashboardPage({ onViewChange }: DashboardPageProps) {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Project Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Project Dashboard</h1>
             <p className="text-gray-600 mt-1">Manage your writing projects with Kanban boards</p>
           </div>
           
@@ -22,6 +22,12 @@ export function DashboardPage({ onViewChange }: DashboardPageProps) {
               className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Switch to Canvas
+            </button>
+            <button
+              onClick={() => onViewChange?.('projects')}
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              View All Projects
             </button>
             <button
               onClick={() => onViewChange?.('write')}
