@@ -358,7 +358,7 @@ const SimplifiedMenu = ({
 
   return (
     <div className={`bg-white border-l border-gray-200 transition-all duration-300 ${
-      isCollapsed ? 'w-12' : 'w-72'
+      isCollapsed ? 'w-12' : 'w-64'
     } flex flex-col h-full`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
@@ -429,10 +429,10 @@ const SimplifiedMenu = ({
                     <button
                       key={template.id}
                       onClick={() => onLoadTemplate(template.id)}
-                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors overflow-hidden"
                     >
-                      <div className="font-medium text-sm">{template.name}</div>
-                      <div className="text-xs text-gray-600 mt-1">{template.description}</div>
+                      <div className="font-medium text-sm truncate">{template.name}</div>
+                      <div className="text-xs text-gray-600 mt-1 break-words leading-tight">{template.description}</div>
                     </button>
                   ))}
                 </div>
@@ -447,10 +447,10 @@ const SimplifiedMenu = ({
                     <button
                       key={sample.id}
                       onClick={() => onLoadSample(sample.id)}
-                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors overflow-hidden"
                     >
-                      <div className="font-medium text-sm">{sample.name}</div>
-                      <div className="text-xs text-gray-600 mt-1">{sample.description}</div>
+                      <div className="font-medium text-sm truncate">{sample.name}</div>
+                      <div className="text-xs text-gray-600 mt-1 break-words leading-tight">{sample.description}</div>
                     </button>
                   ))}
                 </div>
