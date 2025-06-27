@@ -326,7 +326,7 @@ const HelpPage = ({ onViewChange }: { onViewChange: (view: string) => void }) =>
 );
 
 // Main App Component
-export default function App() {
+function App() {
   // State management
   const [activeView, setActiveView] = useState('write');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -600,4 +600,5 @@ export default function App() {
     </ThemeProvider>
   );
 }
+
 export default App;
