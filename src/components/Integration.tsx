@@ -119,23 +119,22 @@ export default function Integration({ onBack }: { onBack: () => void }) {
     loadIntegrations();
   }, []);
 
+  // Fixed: Single loadIntegrations function with migration logic
   const loadIntegrations = async () => {
     try {
- const loadIntegrations = async () => {
-   try {
-     let stored = localStorage.getItem('writer-integrations');
-     
-     // Migration logic for existing data
-     if (!stored) {
-       const oldData = localStorage.getItem('app-integrations');
-       if (oldData) {
-         localStorage.setItem('writer-integrations', oldData);
-         localStorage.removeItem('app-integrations');
-         stored = oldData;
-       }
-     }
-     
-     const loadedIntegrations = stored ? JSON.parse(stored) : [];
+      let stored = localStorage.getItem('writer-integrations');
+      
+      // Migration logic for existing data
+      if (!stored) {
+        const oldData = localStorage.getItem('app-integrations');
+        if (oldData) {
+          localStorage.setItem('writer-integrations', oldData);
+          localStorage.removeItem('app-integrations');
+          stored = oldData;
+        }
+      }
+      
+      const loadedIntegrations = stored ? JSON.parse(stored) : [];
       
       // Add built-in integrations if they don't exist
       const builtInIntegrations: Integration[] = [
@@ -268,13 +267,13 @@ export default function Integration({ onBack }: { onBack: () => void }) {
   const handleSaveIntegration = () => {
     if (!selectedTemplate) return;
 
-// Validate required fields
-for (const field of selectedTemplate.configSchema) {
-if (field.required && !config[field.key]) {
-alert(`${field.label} is required`);
-return;
-}
-}
+    // Validate required fields
+    for (const field of selectedTemplate.configSchema) {
+      if (field.required && !config[field.key]) {
+        alert(`${field.label} is required`);
+        return;
+      }
+    }
 
     const newIntegration: Integration = {
       id: editingIntegration?.id || `${selectedTemplate.id}_${Date.now()}`,
