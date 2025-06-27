@@ -47,19 +47,85 @@ const aiService = {
   }
 };
 
-// Enhanced Node Components with dropdowns
-const SimpleCharacterNode = ({ data, onDataChange }: any) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [planningCharacters] = useState([
+// TypeScript interfaces for component props
+interface NodeProps<T = any> {
+  data: T;
+  onDataChange: (newData: Partial<T>) => void;
+}
+
+interface PlanningCharacter {
+  id: string;
+  name: string;
+  role: string;
+}
+
+interface PlotPoint {
+  id: string;
+  title: string;
+  type: string;
+}
+
+interface WorldBuildingLocation {
+  id: string;
+  name: string;
+  type: string;
+}
+
+interface DropdownData {
+  planningCharacters: PlanningCharacter[];
+  plotPoints: PlotPoint[];
+  worldBuildingLocations: WorldBuildingLocation[];
+}
+
+// Custom hook for managing planning data
+const usePlanningData = (): DropdownData => {
+  // In a real app, this would fetch from context or API
+  const planningCharacters: PlanningCharacter[] = [
     { id: '1', name: 'John Doe', role: 'protagonist' },
     { id: '2', name: 'Jane Smith', role: 'antagonist' },
-    { id: '3', name: 'Bob Wilson', role: 'supporting' }
-  ]);
+    { id: '3', name: 'Bob Wilson', role: 'supporting' },
+    { id: '4', name: 'Alice Cooper', role: 'mentor' },
+    { id: '5', name: 'Tom Hardy', role: 'comic relief' }
+  ];
 
-  const handleCharacterSelect = (character: any) => {
+  const plotPoints: PlotPoint[] = [
+    { id: '1', title: 'Opening Hook', type: 'setup' },
+    { id: '2', title: 'Inciting Incident', type: 'event' },
+    { id: '3', title: 'First Plot Point', type: 'turning_point' },
+    { id: '4', title: 'Midpoint', type: 'turning_point' },
+    { id: '5', title: 'Climax', type: 'climax' },
+    { id: '6', title: 'Rising Action', type: 'event' },
+    { id: '7', title: 'Falling Action', type: 'event' },
+    { id: '8', title: 'Resolution', type: 'resolution' }
+  ];
+
+  const worldBuildingLocations: WorldBuildingLocation[] = [
+    { id: '1', name: 'The Capital City', type: 'city' },
+    { id: '2', name: 'Ancient Forest', type: 'wilderness' },
+    { id: '3', name: 'Royal Palace', type: 'building' },
+    { id: '4', name: 'Hidden Cave', type: 'landmark' },
+    { id: '5', name: 'Mountain Pass', type: 'landmark' },
+    { id: '6', name: 'Tavern Inn', type: 'building' },
+    { id: '7', name: 'Dark Swamp', type: 'wilderness' },
+    { id: '8', name: 'Port Town', type: 'city' }
+  ];
+
+  return {
+    planningCharacters,
+    plotPoints,
+    worldBuildingLocations
+  };
+};
+
+// Enhanced Node Components with proper TypeScript interfaces
+const SimpleCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeData>) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const { planningCharacters } = usePlanningData();
+
+  const handleCharacterSelect = (character: PlanningCharacter) => {
     onDataChange({
       name: character.name,
-      role: character.role,
+      role: character.role as any,
       fromPlanning: true,
       planningId: character.id
     });
@@ -102,20 +168,14 @@ const SimpleCharacterNode = ({ data, onDataChange }: any) => {
   );
 };
 
-const SimplePlotNode = ({ data, onDataChange }: any) => {
+const SimplePlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [plotPoints] = useState([
-    { id: '1', title: 'Opening Hook', type: 'setup' },
-    { id: '2', title: 'Inciting Incident', type: 'event' },
-    { id: '3', title: 'First Plot Point', type: 'turning_point' },
-    { id: '4', title: 'Midpoint', type: 'turning_point' },
-    { id: '5', title: 'Climax', type: 'climax' }
-  ]);
+  const { plotPoints } = usePlanningData();
 
-  const handlePlotSelect = (plot: any) => {
+  const handlePlotSelect = (plot: PlotPoint) => {
     onDataChange({
       title: plot.title,
-      type: plot.type,
+      type: plot.type as any,
       fromPlanning: true,
       planningId: plot.id
     });
@@ -158,19 +218,14 @@ const SimplePlotNode = ({ data, onDataChange }: any) => {
   );
 };
 
-const SimpleLocationNode = ({ data, onDataChange }: any) => {
+const SimpleLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData>) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [worldBuildingLocations] = useState([
-    { id: '1', name: 'The Capital City', type: 'city' },
-    { id: '2', name: 'Ancient Forest', type: 'wilderness' },
-    { id: '3', name: 'Royal Palace', type: 'building' },
-    { id: '4', name: 'Hidden Cave', type: 'landmark' }
-  ]);
+  const { worldBuildingLocations } = usePlanningData();
 
-  const handleLocationSelect = (location: any) => {
+  const handleLocationSelect = (location: WorldBuildingLocation) => {
     onDataChange({
       name: location.name,
-      type: location.type,
+      type: location.type as any,
       fromPlanning: true,
       planningId: location.id
     });
@@ -213,7 +268,7 @@ const SimpleLocationNode = ({ data, onDataChange }: any) => {
   );
 };
 
-const SimpleThemeNode = ({ data, onDataChange }: any) => (
+const SimpleThemeNode = ({ data, onDataChange }: NodeProps<ThemeNodeData>) => (
   <div className="bg-yellow-100 border-2 border-yellow-300 rounded-lg p-3 min-w-[150px] shadow-sm">
     <Handle type="target" position={Position.Top} className="w-2 h-2" />
     <div className="font-semibold text-yellow-800 text-sm">{data.title || 'Theme'}</div>
@@ -222,7 +277,7 @@ const SimpleThemeNode = ({ data, onDataChange }: any) => (
   </div>
 );
 
-const SimpleConflictNode = ({ data, onDataChange }: any) => (
+const SimpleConflictNode = ({ data, onDataChange }: NodeProps<ConflictNodeData>) => (
   <div className="bg-red-100 border-2 border-red-300 rounded-lg p-3 min-w-[150px] shadow-sm">
     <Handle type="target" position={Position.Top} className="w-2 h-2" />
     <div className="font-semibold text-red-800 text-sm">{data.title || 'Conflict'}</div>
@@ -231,7 +286,7 @@ const SimpleConflictNode = ({ data, onDataChange }: any) => (
   </div>
 );
 
-const SimpleResearchNode = ({ data, onDataChange }: any) => (
+const SimpleResearchNode = ({ data, onDataChange }: NodeProps<ResearchNodeData>) => (
   <div className="bg-indigo-100 border-2 border-indigo-300 rounded-lg p-3 min-w-[150px] shadow-sm">
     <Handle type="target" position={Position.Top} className="w-2 h-2" />
     <div className="font-semibold text-indigo-800 text-sm">{data.title || 'Research'}</div>
@@ -240,7 +295,7 @@ const SimpleResearchNode = ({ data, onDataChange }: any) => (
   </div>
 );
 
-const SimpleTimelineNode = ({ data, onDataChange }: any) => (
+const SimpleTimelineNode = ({ data, onDataChange }: NodeProps<TimelineNodeData>) => (
   <div className="bg-cyan-100 border-2 border-cyan-300 rounded-lg p-3 min-w-[150px] shadow-sm">
     <Handle type="target" position={Position.Top} className="w-2 h-2" />
     <div className="font-semibold text-cyan-800 text-sm">{data.title || 'Timeline Event'}</div>
@@ -248,6 +303,20 @@ const SimpleTimelineNode = ({ data, onDataChange }: any) => (
     <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
   </div>
 );
+
+// Interface for menu component props
+interface SimplifiedMenuProps {
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
+  onCreateNode: (type: string) => void;
+  onSave: () => void;
+  onLoad: () => void;
+  onClear: () => void;
+  onLoadTemplate: (templateId: string) => void;
+  onLoadSample: (sampleId: string) => void;
+  lastSaved: Date | null;
+  isSaving: boolean;
+}
 
 // Simplified Menu Component with Templates and Samples
 const SimplifiedMenu = ({ 
@@ -261,13 +330,13 @@ const SimplifiedMenu = ({
   onLoadSample,
   lastSaved,
   isSaving
-}: any) => {
+}: SimplifiedMenuProps) => {
   const [activeTab, setActiveTab] = useState('elements');
   
   const nodeTypes = [
-    { type: 'character', label: 'Character', color: 'green', classes: 'border-green-300 bg-green-100 hover:bg-green-200 text-green-800' },
-{ type: 'plot', label: 'Plot', color: 'blue', classes: 'border-blue-300 bg-blue-100 hover:bg-blue-200 text-blue-800' },
-    { type: 'location', label: 'Location', color: 'purple', classes: 'border-purple-300 bg-purple-100 hover:bg-purple-200 text-purple-800' },
+    { type: 'character', label: 'Character', color: 'green' },
+    { type: 'plot', label: 'Plot', color: 'blue' },
+    { type: 'location', label: 'Location', color: 'purple' },
     { type: 'theme', label: 'Theme', color: 'yellow' },
     { type: 'conflict', label: 'Conflict', color: 'red' },
     { type: 'research', label: 'Research', color: 'indigo' },
@@ -767,4 +836,122 @@ const CanvasFlow = () => {
               Array.isArray(data.edges)
             ) {
               setNodes(data.nodes);
-              setEdges(data.
+              setEdges(data.edges);
+              // Restore viewport if available
+              if (data.viewport && reactFlowInstance) {
+                reactFlowInstance.setViewport(data.viewport);
+              }
+            } else {
+              throw new Error('Invalid canvas file format');
+            }
+          } catch (error) {
+            console.error('Error loading file:', error);
+            alert(
+              'Failed to load file: ' +
+                (error instanceof Error ? error.message : 'Invalid file format')
+            );
+          }
+        };
+        reader.onerror = () => {
+          alert('Failed to read file');
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  }, [setNodes, setEdges, reactFlowInstance]);
+
+  const clearCanvas = useCallback(() => {
+    setNodes([]);
+    setEdges([]);
+  }, [setNodes, setEdges]);
+
+  return (
+    <div className="h-screen bg-gray-50 flex">
+      {/* Main Canvas Area */}
+      <div className="flex-1 relative">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          connectionLineType={ConnectionLineType.SmoothStep}
+          fitView
+          className="bg-gray-50"
+          nodesDraggable={true}
+          nodesConnectable={true}
+          elementsSelectable={true}
+        >
+          <Background 
+            variant="dots" 
+            gap={20} 
+            size={1} 
+            color="#d1d5db"
+          />
+          <Controls />
+          <MiniMap 
+            nodeColor={(node) => {
+              switch (node.type) {
+                case 'character': return '#dcfce7';
+                case 'plot': return '#dbeafe';
+                case 'research': return '#e0e7ff';
+                case 'location': return '#f3e8ff';
+                case 'theme': return '#fef3c7';
+                case 'conflict': return '#fee2e2';
+                case 'timeline': return '#cffafe';
+                default: return '#f3f4f6';
+              }
+            }}
+          />
+        </ReactFlow>
+
+        {/* Welcome Message */}
+        {nodes.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center p-8 bg-white rounded-lg shadow-lg border border-gray-200 max-w-md">
+              <div className="text-4xl mb-4">🎨</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Visual Story Canvas
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Create and visualize your story elements with an intuitive node-based interface.
+              </p>
+              <div className="text-sm text-gray-500 space-y-1">
+                <p>• Add characters, plots, locations, and themes</p>
+                <p>• Connect elements to show relationships</p>
+                <p>• Use the menu on the right to get started</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Right Side Menu */}
+      <SimplifiedMenu
+        isCollapsed={isMenuCollapsed}
+        onToggleCollapsed={() => setIsMenuCollapsed(!isMenuCollapsed)}
+        onCreateNode={createNode}
+        onSave={handleSave}
+        onLoad={handleLoad}
+        onClear={clearCanvas}
+        onLoadTemplate={loadTemplate}
+        onLoadSample={loadSample}
+        lastSaved={lastSaved}
+        isSaving={isSaving}
+      />
+    </div>
+  );
+};
+
+// Main Canvas Component with Provider
+const Canvas = () => {
+  return (
+    <ReactFlowProvider>
+      <CanvasFlow />
+    </ReactFlowProvider>
+  );
+};
+
+export default Canvas;
