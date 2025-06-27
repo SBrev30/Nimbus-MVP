@@ -26,7 +26,7 @@ const ProjectsPage = lazy(() => import('./components/projects-page'));
 
 // FIXED: Settings components with proper import handling
 const History = lazy(() => import('./components/History'));
-const Integration = lazy(() => import('./components/Integration'));
+const Integration = lazy(() => import('./Integration'));
 
 // Enhanced loading components with specific messages
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
