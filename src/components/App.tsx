@@ -1,16 +1,15 @@
 import React, { useState, useCallback, Suspense, lazy } from 'react';
-import { Sidebar } from './Sidebar';  // Fixed: removed ./components/
-import { Breadcrumb } from './Breadcrumb';  // Fixed: removed ./components/
-import { Editor } from './Editor';  // Fixed: removed ./components/
-import { NotesPanel } from './NotesPanel';  // Fixed: removed ./components/
-import { KanbanApp } from './KanbanApp';  // Fixed: removed ./components/
-import { StatusDashboard } from './StatusDashboard';  // Fixed: removed ./components/
-import { Files } from './Files';  // Fixed: removed ./components/
-import { ProjectsPage } from './projects-page';  // Fixed: removed ./components/
+import { Sidebar } from './Sidebar';
+import { Breadcrumb } from './Breadcrumb';
+import { Editor } from './Editor';
+import { NotesPanel } from './NotesPanel';
+import { Files } from './Files';
+import { ProjectsPage } from './projects-page';
+import { DashboardPage } from './DashboardPage'; // Import the file-based component
 import { Search } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';  // Fixed: added ../
-import { useAutoSave } from '../hooks/useAutoSave';  // Fixed: added ../
-import { ThemeProvider } from '../contexts/ThemeContext';  // Fixed: added ../
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useAutoSave } from '../hooks/useAutoSave';
+import { ThemeProvider } from '../contexts/ThemeContext';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -30,21 +29,21 @@ interface Note {
 }
 
 // Import planning components
-import { OutlinePage } from './planning/OutlinePage';  // Fixed: removed ./components/
-import { PlotPage } from './planning/PlotPage';  // Fixed: removed ./components/
-import { CharactersPage } from './planning/CharactersPage';  // Fixed: removed ./components/
-import { WorldBuildingPage } from './planning/WorldBuildingPage';  // Fixed: removed ./components/
+import { OutlinePage } from './planning/OutlinePage';
+import { PlotPage } from './planning/PlotPage';
+import { CharactersPage } from './planning/CharactersPage';
+import { WorldBuildingPage } from './planning/WorldBuildingPage';
 
 // Import help components
-import { HelpTopicsPage } from './help/HelpTopicsPage';  // Fixed: removed ./components/
-import { GetStartedPage } from './help/GetStartedPage';  // Fixed: removed ./components/
-import { AskQuestionPage } from './help/AskQuestionPage';  // Fixed: removed ./components/
-import { GetFeedbackPage } from './help/GetFeedbackPage';  // Fixed: removed ./components/
+import { HelpTopicsPage } from './help/HelpTopicsPage';
+import { GetStartedPage } from './help/GetStartedPage';
+import { AskQuestionPage } from './help/AskQuestionPage';
+import { GetFeedbackPage } from './help/GetFeedbackPage';
 
 // Lazy load heavy components
-const Canvas = lazy(() => import('./Canvas').then(module => ({ default: module.default || module })));  // Fixed: removed ./components/
-const Integration = lazy(() => import('./Integration').then(module => ({ default: module.default || module })));  // Fixed: removed ./components/
-const History = lazy(() => import('./History').then(module => ({ default: module.default || module })));  // Fixed: removed ./components/
+const Canvas = lazy(() => import('./Canvas').then(module => ({ default: module.default || module })));
+const Integration = lazy(() => import('./Integration').then(module => ({ default: module.default || module })));
+const History = lazy(() => import('./History').then(module => ({ default: module.default || module })));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -101,40 +100,9 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-// Dashboard Page Component
-const DashboardPage = ({ onViewChange }: { onViewChange?: (view: string) => void }) => (
-  <div className="h-full w-full">
-    {/* Dashboard Header */}
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Project Dashboard</h1>
-          <p className="text-gray-600">Manage your writing projects and track progress</p>
-        </div>
-        <button
-          onClick={() => onViewChange?.('projects')}
-          className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
-        >
-          View All Projects
-        </button>
-      </div>
-    </div>
-
-    {/* Dashboard Content */}
-    <div className="flex-1 p-6">
-      <ErrorBoundary>
-        <Suspense fallback={<LoadingSpinner />}>
-          <KanbanApp />
-        </Suspense>
-      </ErrorBoundary>
-    </div>
-  </div>
-);
-
 // Planning Page Component
 const PlanningPage = ({ onViewChange }: { onViewChange: (view: string) => void }) => (
   <div className="h-full w-full bg-white">
-    {/* Planning Header */}
     <div className="border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
@@ -144,9 +112,7 @@ const PlanningPage = ({ onViewChange }: { onViewChange: (view: string) => void }
       </div>
     </div>
 
-    {/* Planning Grid */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-      {/* Outline Card */}
       <div
         onClick={() => onViewChange('outline')}
         className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -160,7 +126,6 @@ const PlanningPage = ({ onViewChange }: { onViewChange: (view: string) => void }
         <p className="text-gray-600 text-sm">Structure your story with acts, chapters, and scenes</p>
       </div>
 
-      {/* Plot Card */}
       <div
         onClick={() => onViewChange('plot')}
         className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -174,7 +139,6 @@ const PlanningPage = ({ onViewChange }: { onViewChange: (view: string) => void }
         <p className="text-gray-600 text-sm">Develop plot points, conflicts, and story arcs</p>
       </div>
 
-      {/* Characters Card */}
       <div
         onClick={() => onViewChange('characters')}
         className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -188,7 +152,6 @@ const PlanningPage = ({ onViewChange }: { onViewChange: (view: string) => void }
         <p className="text-gray-600 text-sm">Create and develop your story characters</p>
       </div>
 
-      {/* World Building Card */}
       <div
         onClick={() => onViewChange('world-building')}
         className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -208,7 +171,6 @@ const PlanningPage = ({ onViewChange }: { onViewChange: (view: string) => void }
 // Settings Page Component
 const SettingsPage = ({ onViewChange }: { onViewChange: (view: string) => void }) => (
   <div className="h-full w-full bg-white">
-    {/* Settings Header */}
     <div className="border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
@@ -218,9 +180,7 @@ const SettingsPage = ({ onViewChange }: { onViewChange: (view: string) => void }
       </div>
     </div>
 
-    {/* Settings Grid */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-      {/* History Card */}
       <div
         onClick={() => onViewChange('history')}
         className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -234,7 +194,6 @@ const SettingsPage = ({ onViewChange }: { onViewChange: (view: string) => void }
         <p className="text-gray-600 text-sm">View and restore previous versions of your work</p>
       </div>
 
-      {/* Integrations Card */}
       <div
         onClick={() => onViewChange('integrations')}
         className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -254,7 +213,6 @@ const SettingsPage = ({ onViewChange }: { onViewChange: (view: string) => void }
 // Help Page Component
 const HelpPage = ({ onViewChange }: { onViewChange: (view: string) => void }) => (
   <div className="h-full w-full bg-white">
-    {/* Help Header */}
     <div className="border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
@@ -264,9 +222,7 @@ const HelpPage = ({ onViewChange }: { onViewChange: (view: string) => void }) =>
       </div>
     </div>
 
-    {/* Help Grid */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-      {/* Help Topics Card */}
       <div
         onClick={() => onViewChange('help-topics')}
         className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -280,7 +236,6 @@ const HelpPage = ({ onViewChange }: { onViewChange: (view: string) => void }) =>
         <p className="text-gray-600 text-sm">Browse common questions and tutorials</p>
       </div>
 
-      {/* Get Started Card */}
       <div
         onClick={() => onViewChange('get-started')}
         className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -294,7 +249,6 @@ const HelpPage = ({ onViewChange }: { onViewChange: (view: string) => void }) =>
         <p className="text-gray-600 text-sm">Learn the basics and set up your first project</p>
       </div>
 
-      {/* Ask Question Card */}
       <div
         onClick={() => onViewChange('ask-question')}
         className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -308,7 +262,6 @@ const HelpPage = ({ onViewChange }: { onViewChange: (view: string) => void }) =>
         <p className="text-gray-600 text-sm">Get personalized help from our support team</p>
       </div>
 
-      {/* Get Feedback Card */}
       <div
         onClick={() => onViewChange('get-feedback')}
         className="bg-white p-6 rounded-xl border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 group"
@@ -327,13 +280,10 @@ const HelpPage = ({ onViewChange }: { onViewChange: (view: string) => void }) =>
 
 // Main App Component
 function App() {
-  // State management
   const [activeView, setActiveView] = useState('write');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
-  const [currentChapter, setCurrentChapter] = useState<{ id: string; title: string } | null>(null);
 
-  // Use hooks for data management
   const [editorContent, setEditorContent] = useLocalStorage<EditorContent>('editorContent', {
     title: 'Chapter 1',
     content: '',
@@ -343,10 +293,8 @@ function App() {
 
   const [notes, setNotes] = useLocalStorage<Note[]>('notes', []);
 
-  // Auto-save setup
   useAutoSave(editorContent, 'editorContent', 2000);
 
-  // Event handlers
   const handleEditorChange = useCallback((content: any) => {
     setEditorContent(content);
   }, [setEditorContent]);
@@ -371,45 +319,14 @@ function App() {
     setNotes(prev => prev.filter(note => note.id !== id));
   }, [setNotes]);
 
-  const handleBackToWrite = useCallback(() => {
-    setActiveView('write');
-  }, []);
+  const handleBackToWrite = useCallback(() => setActiveView('write'), []);
+  const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
+  const handleBackToSettings = useCallback(() => setActiveView('settings'), []);
+  const handleBackToHelp = useCallback(() => setActiveView('help'), []);
 
-  const handleBackToPlanning = useCallback(() => {
-    setActiveView('planning');
-  }, []);
-
-  const handleBackToSettings = useCallback(() => {
-    setActiveView('settings');
-  }, []);
-
-  const handleBackToHelp = useCallback(() => {
-    setActiveView('help');
-  }, []);
-
-  // Render main content based on active view
   const renderMainContent = () => {
     switch (activeView) {
       case 'write':
-        return (
-          <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 flex flex-col">
-              <Editor
-                content={editorContent}
-                onChange={handleEditorChange}
-              />
-            </div>
-            <NotesPanel
-              notes={notes}
-              onAddNote={handleAddNote}
-              onEditNote={handleEditNote}
-              onDeleteNote={handleDeleteNote}
-              isCollapsed={notesPanelCollapsed}
-              onToggleCollapse={() => setNotesPanelCollapsed(!notesPanelCollapsed)}
-            />
-          </div>
-        );
-
       case 'editor':
         return (
           <div className="flex-1 flex overflow-hidden">
@@ -580,7 +497,6 @@ function App() {
   return (
     <ThemeProvider>
       <div className="h-screen bg-[#FAF9F9] flex overflow-hidden">
-        {/* Sidebar */}
         <Sidebar
           activeView={activeView}
           onViewChange={setActiveView}
@@ -588,12 +504,8 @@ function App() {
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
 
-        {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Breadcrumb */}
           <Breadcrumb activeView={activeView} onViewChange={setActiveView} />
-          
-          {/* Main Content */}
           {renderMainContent()}
         </div>
       </div>
