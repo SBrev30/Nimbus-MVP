@@ -42,9 +42,9 @@ import { AskQuestionPage } from './components/help/AskQuestionPage';
 import { GetFeedbackPage } from './components/help/GetFeedbackPage';
 
 // Lazy load heavy components
-const Canvas = lazy(() => import('./components/Canvas').then(module => ({ default: module.default || module })));
-const Integration = lazy(() => import('./components/Integration').then(module => ({ default: module.default || module })));
-const History = lazy(() => import('./components/History').then(module => ({ default: module.default || module })));
+const Canvas = lazy(() => import('./components/Canvas'));
+const Integration = lazy(() => import('./components/Integration'));
+const History = lazy(() => import('./components/History'));
 
 // Loading component
 const LoadingSpinner = () => (
