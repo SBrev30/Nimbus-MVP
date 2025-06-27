@@ -1,32 +1,32 @@
 import React, { useState, useCallback, Suspense, lazy } from 'react';
-import { Sidebar } from './Sidebar';
-import { Breadcrumb } from './Breadcrumb';
-import { Editor } from './Editor';
-import { NotesPanel } from './NotesPanel';
+import { Sidebar } from './components/Sidebar';
+import { Breadcrumb } from './components/Breadcrumb';
+import { Editor } from './components/Editor';
+import { NotesPanel } from './components/NotesPanel';
 import { Search } from 'lucide-react';
-import { ThemeProvider } from '../contexts/ThemeContext';
-import { AppDataProvider, useAppData } from '../contexts/AppDataContext';
-import { SettingsProvider } from '../contexts/SettingsContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AppDataProvider, useAppData } from './contexts/AppDataContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 // Lightweight immediate components
-import { OutlinePage } from './planning/OutlinePage';
-import { PlotPage } from './planning/PlotPage';
-import { CharactersPage } from './planning/CharactersPage';
-import { WorldBuildingPage } from './planning/WorldBuildingPage';
-import { HelpTopicsPage } from './help/HelpTopicsPage';
-import { GetStartedPage } from './help/GetStartedPage';
-import { AskQuestionPage } from './help/AskQuestionPage';
-import { GetFeedbackPage } from './help/GetFeedbackPage';
+import { OutlinePage } from './components/planning/OutlinePage';
+import { PlotPage } from './components/planning/PlotPage';
+import { CharactersPage } from './components/planning/CharactersPage';
+import { WorldBuildingPage } from './components/planning/WorldBuildingPage';
+import { HelpTopicsPage } from './components/help/HelpTopicsPage';
+import { GetStartedPage } from './components/help/GetStartedPage';
+import { AskQuestionPage } from './components/help/AskQuestionPage';
+import { GetFeedbackPage } from './components/help/GetFeedbackPage';
 
 // Heavy lazy-loaded components
-const Canvas = lazy(() => import('./Canvas'));
-const KanbanApp = lazy(() => import('./KanbanApp'));
-const Files = lazy(() => import('./Files'));
-const ProjectsPage = lazy(() => import('./projects-page'));
+const Canvas = lazy(() => import('./components/Canvas'));
+const KanbanApp = lazy(() => import('./components/KanbanApp'));
+const Files = lazy(() => import('./components/Files'));
+const ProjectsPage = lazy(() => import('./components/projects-page'));
 
 // FIXED: Settings components with proper import handling
-const History = lazy(() => import('./History'));
-const Integration = lazy(() => import('./Integration'));
+const History = lazy(() => import('./components/History'));
+const Integration = lazy(() => import('./components/Integration'));
 
 // Enhanced loading components with specific messages
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
