@@ -4,35 +4,80 @@ import {
   ChevronUp,
   User,
   LogOut,
-  Cloud
+  Cloud,
+  LayoutDashboard,
+  Edit3,
+  Layers,
+  Search,
+  Folder,
+  Settings,
+  HelpCircle,
+  PanelLeftClose
 } from 'lucide-react';
-
-// React Icons imports as specified
-import { RiDashboardHorizontalLine } from "react-icons/ri";
-import { LuTextCursor } from "react-icons/lu";
-import { RiStackLine } from "react-icons/ri";
-import { RxMagnifyingGlass } from "react-icons/rx";
-import { IoFolderOutline } from "react-icons/io5";
-import { IoSettingsOutline } from "react-icons/io5";
-import { IoIosHelpCircleOutline } from "react-icons/io";
-import { GoSidebarCollapse } from "react-icons/go";
 
 // Nimbus Note Logo Component
 const NimbusLogo = ({ isCollapsed }: { isCollapsed: boolean }) => {
   if (isCollapsed) {
     return (
-      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-        <Cloud className="w-5 h-5 text-white" />
-      </div>
+      <svg 
+        version="1.1" 
+        viewBox="0 0 107.5 112.6" 
+        className="w-8 h-8 text-gray-800"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path fill="currentColor" d="M61.8,69.1c-4-3.4-9.2-8-14.7-12.9l0,0C33.8,44.4,18.9,31.5,18.6,31c-0.6-0.7-1.6-0.6-1.8-0.6c-0.1,0,0,0,0,0H4.5
+        c-1.2,0-2.2,1-2.2,2.2v48c0,1.2,1,2.2,2.2,2.2h9.7c0.1,0,0.3,0,0.3-0.3V45.4l0,0l0,0l0,0l0,0c0-0.6,0.6-1,1.2-1s0.4,0,0.6,0.1l0,0
+        l0,0c0,0,0,0,0.1,0l21.8,18.9l0,0l4,3.4l0,0l13.8,12l3.1,2.7l0,0c1.6,1.9,2.5,4.3,2.5,7c0,6.4-5.5,11.6-12.2,11.6
+        s-12.2-5.2-12.2-11.6s1.5-6.2,3.9-8.3s0-0.3,0-0.4l-8.3-7.1c0,0-0.3,0-0.4,0c-4.3,4.2-6.8,9.8-6.8,15.9c0,12.6,10.7,22.7,24.1,22.7
+        S73.7,101,73.7,88.5s-4.3-13.1-4.6-13.4s0,0,0,0c-0.1-0.1-3-2.7-7.1-6.2L61.8,69.1z"/>
+        <path fill="currentColor" d="M45.8,44c4,3.4,9.2,8,14.7,12.9l0,0C73.9,68.6,88.7,81.6,89,82c0.6,0.7,1.8,0.6,1.8,0.6h2.1h1.3h8.9c1.2,0,2.2-1,2.2-2.2
+        v-48c0-1.2-1-2.2-2.2-2.2h-10v37.4l0,0l0,0l0,0l0,0c0,0.6-0.6,1-1.2,1s-0.4,0-0.6-0.1l0,0l0,0c0,0,0,0-0.1,0L69.4,49.6l0,0l-4-3.4
+        l0,0l-13.8-12l-3.1-2.7c-1.6-1.9-2.5-4.3-2.5-7c0-6.4,5.5-11.6,12.2-11.6c6.7,0,12.2,5.2,12.2,11.6s-1.6,6.5-4,8.6l8.8,7.6
+        c4.3-4.2,7-9.8,7-16.2C82,11.9,71.4,1.8,58,1.8S33.9,12.1,33.9,24.5s4.6,13.4,4.6,13.4s2.8,2.5,7.1,6.2L45.8,44z"/>
+      </svg>
     );
   }
   
   return (
-    <div className="flex items-center space-x-2">
-      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-        <Cloud className="w-5 h-5 text-white" />
-      </div>
-      <span className="font-bold text-gray-900">Nimbus Note</span>
+    <div className="flex items-center space-x-3">
+      <svg 
+        version="1.1" 
+        viewBox="0 0 608.8 118" 
+        className="h-8 w-auto text-gray-800"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path fill="currentColor" d="M73.1,74.5c-4-3.4-9.2-8-14.7-12.9l0,0C45,49.9,30.2,36.9,29.9,36.5c-0.6-0.7-1.6-0.6-1.8-0.6c-0.1,0,0,0,0,0H15.8
+        c-1.2,0-2.2,1-2.2,2.2v48c0,1.2,1,2.2,2.2,2.2h9.7c0.1,0,0.3,0,0.3-0.3V50.9l0,0l0,0l0,0l0,0c0-0.6,0.6-1,1.2-1c0.6,0,0.4,0,0.6,0.1
+        l0,0l0,0c0,0,0,0,0.1,0l21.8,18.9l0,0l4,3.4l0,0l13.8,12l3.1,2.7l0,0c1.6,1.9,2.5,4.3,2.5,7c0,6.4-5.5,11.6-12.2,11.6
+        S48.6,100.3,48.6,94s1.5-6.2,3.9-8.3c2.4-2.1,0-0.3,0-0.4l-8.3-7.1c0,0-0.3,0-0.4,0c-4.3,4.2-6.8,9.8-6.8,15.9
+        c0,12.6,10.7,22.7,24.1,22.7S85,106.4,85,94s-4.3-13.1-4.6-13.4c-0.3-0.3,0,0,0,0c-0.1-0.1-3-2.7-7.1-6.2L73.1,74.5z"/>
+        <path fill="currentColor" d="M57,49.4c4,3.4,9.2,8,14.7,12.9l0,0C85.1,74.1,100,87,100.3,87.4c0.6,0.7,1.8,0.6,1.8,0.6h2.1h1.3h8.9c1.2,0,2.2-1,2.2-2.2
+        v-48c0-1.2-1-2.2-2.2-2.2h-10V73l0,0l0,0l0,0l0,0c0,0.6-0.6,1-1.2,1s-0.4,0-0.6-0.1l0,0l0,0c0,0,0,0-0.1,0L80.7,55.1l0,0l-4-3.4l0,0
+        l-13.8-12L59.7,37c-1.6-1.9-2.5-4.3-2.5-7c0-6.4,5.5-11.6,12.2-11.6S81.5,23.6,81.5,30s-1.6,6.5-4,8.6l8.8,7.6c4.3-4.2,7-9.8,7-16.2
+        c0-12.6-10.7-22.7-24.1-22.7S45.2,17.5,45.2,30s4.6,13.4,4.6,13.4s2.8,2.5,7.1,6.2L57,49.4z"/>
+        <g>
+          <path fill="currentColor" d="M150.8,35.9h9.1l22.2,34.6l3.4,6.2l-0.2-40.9h8.7v53h-9.1l-22.2-34.5l-3.4-6.5l0.2,41h-8.7V35.9z"/>
+          <path fill="currentColor" d="M205.2,32.8h8.3v9.4h-8.3V32.8z M205.2,47.4h8.3v41.6h-8.3V47.4z"/>
+          <path fill="currentColor" d="M224,47.4h8.3v5.3c2.7-4.3,6.8-6.4,11.7-6.4c5.5,0,9.7,2.4,11.7,7.2c2.7-4.8,7.3-7.2,12.7-7.2c8.2,0,13.5,5.1,13.5,14.9
+          v27.8h-8.3V62.9c0-6-2.3-9.7-7.4-9.7c-5.6,0-9,5.5-9,11.3v24.4h-8.3V62.9c0-6-2.3-9.7-7.4-9.7c-5.6,0-9,5.5-9,11.3v24.4H224V47.4z"/>
+          <path fill="currentColor" d="M292.4,88.9V32.8h8.3v19.4c2.7-3.8,6.6-5.9,11.3-5.9c10.9,0,17.6,8.2,17.6,21.8c0,14.1-6.8,21.9-17.6,21.9
+          c-4.8,0-8.7-2-11.3-5.7v4.7H292.4z M300.8,68c0,9.5,3.7,14.9,10.2,14.9c6.6,0,10.1-5.2,10.1-14.9c0-9.4-3.7-14.7-10.1-14.7
+          C304.3,53.3,300.8,58.5,300.8,68z"/>
+          <path fill="currentColor" d="M364.4,47.4h8.3v41.6h-8.3v-5.6c-2.7,4.4-7.1,6.6-12.4,6.6c-8.5,0-13.8-5-13.8-14.8V47.4h8.3v26.1c0,6,2.5,9.6,8,9.6
+          c6.1,0,9.8-5.5,9.8-11.3V47.4z"/>
+          <path fill="currentColor" d="M416.4,76.9c0,7.9-7.1,13-17.2,13s-17.2-4.7-18.7-14.6h8.3c0.9,5.2,4.8,8.1,10.6,8.1c5.6,0,8.6-2.5,8.6-6
+          c0-10.4-26.2-1.6-26.2-18.7c0-6.5,5.1-12.5,15.6-12.5c9.3,0,16.1,4.3,17.5,14.7h-8.3c-0.9-5.9-4.2-8-9.5-8c-4.6,0-7.3,2.3-7.3,5.4
+          C389.8,68.9,416.4,60,416.4,76.9z"/>
+          <path fill="currentColor" d="M440.6,35.9h9.1L472,70.5l3.4,6.2l-0.2-40.9h8.7v53h-9.1l-22.2-34.5l-3.4-6.5l0.2,41h-8.7V35.9z"/>
+          <path fill="currentColor" d="M493,68.2c0-14.1,7.6-21.9,19.4-21.9c12.1,0,19.4,8.3,19.4,21.9c0,14-7.6,21.8-19.4,21.8C500.3,89.9,493,81.7,493,68.2z
+          M523.3,68.2c0-9.5-3.9-14.9-10.9-14.9s-10.9,5.2-10.9,14.9c0,9.4,3.9,14.7,10.9,14.7C519.5,82.9,523.3,77.8,523.3,68.2z"/>
+          <path fill="currentColor" d="M541.4,53.8h-5.6v-6.5h5.6v-9.6h8.3v9.6h9v6.5h-9v22.2c0,4.8,1.3,7,7.2,7h1.6v6.1c-0.9,0.5-2.9,0.8-5.2,0.8
+          c-8.1,0-11.9-4.4-11.9-13.4V53.8z"/>
+          <path fill="currentColor" d="M583.1,89.9c-12.2,0-19.7-8.2-19.7-21.8c0-14.1,7.5-21.9,19.3-21.9c12,0,19.3,8.1,19.3,21.5v2h-30.1
+          c0.5,8.5,4.4,13.3,11.2,13.3c5.3,0,9-2.5,10.5-7.6h8.7C600,85,592.8,89.9,583.1,89.9z M572.1,64h21.2c-1-7-4.7-10.8-10.6-10.8
+          C576.7,53.2,573.1,57,572.1,64z"/>
+        </g>
+      </svg>
     </div>
   );
 };
@@ -42,8 +87,8 @@ const UserAvatar = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const initials = "SB"; // SBrev30 initials
   
   return (
-    <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300`}>
-      <span className="text-gray-700 font-semibold text-sm">{initials}</span>
+    <div className={`${isCollapsed ? 'w-6 h-6' : 'w-8 h-8'} bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300`}>
+      <span className={`text-gray-700 font-semibold ${isCollapsed ? 'text-xs' : 'text-sm'}`}>{initials}</span>
     </div>
   );
 };
@@ -52,7 +97,7 @@ const UserAvatar = ({ isCollapsed }: { isCollapsed: boolean }) => {
 const Tooltip = ({ content, children }: { content: string; children: React.ReactNode }) => (
   <div className="relative group">
     {children}
-    <div className="absolute left-16 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[60] whitespace-nowrap">
+    <div className="absolute left-16 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100] whitespace-nowrap">
       {content}
     </div>
   </div>
@@ -68,7 +113,7 @@ const CollapsedDropdownMenu = ({
   onItemClick: (view: string) => void;
   activeView: string;
 }) => (
-  <div className="absolute left-16 top-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-[60] w-48">
+  <div className="absolute left-16 top-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-[100] w-48">
     <div className="px-3 py-2 text-sm font-semibold text-gray-900 border-b border-gray-100">
       {item.label}
     </div>
@@ -117,12 +162,12 @@ const menuItems: MenuItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: RiDashboardHorizontalLine,
+    icon: LayoutDashboard,
   },
   {
     id: 'write',
     label: 'Write',
-    icon: LuTextCursor,
+    icon: Edit3,
     hasDropdown: true,
     subItems: [
       { id: 'projects', label: 'Projects' }
@@ -131,13 +176,12 @@ const menuItems: MenuItem[] = [
   {
     id: 'canvas',
     label: 'Canvas',
-    icon: RiStackLine,
-    isNew: true
+    icon: Layers
   },
   {
     id: 'planning',
     label: 'Planning',
-    icon: RxMagnifyingGlass,
+    icon: Search,
     hasDropdown: true,
     subItems: [
       { id: 'outline', label: 'Outline' },
@@ -149,12 +193,12 @@ const menuItems: MenuItem[] = [
   {
     id: 'files',
     label: 'Files',
-    icon: IoFolderOutline,
+    icon: Folder,
   },
   {
     id: 'settings',
     label: 'Settings',
-    icon: IoSettingsOutline,
+    icon: Settings,
     hasDropdown: true,
     subItems: [
       { id: 'history', label: 'History' },
@@ -164,7 +208,7 @@ const menuItems: MenuItem[] = [
   {
     id: 'help',
     label: 'Help & Support',
-    icon: IoIosHelpCircleOutline,
+    icon: HelpCircle,
     hasDropdown: true,
     subItems: [
       { id: 'help-topics', label: 'Help Topics' },
@@ -205,23 +249,17 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
       <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
         isCollapsed ? 'w-16' : 'w-64'
-      } flex flex-col`}>
+      } flex flex-col flex-shrink-0`}>
         
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-center">
             <NimbusLogo isCollapsed={isCollapsed} />
-            {!isCollapsed && (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            )}
           </div>
-          {!isCollapsed && (
-            <div className="mt-2 text-sm text-gray-500">Visual Story Canvas</div>
-          )}
         </div>
 
         {/* Navigation */}
@@ -237,7 +275,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
                     <Tooltip content={item.label}>
                       <button
                         onClick={() => handleItemClick(item.id)}
-                        className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 ${
+                        className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
                           isActive 
                             ? 'bg-gray-100 text-gray-900' 
                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -334,8 +372,8 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
         <div className="border-t border-gray-200">
           {/* User profile */}
           <div className="p-3">
-            <div className={`flex items-center space-x-3 p-3 rounded-lg bg-gray-50 ${
-              isCollapsed ? 'justify-center' : ''
+            <div className={`flex items-center p-3 rounded-lg bg-gray-50 ${
+              isCollapsed ? 'justify-center' : 'space-x-3'
             }`}>
               <UserAvatar isCollapsed={isCollapsed} />
               {!isCollapsed && (
@@ -369,7 +407,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
                   onClick={() => setIsCollapsed(false)}
                   className="w-full flex justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
                 >
-                  <GoSidebarCollapse className="w-4 h-4 rotate-180" />
+                  <PanelLeftClose className="w-4 h-4 rotate-180" />
                 </button>
               </Tooltip>
             ) : (
@@ -377,7 +415,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
                 onClick={() => setIsCollapsed(true)}
                 className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
               >
-                <GoSidebarCollapse className="w-4 h-4" />
+                <PanelLeftClose className="w-4 h-4" />
                 <span className="font-medium">Collapse</span>
               </button>
             )}
@@ -405,10 +443,25 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
               <li>✅ Tooltips when collapsed</li>
               <li>✅ Mini dropdown menus for collapsed state</li>
               <li>✅ User profile section with non-gradient avatar</li>
-              <li>✅ Responsive icons with React Icons</li>
-              <li>✅ New badge for Canvas</li>
+              <li>✅ User profile section with non-gradient avatar</li>
+              <li>✅ Responsive icons with Lucide React</li>
+              <li>✅ Collapse button with border and hover shadow</li>
               <li>✅ Collapse button with border and hover shadow</li>
             </ul>
+
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-2">Icon Mappings (Lucide React)</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm text-blue-800">
+                <div>Dashboard: LayoutDashboard</div>
+                <div>Write: Edit3</div>
+                <div>Canvas: Layers</div>
+                <div>Planning: Search</div>
+                <div>Files: Folder</div>
+                <div>Settings: Settings</div>
+                <div>Help: HelpCircle</div>
+                <div>Collapse: PanelLeftClose</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
