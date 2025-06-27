@@ -128,9 +128,16 @@ export default function Integration({ onBack }: { onBack: () => void }) {
       if (!stored) {
         const oldData = localStorage.getItem('app-integrations');
         if (oldData) {
-          localStorage.setItem('writer-integrations', oldData);
-          localStorage.removeItem('app-integrations');
-          stored = oldData;
+          try { 
+// Validate JSON before migration 
+JSON.parse(oldData); 
+localStorage.setItem('writer-integrations', oldData); 
+localStorage.removeItem('app-integrations'); 
+stored = oldData; 
+} catch (parseError) { 
+console.error('Failed to migrate legacy data - invalid JSON:', parseError); 
+stored = null; 
+}
         }
       }
       
