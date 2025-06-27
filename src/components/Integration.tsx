@@ -13,7 +13,7 @@ import {
   Key,
   Shield,
   ExternalLink,
-  Refresh
+  RotateCcw // Changed from Refresh to RotateCcw
 } from 'lucide-react';
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 
@@ -76,72 +76,53 @@ const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
     icon: 'zap',
     configSchema: [
       { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'sk-...' },
-      { key: 'model', label: 'Model', type: 'select', required: true, options: ['gpt-4', 'gpt-3.5-turbo'] }
+      { key: 'model', label: 'Model', type: 'select', required: true, options: ['gpt-4', 'gpt-3.5-turbo'], placeholder: 'Choose model' }
     ]
   },
   {
     id: 'claude_ai',
     name: 'Claude AI',
     type: 'ai_service',
-    description: 'Use Claude AI for writing assistance and feedback',
+    description: 'Advanced AI writing assistance and analysis',
     icon: 'zap',
     configSchema: [
       { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'Enter your Claude API key' }
     ]
   },
   {
-    id: 'kindle_direct',
-    name: 'Kindle Direct Publishing',
-    type: 'publishing',
-    description: 'Prepare and format your work for Kindle Direct Publishing',
-    icon: 'globe',
+    id: 'github',
+    name: 'GitHub',
+    type: 'backup',
+    description: 'Version control and backup your writing projects',
+    icon: 'cloud',
     configSchema: [
-      { key: 'email', label: 'KDP Email', type: 'text', required: true, placeholder: 'your@email.com' },
-      { key: 'authorName', label: 'Author Name', type: 'text', required: true, placeholder: 'Your pen name' }
-    ]
-  },
-  {
-    id: 'analytics',
-    name: 'Writing Analytics',
-    type: 'analytics',
-    description: 'Track your writing progress and productivity metrics',
-    icon: 'database',
-    configSchema: [
-      { key: 'trackingId', label: 'Tracking ID', type: 'text', required: true, placeholder: 'UA-XXXXXXXXX-X' }
+      { key: 'token', label: 'Personal Access Token', type: 'password', required: true, placeholder: 'ghp_...' },
+      { key: 'repository', label: 'Repository', type: 'text', required: true, placeholder: 'username/repository-name' }
     ]
   }
 ];
 
-const Integration: React.FC = () => {
+export default function Integration({ onBack }: { onBack: () => void }) {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<IntegrationTemplate | null>(null);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
   const [config, setConfig] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(true);
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
-  // Auto-save integrations
-  const { forceSave } = useUnifiedAutoSave(
-    integrations,
-    'current-user', // Replace with actual user ID
-    {
-      localKey: 'app-integrations',
-      enableCloud: true,
-      onSaveError: (error) => console.error('Failed to save integrations:', error)
-    }
-  );
+  const { saveData } = useUnifiedAutoSave();
 
   useEffect(() => {
     loadIntegrations();
   }, []);
 
   const loadIntegrations = async () => {
-    setIsLoading(true);
     try {
-      const stored = localStorage.getItem('app-integrations');
-      const loadedIntegrations: Integration[] = stored ? JSON.parse(stored) : [];
+      const stored = localStorage.getItem('writer-integrations');
+      const loadedIntegrations = stored ? JSON.parse(stored) : [];
       
       // Add built-in integrations if they don't exist
       const builtInIntegrations: Integration[] = [
@@ -160,7 +141,7 @@ const Integration: React.FC = () => {
 
       const mergedIntegrations = [
         ...builtInIntegrations,
-        ...loadedIntegrations.filter(integration => !integration.isBuiltIn)
+        ...loadedIntegrations.filter((integration: Integration) => !integration.isBuiltIn)
       ];
 
       setIntegrations(mergedIntegrations);
@@ -242,76 +223,67 @@ const Integration: React.FC = () => {
     setTimeout(() => {
       setIntegrations(prev => prev.map(integration =>
         integration.id === integrationId
-          ? { ...integration, status: 'connected' as const, lastSync: new Date(), errorMessage: undefined }
+          ? { ...integration, status: 'connected' as const, lastSync: new Date() }
           : integration
       ));
       setTestingConnection(null);
+      saveIntegrations();
     }, 2000);
   };
 
-  const saveIntegration = async () => {
+  const refreshIntegration = async (integrationId: string) => {
+    setTestingConnection(integrationId);
+    
+    // Simulate refresh
+    setTimeout(() => {
+      setIntegrations(prev => prev.map(integration =>
+        integration.id === integrationId
+          ? { ...integration, lastSync: new Date() }
+          : integration
+      ));
+      setTestingConnection(null);
+      saveIntegrations();
+    }, 1000);
+  };
+
+  const saveIntegrations = () => {
+    const integrationsToSave = integrations.filter(integration => !integration.isBuiltIn);
+    localStorage.setItem('writer-integrations', JSON.stringify(integrationsToSave));
+    saveData('integrations', integrationsToSave);
+  };
+
+  const handleSaveIntegration = () => {
     if (!selectedTemplate) return;
 
-    // Validate required fields
-    const missingFields = selectedTemplate.configSchema
-      .filter(field => field.required && !config[field.key])
-      .map(field => field.label);
-
-    if (missingFields.length > 0) {
-      alert(`Please fill in required fields: ${missingFields.join(', ')}`);
-      return;
-    }
-
-    const integrationData: Integration = {
-      id: editingIntegration?.id || Date.now().toString(),
+    const newIntegration: Integration = {
+      id: editingIntegration?.id || `${selectedTemplate.id}_${Date.now()}`,
       name: selectedTemplate.name,
       type: selectedTemplate.type,
       status: 'pending',
       description: selectedTemplate.description,
       icon: selectedTemplate.icon,
-      config: { ...config }
+      config: config
     };
 
     if (editingIntegration) {
-      // Update existing integration
       setIntegrations(prev => prev.map(integration =>
-        integration.id === editingIntegration.id ? integrationData : integration
+        integration.id === editingIntegration.id ? newIntegration : integration
       ));
     } else {
-      // Add new integration
-      setIntegrations(prev => [...prev, integrationData]);
+      setIntegrations(prev => [...prev, newIntegration]);
     }
-
-    // Test connection automatically
-    setTimeout(() => testConnection(integrationData.id), 500);
 
     setShowConfigModal(false);
     setSelectedTemplate(null);
     setEditingIntegration(null);
     setConfig({});
+    saveIntegrations();
   };
 
-  const deleteIntegration = (id: string) => {
-    if (confirm('Are you sure you want to remove this integration?')) {
-      setIntegrations(prev => prev.filter(integration => integration.id !== id));
-    }
-  };
-
-  const syncIntegration = async (id: string) => {
-    setIntegrations(prev => prev.map(integration =>
-      integration.id === id
-        ? { ...integration, status: 'pending' as const }
-        : integration
-    ));
-
-    // Simulate sync process
-    setTimeout(() => {
-      setIntegrations(prev => prev.map(integration =>
-        integration.id === id
-          ? { ...integration, status: 'connected' as const, lastSync: new Date() }
-          : integration
-      ));
-    }, 2000);
+  const deleteIntegration = (integrationId: string) => {
+    setIntegrations(prev => prev.filter(integration => integration.id !== integrationId));
+    setShowDeleteConfirm(null);
+    saveIntegrations();
   };
 
   if (isLoading) {
@@ -326,13 +298,13 @@ const Integration: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 bg-white rounded-t-[17px] flex flex-col">
+    <div className="flex-1 flex flex-col bg-[#FAF9F9] rounded-t-[17px] overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 p-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Settings className="w-6 h-6 text-[#A5F7AC]" />
-            <h1 className="text-xl font-semibold text-gray-900">Integrations</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
+            <p className="text-gray-600 mt-1">Connect external services to enhance your writing workflow</p>
           </div>
           <button
             onClick={openAddModal}
@@ -342,10 +314,9 @@ const Integration: React.FC = () => {
             <span>Add Integration</span>
           </button>
         </div>
-        <p className="text-gray-600 mt-2">Connect external services to enhance your writing workflow</p>
       </div>
 
-      {/* Integrations List */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {integrations.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -392,49 +363,49 @@ const Integration: React.FC = () => {
 
                       {integration.errorMessage && (
                         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-red-700 text-sm">{integration.errorMessage}</p>
+                          <p className="text-sm text-red-700">{integration.errorMessage}</p>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2 ml-4">
-                    {integration.status === 'connected' && (
-                      <button
-                        onClick={() => syncIntegration(integration.id)}
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                        title="Sync now"
-                      >
-                        <Refresh className="w-4 h-4" />
-                      </button>
-                    )}
-                    
-                    {integration.status === 'error' && (
-                      <button
-                        onClick={() => testConnection(integration.id)}
-                        disabled={testingConnection === integration.id}
-                        className="px-3 py-1 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
-                      >
-                        {testingConnection === integration.id ? 'Testing...' : 'Retry'}
-                      </button>
-                    )}
-
                     {!integration.isBuiltIn && (
                       <>
                         <button
+                          onClick={() => refreshIntegration(integration.id)}
+                          disabled={testingConnection === integration.id}
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Refresh connection"
+                        >
+                          <RotateCcw className={`w-4 h-4 ${testingConnection === integration.id ? 'animate-spin' : ''}`} />
+                        </button>
+                        
+                        <button
                           onClick={() => {
-                            const template = INTEGRATION_TEMPLATES.find(t => t.name === integration.name);
+                            const template = INTEGRATION_TEMPLATES.find(t => t.id === integration.id.split('_')[0]);
                             if (template) openConfigModal(template, integration);
                           }}
-                          className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                          title="Edit settings"
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Edit configuration"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
+
+                        {integration.status === 'pending' && (
+                          <button
+                            onClick={() => testConnection(integration.id)}
+                            disabled={testingConnection === integration.id}
+                            className="px-3 py-1 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors"
+                          >
+                            {testingConnection === integration.id ? 'Testing...' : 'Test'}
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => deleteIntegration(integration.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                          title="Remove integration"
+                          onClick={() => setShowDeleteConfirm(integration.id)}
+                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-lg transition-colors"
+                          title="Delete integration"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -450,41 +421,40 @@ const Integration: React.FC = () => {
 
       {/* Add Integration Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Add Integration</h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {INTEGRATION_TEMPLATES.map((template) => (
-                  <div
-                    key={template.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => openConfigModal(template)}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 p-2 bg-gray-100 rounded-lg">
-                        {getIntegrationIcon(template.icon)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-1">{template.name}</h3>
-                        <p className="text-xs text-gray-600 mb-2">{template.description}</p>
-                        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded capitalize">
-                          {template.type.replace('_', ' ')}
-                        </span>
-                      </div>
-                      <ExternalLink className="w-4 h-4 text-gray-400" />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Add New Integration</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {INTEGRATION_TEMPLATES.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => openConfigModal(template)}
+                  className="p-4 border border-gray-200 rounded-lg hover:border-[#A5F7AC] hover:bg-green-50 transition-colors text-left"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      {getIntegrationIcon(template.icon)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{template.description}</p>
+                      <span className="inline-block mt-2 px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">
+                        {template.type.replace('_', ' ')}
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -492,94 +462,90 @@ const Integration: React.FC = () => {
 
       {/* Configuration Modal */}
       {showConfigModal && selectedTemplate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {getIntegrationIcon(selectedTemplate.icon)}
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {editingIntegration ? 'Edit' : 'Configure'} {selectedTemplate.name}
-                </h2>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {editingIntegration ? 'Edit' : 'Configure'} {selectedTemplate.name}
+            </h2>
+            
+            <div className="space-y-4">
+              {selectedTemplate.configSchema.map((field) => (
+                <div key={field.key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  
+                  {field.type === 'select' ? (
+                    <select
+                      value={config[field.key] || ''}
+                      onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                      required={field.required}
+                    >
+                      <option value="">{field.placeholder}</option>
+                      {field.options?.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type}
+                      value={config[field.key] || ''}
+                      onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      placeholder={field.placeholder}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                      required={field.required}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
               <button
                 onClick={() => setShowConfigModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                ×
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveIntegration}
+                className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
+              >
+                {editingIntegration ? 'Update' : 'Add'} Integration
               </button>
             </div>
-            <div className="p-6 overflow-y-auto">
-              <p className="text-gray-600 mb-6">{selectedTemplate.description}</p>
-              
-              <div className="space-y-4">
-                {selectedTemplate.configSchema.map((field) => (
-                  <div key={field.key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {field.label}
-                      {field.required && <span className="text-red-500 ml-1">*</span>}
-                    </label>
-                    
-                    {field.type === 'select' ? (
-                      <select
-                        value={config[field.key] || ''}
-                        onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                      >
-                        <option value="">Select {field.label.toLowerCase()}</option>
-                        {field.options?.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="relative">
-                        <input
-                          type={field.type === 'password' ? 'password' : 'text'}
-                          value={config[field.key] || ''}
-                          onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
-                          placeholder={field.placeholder}
-                          className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                        />
-                        {field.type === 'password' && (
-                          <Key className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+          </div>
+        </div>
+      )}
 
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-medium text-blue-900 mb-1">Security Notice</h4>
-                    <p className="text-sm text-blue-700">
-                      Your API keys and credentials are stored securely and encrypted. They are only used to connect to your chosen services.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowConfigModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={saveIntegration}
-                  className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
-                >
-                  {editingIntegration ? 'Update' : 'Connect'} Integration
-                </button>
-              </div>
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Delete Integration</h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this integration? This action cannot be undone.
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteIntegration(showDeleteConfirm)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
       )}
     </div>
   );
-};
-
-export default Integration;
+}
