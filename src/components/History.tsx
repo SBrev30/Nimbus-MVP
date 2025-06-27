@@ -1,439 +1,372 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, FileText, Users, RotateCcw, Trash2, Eye, Search, Filter, Download, StickyNote, FolderOpen } from 'lucide-react';
+import { Clock, Edit, Plus, Trash2, FileText, User, MapPin, Zap } from 'lucide-react';
 
 interface HistoryEntry {
   id: string;
-  type: 'chapter' | 'note' | 'character' | 'project';
+  type: 'create' | 'edit' | 'delete';
+  target: 'chapter' | 'character' | 'note' | 'project';
   title: string;
-  action: 'created' | 'updated' | 'deleted';
-  content?: string;
+  description: string;
   timestamp: Date;
-  wordCount?: number;
-  chapterNumber?: number;
-  metadata?: Record<string, unknown>;
+  details?: {
+    wordCountChange?: number;
+    charactersAffected?: string[];
+    tagsModified?: string[];
+  };
 }
 
-interface HistoryFilter {
-  type: 'all' | 'chapter' | 'note' | 'character' | 'project';
-  action: 'all' | 'created' | 'updated' | 'deleted';
-  dateRange: 'all' | 'today' | 'week' | 'month';
+interface HistoryProps {
+  onBack: () => void;
 }
 
-const History: React.FC = () => {
+const History: React.FC<HistoryProps> = ({ onBack }) => {
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
-  const [filteredEntries, setFilteredEntries] = useState<HistoryEntry[]>([]);
-  const [selectedEntry, setSelectedEntry] = useState<HistoryEntry | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<HistoryFilter>({
-    type: 'all',
-    action: 'all',
-    dateRange: 'all'
-  });
   const [isLoading, setIsLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'create' | 'edit' | 'delete'>('all');
 
-  // Load history from storage on mount
   useEffect(() => {
     loadHistoryData();
   }, []);
 
-  // Filter entries whenever filter or search changes
-  useEffect(() => {
-    applyFilters();
-  }, [historyEntries, filter, searchQuery]);
-
   const loadHistoryData = async () => {
     setIsLoading(true);
-    try {
-      // Load from localStorage first, then enhance with any cloud data
-      const localHistory = localStorage.getItem('app-history');
-      const entries: HistoryEntry[] = localHistory ? JSON.parse(localHistory) : [];
-      
-      // Validate entries structure
-      if (!Array.isArray(entries)) {
-        throw new Error('Invalid history data format');
+    
+    // Simulate loading from local storage or API
+    const mockHistory: HistoryEntry[] = [
+      {
+        id: '1',
+        type: 'edit',
+        target: 'chapter',
+        title: 'Chapter 3: The Discovery',
+        description: 'Updated character dialogue and added 347 words',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        details: {
+          wordCountChange: 347,
+          charactersAffected: ['Sarah', 'Marcus']
+        }
+      },
+      {
+        id: '2',
+        type: 'create',
+        target: 'character',
+        title: 'Elena Rodriguez',
+        description: 'Created new supporting character with background',
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+        details: {
+          tagsModified: ['detective', 'mentor']
+        }
+      },
+      {
+        id: '3',
+        type: 'edit',
+        target: 'note',
+        title: 'World Building: Magic System',
+        description: 'Refined magic system rules and limitations',
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+        details: {
+          tagsModified: ['magic', 'rules', 'limitations']
+        }
+      },
+      {
+        id: '4',
+        type: 'create',
+        target: 'chapter',
+        title: 'Chapter 12: Resolution',
+        description: 'Started new chapter with opening scene',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        details: {
+          wordCountChange: 523
+        }
+      },
+      {
+        id: '5',
+        type: 'delete',
+        target: 'character',
+        title: 'Thomas the Merchant',
+        description: 'Removed minor character - merged with existing character',
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       }
-      
-      // Convert date strings back to Date objects
-      const processedEntries = entries.map(entry => ({
-        ...entry,
-        timestamp: new Date(entry.timestamp)
-      })).filter(entry =>
-        entry.id &&
-        entry.type &&
-        entry.title &&
-        entry.action &&
-        entry.timestamp instanceof Date &&
-        !isNaN(entry.timestamp.getTime())
-      );
+    ];
 
-      setHistoryEntries(processedEntries);
-    } catch (error) {
-      console.error('Failed to load history:', error);
-      setHistoryEntries([]);
-    } finally {
+    // Simulate network delay
+    setTimeout(() => {
+      setHistoryEntries(mockHistory);
       setIsLoading(false);
-    }
+    }, 800);
   };
 
-  const applyFilters = () => {
-    let filtered = [...historyEntries];
+  const getFilteredEntries = () => {
+    let filtered = historyEntries;
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(entry =>
-        entry.title.toLowerCase().includes(query) ||
-        entry.content?.toLowerCase().includes(query)
-      );
-    }
-
-    // Apply type filter
-    if (filter.type !== 'all') {
-      filtered = filtered.filter(entry => entry.type === filter.type);
-    }
-
-    // Apply action filter
-    if (filter.action !== 'all') {
-      filtered = filtered.filter(entry => entry.action === filter.action);
-    }
-
-    // Apply date range filter
-    if (filter.dateRange !== 'all') {
+    // Time filter
+    if (timeFilter !== 'all') {
       const now = new Date();
-      const startDate = new Date();
-
-      switch (filter.dateRange) {
+      const cutoff = new Date();
+      
+      switch (timeFilter) {
         case 'today':
-          startDate.setHours(0, 0, 0, 0);
+          cutoff.setHours(0, 0, 0, 0);
           break;
         case 'week':
-          startDate.setDate(now.getDate() - 7);
+          cutoff.setDate(now.getDate() - 7);
           break;
         case 'month':
-          startDate.setMonth(now.getMonth() - 1);
+          cutoff.setMonth(now.getMonth() - 1);
           break;
       }
-
-      filtered = filtered.filter(entry => entry.timestamp >= startDate);
+      
+      filtered = filtered.filter(entry => entry.timestamp >= cutoff);
     }
 
-    // Sort by timestamp (newest first)
-    filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    // Type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(entry => entry.type === typeFilter);
+    }
 
-    setFilteredEntries(filtered);
+    return filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   };
 
-  const getEntryIcon = (type: string) => {
-    switch (type) {
+  const getIcon = (type: HistoryEntry['type'], target: HistoryEntry['target']) => {
+    const iconProps = { className: "w-4 h-4" };
+    
+    if (type === 'create') {
+      return <Plus {...iconProps} className="w-4 h-4 text-green-600" />;
+    } else if (type === 'delete') {
+      return <Trash2 {...iconProps} className="w-4 h-4 text-red-600" />;
+    } else {
+      return <Edit {...iconProps} className="w-4 h-4 text-blue-600" />;
+    }
+  };
+
+  const getTargetIcon = (target: HistoryEntry['target']) => {
+    const iconProps = { className: "w-4 h-4 text-gray-500" };
+    
+    switch (target) {
       case 'chapter':
-        return <FileText className="w-4 h-4" />;
+        return <FileText {...iconProps} />;
       case 'character':
-        return <Users className="w-4 h-4" />;
+        return <User {...iconProps} />;
       case 'note':
-        return <StickyNote className="w-4 h-4" />;
+        return <MapPin {...iconProps} />;
       case 'project':
-        return <FolderOpen className="w-4 h-4" />;
+        return <Zap {...iconProps} />;
       default:
-        return <FileText className="w-4 h-4" />;
+        return <FileText {...iconProps} />;
     }
   };
 
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case 'created':
-        return 'text-green-600 bg-green-50';
-      case 'updated':
-        return 'text-blue-600 bg-blue-50';
-      case 'deleted':
-        return 'text-red-600 bg-red-50';
+  const getTypeColor = (type: HistoryEntry['type']) => {
+    switch (type) {
+      case 'create':
+        return 'bg-green-50 border-green-200';
+      case 'delete':
+        return 'bg-red-50 border-red-200';
+      case 'edit':
+        return 'bg-blue-50 border-blue-200';
       default:
-        return 'text-gray-600 bg-gray-50';
+        return 'bg-gray-50 border-gray-200';
     }
   };
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
-    const hours = diff / (1000 * 60 * 60);
+    const diffMs = now.getTime() - timestamp.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
 
-    if (hours < 1) {
-      const minutes = Math.floor(diff / (1000 * 60));
-      return `${minutes}m ago`;
-    } else if (hours < 24) {
-      return `${Math.floor(hours)}h ago`;
+    if (diffHours < 1) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return `${diffMinutes} minutes ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hours ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
     } else {
       return timestamp.toLocaleDateString();
     }
   };
 
-  // Add state to control the confirmation modal
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-
-  // Trigger the confirmation modal instead of browser confirm
-  const clearHistory = () => {
-    setShowClearConfirm(true);
-  };
-
-  // Perform the actual clear when user confirms
-  const confirmClearHistory = () => {
-    setHistoryEntries([]);
-    localStorage.removeItem('app-history');
-    setShowClearConfirm(false);
-  };
-
-  const exportHistory = () => {
-    const dataStr = JSON.stringify(historyEntries, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `writersblock-history-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#889096]">Loading history...</p>
-        </div>
-      </div>
-    );
-  }
+  const filteredEntries = getFilteredEntries();
 
   return (
-    <div className="flex-1 bg-white rounded-t-[17px] flex flex-col">
+    <div className="flex-1 bg-white rounded-t-[17px] overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Clock className="w-6 h-6 text-[#A5F7AC]" />
-            <h1 className="text-xl font-semibold text-gray-900">History</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Activity History</h1>
+            <p className="text-gray-600 mt-1">Track your writing progress and changes</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-lg transition-colors ${
-                showFilters ? 'bg-[#A5F7AC] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              <Filter className="w-4 h-4" />
-            </button>
-            <button
-              onClick={exportHistory}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-700"
-              title="Export History"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <button
-              onClick={clearHistory}
-              className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600"
-              title="Clear History"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            onClick={onBack}
+            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            Back to Settings
+          </button>
         </div>
-
-        {/* Search Bar */}
-        <div className="mt-4 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search history..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-          />
-        </div>
-
-        {/* Filters */}
-        {showFilters && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg space-y-3">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select
-                  value={filter.type}
-                  onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value as HistoryFilter['type'] }))}
-                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A5F7AC]"
-                >
-                  <option value="all">All Types</option>
-                  <option value="chapter">Chapters</option>
-                  <option value="character">Characters</option>
-                  <option value="note">Notes</option>
-                  <option value="project">Projects</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Action</label>
-                <select
-                  value={filter.action}
-                  onChange={(e) => setFilter(prev => ({ ...prev, action: e.target.value as any }))}
-                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A5F7AC]"
-                >
-                  <option value="all">All Actions</option>
-                  <option value="created">Created</option>
-                  <option value="updated">Updated</option>
-                  <option value="deleted">Deleted</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-                <select
-                  value={filter.dateRange}
-                  onChange={(e) => setFilter(prev => ({ ...prev, dateRange: e.target.value as any }))}
-                  className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A5F7AC]"
-                >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">Past Week</option>
-                  <option value="month">Past Month</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* History List */}
+      {/* Filters */}
+      <div className="p-6 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Time:</span>
+            <select
+              value={timeFilter}
+              onChange={(e) => setTimeFilter(e.target.value as any)}
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+            >
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="week">Past week</option>
+              <option value="month">Past month</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">Type:</span>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as any)}
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+            >
+              <option value="all">All actions</option>
+              <option value="create">Created</option>
+              <option value="edit">Edited</option>
+              <option value="delete">Deleted</option>
+            </select>
+          </div>
+
+          <div className="ml-auto text-sm text-gray-500">
+            {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {filteredEntries.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading history...</p>
+            </div>
+          </div>
+        ) : filteredEntries.length === 0 ? (
+          <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No history found</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No activity found</h3>
               <p className="text-gray-600">
-                {searchQuery || filter.type !== 'all' || filter.action !== 'all' || filter.dateRange !== 'all'
-                  ? 'Try adjusting your filters or search terms'
-                  : 'Your editing history will appear here as you work on your project'
+                {timeFilter !== 'all' || typeFilter !== 'all' 
+                  ? 'Try adjusting your filters to see more results.'
+                  : 'Your writing activity will appear here as you work.'
                 }
               </p>
             </div>
           </div>
         ) : (
-          <div className="p-6 space-y-4">
-            {filteredEntries.map((entry) => (
-              <div
-                key={entry.id}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedEntry(entry)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3 flex-1">
-                    <div className="flex-shrink-0 p-2 bg-gray-100 rounded-lg">
-                      {getEntryIcon(entry.type)}
+          <div className="p-6">
+            <div className="space-y-4">
+              {filteredEntries.map((entry) => (
+                <div
+                  key={entry.id}
+                  className={`border rounded-lg p-4 transition-shadow hover:shadow-md ${getTypeColor(entry.type)}`}
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0 flex items-center space-x-2">
+                      {getIcon(entry.type, entry.target)}
+                      {getTargetIcon(entry.target)}
                     </div>
+                    
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">
                           {entry.title}
                         </h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(entry.action)}`}>
-                          {entry.action}
+                        <span className="text-sm text-gray-500 flex-shrink-0 ml-2">
+                          {formatTimestamp(entry.timestamp)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {entry.type === 'chapter' && entry.chapterNumber && `Chapter ${entry.chapterNumber} • `}
-                        {entry.wordCount && `${entry.wordCount} words • `}
-                        {formatTimestamp(entry.timestamp)}
-                      </p>
-                      {entry.content && (
-                        <p className="text-sm text-gray-500 line-clamp-2">
-                          {entry.content.substring(0, 120)}...
-                        </p>
+                      
+                      <p className="text-gray-700 mb-3">{entry.description}</p>
+                      
+                      {entry.details && (
+                        <div className="flex items-center space-x-4 text-sm text-gray-600">
+                          {entry.details.wordCountChange && (
+                            <span className="flex items-center space-x-1">
+                              <FileText className="w-3 h-3" />
+                              <span>
+                                {entry.details.wordCountChange > 0 ? '+' : ''}
+                                {entry.details.wordCountChange} words
+                              </span>
+                            </span>
+                          )}
+                          
+                          {entry.details.charactersAffected && (
+                            <span className="flex items-center space-x-1">
+                              <User className="w-3 h-3" />
+                              <span>
+                                Characters: {entry.details.charactersAffected.join(', ')}
+                              </span>
+                            </span>
+                          )}
+                          
+                          {entry.details.tagsModified && (
+                            <span className="flex items-center space-x-1">
+                              <span className="w-3 h-3 text-center">#</span>
+                              <span>
+                                Tags: {entry.details.tagsModified.join(', ')}
+                              </span>
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedEntry(entry);
-                    }}
-                    className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
                 </div>
+              ))}
+            </div>
+            
+            {/* Load More Button (if needed) */}
+            {filteredEntries.length >= 10 && (
+              <div className="mt-6 text-center">
+                <button className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                  Load More History
+                </button>
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
 
-      {/* Entry Detail Modal */}
-      {selectedEntry && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">History Entry Details</h2>
-               <h2 className="text-lg font-semibold text-gray-900">History Entry Details</h2>
-               <button
-                 onClick={() => setSelectedEntry(null)}
-                 className="text-gray-400 hover:text-gray-600 transition-colors"
-                 aria-label="Close modal"
-               >
-                 <X className="w-5 h-5" />
-               </button>
+      {/* Summary Stats */}
+      <div className="border-t border-gray-200 bg-gray-50 p-4">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {historyEntries.filter(e => e.type === 'create').length}
             </div>
-            <div className="p-6 overflow-y-auto">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                  <p className="text-gray-900">{selectedEntry.title}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                    <p className="text-gray-900 capitalize">{selectedEntry.type}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Action</label>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(selectedEntry.action)}`}>
-                      {selectedEntry.action}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Timestamp</label>
-                  <p className="text-gray-900">{selectedEntry.timestamp.toLocaleString()}</p>
-                </div>
-                {selectedEntry.wordCount && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Word Count</label>
-                    <p className="text-gray-900">{selectedEntry.wordCount} words</p>
-                  </div>
-                )}
-                {selectedEntry.content && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Content Preview</label>
-                    <div className="bg-gray-50 rounded-lg p-3 max-h-60 overflow-y-auto">
-                      <p className="text-gray-700 whitespace-pre-wrap">{selectedEntry.content}</p>
-                    </div>
-                  </div>
-                )}
-                {selectedEntry.metadata && Object.keys(selectedEntry.metadata).length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Additional Information</label>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      {Object.entries(selectedEntry.metadata).map(([key, value]) => (
-                        <div key={key} className="flex justify-between py-1">
-                          <span className="text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
-                          <span className="text-gray-900">{String(value)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="text-sm text-gray-600">Items Created</div>
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {historyEntries.filter(e => e.type === 'edit').length}
             </div>
+            <div className="text-sm text-gray-600">Items Edited</div>
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {historyEntries.reduce((total, entry) => 
+                total + (entry.details?.wordCountChange || 0), 0
+              )}
+            </div>
+            <div className="text-sm text-gray-600">Words Added</div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
