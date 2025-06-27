@@ -3,138 +3,32 @@ import { ChevronRight } from 'lucide-react';
 
 interface BreadcrumbProps {
   activeView: string;
-  currentChapter?: { id: string; title: string } | null;
-  projectTitle?: string;
   onNavigate?: (view: string) => void;
 }
 
-export function Breadcrumb({ activeView, currentChapter, projectTitle, onNavigate }: BreadcrumbProps) {
+export function Breadcrumb({ activeView, onNavigate }: BreadcrumbProps) {
   const getBreadcrumbPath = () => {
     const basePath = [
-      { label: 'WorkSpace', view: 'dashboard', href: '#' }
+      { label: 'Nimbus Note', view: 'dashboard', href: '#' }
     ];
 
     switch (activeView) {
-      case 'write':
-        return [
-          ...basePath,
-          { label: 'Write', view: 'write', href: '#', active: true }
-        ];
-      
-      case 'projects':
-        return [
-          ...basePath,
-          { label: 'Write', view: 'write', href: '#' },
-          { label: 'Projects', view: 'projects', href: '#', active: true }
-        ];
-      
-      case 'editor':
-        return [
-          ...basePath,
-          { label: 'Write', view: 'write', href: '#' },
-          { label: 'Projects', view: 'projects', href: '#' },
-          { label: projectTitle || 'Project 1', view: 'projects', href: '#' },
-          { label: currentChapter?.title || 'Chapter 1', view: 'editor', href: '#', active: true }
-        ];
-      
       case 'canvas':
         return [
           ...basePath,
           { label: 'Canvas', view: 'canvas', href: '#', active: true }
         ];
       
-      case 'planning':
+      case 'library':
         return [
           ...basePath,
-          { label: 'Planning', view: 'planning', href: '#', active: true }
-        ];
-      
-      case 'outline':
-        return [
-          ...basePath,
-          { label: 'Planning', view: 'planning', href: '#' },
-          { label: 'Outline', view: 'outline', href: '#', active: true }
-        ];
-      
-      case 'plot':
-        return [
-          ...basePath,
-          { label: 'Planning', view: 'planning', href: '#' },
-          { label: 'Plot', view: 'plot', href: '#', active: true }
-        ];
-      
-      case 'characters':
-        return [
-          ...basePath,
-          { label: 'Planning', view: 'planning', href: '#' },
-          { label: 'Characters', view: 'characters', href: '#', active: true }
-        ];
-      
-      case 'world-building':
-        return [
-          ...basePath,
-          { label: 'Planning', view: 'planning', href: '#' },
-          { label: 'World Building', view: 'world-building', href: '#', active: true }
+          { label: 'Library', view: 'library', href: '#', active: true }
         ];
       
       case 'files':
         return [
           ...basePath,
           { label: 'Files', view: 'files', href: '#', active: true }
-        ];
-      
-      case 'settings':
-        return [
-          ...basePath,
-          { label: 'Settings', view: 'settings', href: '#', active: true }
-        ];
-      
-      case 'history':
-        return [
-          ...basePath,
-          { label: 'Settings', view: 'settings', href: '#' },
-          { label: 'History', view: 'history', href: '#', active: true }
-        ];
-      
-      case 'integrations':
-        return [
-          ...basePath,
-          { label: 'Settings', view: 'settings', href: '#' },
-          { label: 'Integrations', view: 'integrations', href: '#', active: true }
-        ];
-      
-      case 'help':
-        return [
-          ...basePath,
-          { label: 'Help & Support', view: 'help', href: '#', active: true }
-        ];
-
-      case 'help-topics':
-        return [
-          ...basePath,
-          { label: 'Help & Support', view: 'help', href: '#' },
-          { label: 'Help Topics', view: 'help-topics', href: '#', active: true }
-        ];
-
-      case 'get-started':
-        return [
-          ...basePath,
-          { label: 'Help & Support', view: 'help', href: '#' },
-          { label: 'Get Started', view: 'get-started', href: '#', active: true }
-        ];
-
-      case 'ask-question':
-        return [
-          ...basePath,
-          { label: 'Help & Support', view: 'help', href: '#' },
-          { label: 'Ask A Question', view: 'ask-question', href: '#', active: true }
-        ];
-
-      case 'get-feedback':
-        return [
-          ...basePath,
-          { label: 'Help & Support', view: 'help', href: '#' },
-          { label: 'Get Feedback', view: 'get-feedback', href: '#', active: true }
         ];
       
       default:

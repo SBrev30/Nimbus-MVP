@@ -2,16 +2,11 @@ import React, { useState } from 'react';
 import { 
   ChevronDown, 
   ChevronUp,
-  User,
-  LogOut,
-  Cloud,
-  LayoutDashboard,
-  Edit3,
+  Home,
+  BookOpen,
   Layers,
   Search,
   Folder,
-  Settings,
-  HelpCircle,
   PanelLeftClose
 } from 'lucide-react';
 
@@ -161,17 +156,13 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   {
     id: 'dashboard',
-    label: 'Dashboard',
-    icon: LayoutDashboard,
+    label: 'Home',
+    icon: Home,
   },
   {
-    id: 'write',
-    label: 'Write',
-    icon: Edit3,
-    hasDropdown: true,
-    subItems: [
-      { id: 'projects', label: 'Projects' }
-    ]
+    id: 'library',
+    label: 'Library',
+    icon: BookOpen,
   },
   {
     id: 'canvas',
@@ -179,43 +170,9 @@ const menuItems: MenuItem[] = [
     icon: Layers
   },
   {
-    id: 'planning',
-    label: 'Planning',
-    icon: Search,
-    hasDropdown: true,
-    subItems: [
-      { id: 'outline', label: 'Outline' },
-      { id: 'plot', label: 'Plot' },
-      { id: 'characters', label: 'Characters' },
-      { id: 'world-building', label: 'World Building' }
-    ]
-  },
-  {
     id: 'files',
     label: 'Files',
     icon: Folder,
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    icon: Settings,
-    hasDropdown: true,
-    subItems: [
-      { id: 'history', label: 'History' },
-      { id: 'integrations', label: 'Integrations' }
-    ]
-  },
-  {
-    id: 'help',
-    label: 'Help & Support',
-    icon: HelpCircle,
-    hasDropdown: true,
-    subItems: [
-      { id: 'help-topics', label: 'Help Topics' },
-      { id: 'get-started', label: 'Get Started' },
-      { id: 'ask-question', label: 'Ask A Question' },
-      { id: 'give-feedback', label: 'Give Feedback' }
-    ]
   }
 ];
 
@@ -225,7 +182,7 @@ interface SidebarProps {
 }
 
 export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onViewChange }: SidebarProps) {
-  const [expandedItems, setExpandedItems] = useState<string[]>(['planning', 'settings']);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleExpanded = (itemId: string) => {
@@ -370,35 +327,6 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
 
         {/* Bottom section */}
         <div className="border-t border-gray-200">
-          {/* User profile */}
-          <div className="p-3">
-            <div className={`flex items-center p-3 rounded-lg bg-gray-50 ${
-              isCollapsed ? 'justify-center' : 'space-x-3'
-            }`}>
-              <UserAvatar isCollapsed={isCollapsed} />
-              {!isCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 truncate">SBrev30</div>
-                  <div className="text-sm text-gray-500">Admin</div>
-                </div>
-              )}
-              {!isCollapsed && (
-                <div className="flex space-x-1">
-                  <Tooltip content="Profile">
-                    <button className="p-1 hover:bg-gray-200 rounded transition-colors duration-150">
-                      <User className="w-4 h-4 text-gray-400" />
-                    </button>
-                  </Tooltip>
-                  <Tooltip content="Sign Out">
-                    <button className="p-1 hover:bg-gray-200 rounded transition-colors duration-150">
-                      <LogOut className="w-4 h-4 text-gray-400" />
-                    </button>
-                  </Tooltip>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Collapse button */}
           <div className="p-3">
             {isCollapsed ? (

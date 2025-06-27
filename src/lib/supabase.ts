@@ -15,16 +15,6 @@ export interface ImportedItem {
   created_at: string
 }
 
-export interface User {
-  id: string
-  email: string
-  full_name?: string
-  avatar_url?: string
-  subscription_tier: 'free' | 'premium' | 'pro'
-  ai_credits_remaining: number
-  created_at: string
-}
-
 export interface ItemTag {
   id: string
   item_id: string
