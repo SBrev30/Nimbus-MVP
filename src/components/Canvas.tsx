@@ -358,7 +358,7 @@ const SimplifiedMenu = ({
 
   return (
     <div className={`bg-white border-l border-gray-200 transition-all duration-300 ${
-      isCollapsed ? 'w-12' : 'w-64'
+      isCollapsed ? 'w-12' : 'w-72'
     } flex flex-col h-full`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
