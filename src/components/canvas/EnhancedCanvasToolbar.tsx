@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   User, BookOpen, MapPin, Lightbulb, Zap, Calendar, FileText,
   Save, Upload, Sparkles, Cloud, CloudOff, Brain, Trash2,
-  Download, Plus, RotateCcw // Changed from Refresh to RotateCcw
+  Download
 } from 'lucide-react';
 
 interface EnhancedCanvasToolbarProps {
