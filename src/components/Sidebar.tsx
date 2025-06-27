@@ -422,50 +422,6 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
           </div>
         </div>
       </div>
-
-      {/* Main content area */}
-      <div className="flex-1 p-8">
-        <div className="max-w-4xl">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4 capitalize">
-            {activeView.replace('-', ' ')}
-          </h1>
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <p className="text-gray-600 mb-4">
-              Currently viewing: <strong className="capitalize">{activeView.replace('-', ' ')}</strong>
-            </p>
-            <p className="text-gray-600">
-              This enhanced Nimbus Note sidebar includes all CodeRabbit functionality:
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-gray-600">
-              <li>✅ Collapsible design with smooth animations</li>
-              <li>✅ Dropdown menus (Planning, Settings, Help, Write)</li>
-              <li>✅ Hover states and active states</li>
-              <li>✅ Tooltips when collapsed</li>
-              <li>✅ Mini dropdown menus for collapsed state</li>
-              <li>✅ User profile section with non-gradient avatar</li>
-              <li>✅ User profile section with non-gradient avatar</li>
-              <li>✅ Responsive icons with Lucide React</li>
-              <li>✅ Collapse button with border and hover shadow</li>
-              <li>✅ Collapse button with border and hover shadow</li>
-            </ul>
-
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-blue-900 mb-2">Icon Mappings (Lucide React)</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm text-blue-800">
-                <div>Dashboard: LayoutDashboard</div>
-                <div>Write: Edit3</div>
-                <div>Canvas: Layers</div>
-                <div>Planning: Search</div>
-                <div>Files: Folder</div>
-                <div>Settings: Settings</div>
-                <div>Help: HelpCircle</div>
-                <div>Collapse: PanelLeftClose</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 export const Sidebar = EnhancedNimbusSidebar;
