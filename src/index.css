@@ -5,6 +5,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global Color */
+body {
+  background-color: rgb(246, 246, 241);
+}
+
 /* Canvas Node Styles */
 .character-node {
   background: #A5F7AC;
