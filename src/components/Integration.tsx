@@ -121,8 +121,21 @@ export default function Integration({ onBack }: { onBack: () => void }) {
 
   const loadIntegrations = async () => {
     try {
-      const stored = localStorage.getItem('writer-integrations');
-      const loadedIntegrations = stored ? JSON.parse(stored) : [];
+ const loadIntegrations = async () => {
+   try {
+     let stored = localStorage.getItem('writer-integrations');
+     
+     // Migration logic for existing data
+     if (!stored) {
+       const oldData = localStorage.getItem('app-integrations');
+       if (oldData) {
+         localStorage.setItem('writer-integrations', oldData);
+         localStorage.removeItem('app-integrations');
+         stored = oldData;
+       }
+     }
+     
+     const loadedIntegrations = stored ? JSON.parse(stored) : [];
       
       // Add built-in integrations if they don't exist
       const builtInIntegrations: Integration[] = [
