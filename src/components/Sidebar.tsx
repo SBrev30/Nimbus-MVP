@@ -422,6 +422,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
           </div>
         </div>
       </div>
+            </div>
   );
 }
 export const Sidebar = EnhancedNimbusSidebar;
