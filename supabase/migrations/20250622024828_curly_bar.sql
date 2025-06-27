@@ -49,15 +49,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger for updated_at
-DO $$
+DO $
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_profiles_updated_at') THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger 
+    WHERE tgname = 'update_user_profiles_updated_at' 
+    AND tgrelid = 'user_profiles'::regclass
+  ) THEN
     CREATE TRIGGER update_user_profiles_updated_at
       BEFORE UPDATE ON user_profiles
       FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
   END IF;
 END
-$$;
+$;
 
 -- Create function to handle new user creation
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -75,17 +79,19 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger to create user profile on signup
-DO $$
+DO $
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created'
+    SELECT 1 FROM pg_trigger 
+    WHERE tgname = 'on_auth_user_created' 
+    AND tgrelid = 'auth.users'::regclass
   ) THEN
     CREATE TRIGGER on_auth_user_created
       AFTER INSERT ON auth.users
       FOR EACH ROW EXECUTE FUNCTION handle_new_user();
   END IF;
 END
-$$;
+$;
 
 -- Enable Row Level Security
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
