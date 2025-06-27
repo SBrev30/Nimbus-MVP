@@ -3,7 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Breadcrumb } from './components/Breadcrumb';
 import { Editor } from './components/Editor';
 import { NotesPanel } from './components/NotesPanel';
-import { KanbanApp } from './components/KanbanApp';
+import { DashboardPage } from './components/DashboardPage';
 import { StatusDashboard } from './components/StatusDashboard';
 import { Files } from './components/Files';
 import { ProjectsPage } from './components/projects-page';
