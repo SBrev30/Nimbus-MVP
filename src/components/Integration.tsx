@@ -268,6 +268,14 @@ export default function Integration({ onBack }: { onBack: () => void }) {
   const handleSaveIntegration = () => {
     if (!selectedTemplate) return;
 
+// Validate required fields
+for (const field of selectedTemplate.configSchema) {
+if (field.required && !config[field.key]) {
+alert(`${field.label} is required`);
+return;
+}
+}
+
     const newIntegration: Integration = {
       id: editingIntegration?.id || `${selectedTemplate.id}_${Date.now()}`,
       name: selectedTemplate.name,
@@ -396,7 +404,9 @@ export default function Integration({ onBack }: { onBack: () => void }) {
                         
                         <button
                           onClick={() => {
-                            const template = INTEGRATION_TEMPLATES.find(t => t.id === integration.id.split('_')[0]);
+                            // Store template ID separately or use a more robust lookup
+                            const templateId = integration.id.includes('_') ? integration.id.split('_')[0] : integration.id;
+                            const template = INTEGRATION_TEMPLATES.find(t => t.id === templateId);
                             if (template) openConfigModal(template, integration);
                           }}
                           className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
