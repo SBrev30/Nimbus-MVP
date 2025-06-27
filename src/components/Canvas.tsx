@@ -373,9 +373,31 @@ const CanvasFlow = () => {
     }, eds));
   }, [setEdges]);
 
-  const handleSave = useCallback(() => {
-    return forceSave();
-  }, [forceSave]);
+  const handleSave = useCallback(async () => {
+    try {
+      // Force save to storage
+      await forceSave();
+
+      // Also offer file download
+      const dataToSave = {
+        nodes,
+        edges,
+        viewport: reactFlowInstance?.getViewport(),
+        timestamp: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `canvas-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Save failed:', error);
+      alert('Failed to save canvas');
+    }
+  }, [forceSave, nodes, edges, reactFlowInstance]);
 
   const handleLoad = useCallback(() => {
     const input = document.createElement('input');
