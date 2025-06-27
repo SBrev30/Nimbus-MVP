@@ -265,9 +265,9 @@ const SimplifiedMenu = ({
   const [activeTab, setActiveTab] = useState('elements');
   
   const nodeTypes = [
-    { type: 'character', label: 'Character', color: 'green' },
-    { type: 'plot', label: 'Plot', color: 'blue' },
-    { type: 'location', label: 'Location', color: 'purple' },
+    { type: 'character', label: 'Character', color: 'green', classes: 'border-green-300 bg-green-100 hover:bg-green-200 text-green-800' },
+{ type: 'plot', label: 'Plot', color: 'blue', classes: 'border-blue-300 bg-blue-100 hover:bg-blue-200 text-blue-800' },
+    { type: 'location', label: 'Location', color: 'purple', classes: 'border-purple-300 bg-purple-100 hover:bg-purple-200 text-purple-800' },
     { type: 'theme', label: 'Theme', color: 'yellow' },
     { type: 'conflict', label: 'Conflict', color: 'red' },
     { type: 'research', label: 'Research', color: 'indigo' },
