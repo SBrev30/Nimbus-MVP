@@ -48,10 +48,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for updated_at
-CREATE TRIGGER update_user_profiles_updated_at
-  BEFORE UPDATE ON user_profiles
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Create trigger for updated_at if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_profiles_updated_at'
+  ) THEN
+    CREATE TRIGGER update_user_profiles_updated_at
+      BEFORE UPDATE ON user_profiles
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END
+$$;
 
 -- Create function to handle new user creation
 CREATE OR REPLACE FUNCTION handle_new_user()
