@@ -3,8 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Breadcrumb } from './components/Breadcrumb';
 import { Editor } from './components/Editor';
 import { NotesPanel } from './components/NotesPanel';
-import { KanbanApp } from './components/KanbanApp';
-import { StatusDashboard } from './components/StatusDashboard';
+import { DashboardPage } from './components/DashboardPage';
 import { Files } from './components/Files';
 import { ProjectsPage } from './components/projects-page';
 import { Search } from 'lucide-react';
@@ -297,7 +296,7 @@ function AppContent() {
       case 'dashboard':
         return (
           <ErrorBoundary>
-            <KanbanApp />
+            <DashboardPage onViewChange={handleViewChange} />
           </ErrorBoundary>
         );
       
