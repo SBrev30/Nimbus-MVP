@@ -1,22 +1,8 @@
 import React, { useState } from 'react';
-import {
-  Plus,
-  User,
-  BookOpen,
-  FileText,
-  Network,
-  Save,
-  Upload,
-  Brain,
-  Cloud,
-  CloudOff,
-  Zap,
-  TrendingUp,
-  Users,
-  MoreHorizontal,
-  Lightbulb,
-  Target,
-  RefreshCw
+import { 
+  User, BookOpen, MapPin, Lightbulb, Zap, Calendar, FileText,
+  Save, Upload, Sparkles, Cloud, CloudOff, Brain, Trash2,
+  Download, Plus, RotateCcw // Changed from Refresh to RotateCcw
 } from 'lucide-react';
 
 interface EnhancedCanvasToolbarProps {
@@ -24,15 +10,21 @@ interface EnhancedCanvasToolbarProps {
   onTemplate: (templateId: string) => void;
   onSave: () => void;
   onLoad: () => void;
+  onLoadSample: (sampleId: string) => void;
+  onClear: () => void;
+  onExport?: (format: string) => void;
   lastSaved: Date | null;
   isSaving: boolean;
   selectedNodes: string[];
-  onAnalyzeAI: (analysisType?: string) => void;
+  onAnalyzeAI: () => void;
   isAnalyzing: boolean;
   syncStatus: string;
   isOnline: boolean;
-  onShowAIPanel: () => void;
-  aiResults: any[];
+  canvasMode: string;
+  onModeChange: (mode: string) => void;
+  hasNodes: boolean;
+  nodeCount?: number;
+  edgeCount?: number;
 }
 
 export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
@@ -40,6 +32,9 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
   onTemplate,
   onSave,
   onLoad,
+  onLoadSample,
+  onClear,
+  onExport,
   lastSaved,
   isSaving,
   selectedNodes,
@@ -47,349 +42,286 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
   isAnalyzing,
   syncStatus,
   isOnline,
-  onShowAIPanel,
-  aiResults
+  canvasMode,
+  onModeChange,
+  hasNodes,
+  nodeCount = 0,
+  edgeCount = 0
 }) => {
   const [showTemplates, setShowTemplates] = useState(false);
-  const [showAIOptions, setShowAIOptions] = useState(false);
+  const [showSamples, setShowSamples] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const nodeTypes = [
+    { type: 'character', icon: User, label: 'Character', color: 'bg-blue-100 text-blue-700' },
+    { type: 'chapter', icon: BookOpen, label: 'Chapter', color: 'bg-green-100 text-green-700' },
+    { type: 'location', icon: MapPin, label: 'Location', color: 'bg-purple-100 text-purple-700' },
+    { type: 'idea', icon: Lightbulb, label: 'Idea', color: 'bg-yellow-100 text-yellow-700' },
+    { type: 'plot', icon: Zap, label: 'Plot Point', color: 'bg-red-100 text-red-700' },
+    { type: 'timeline', icon: Calendar, label: 'Timeline', color: 'bg-indigo-100 text-indigo-700' },
+    { type: 'note', icon: FileText, label: 'Note', color: 'bg-gray-100 text-gray-700' }
+  ];
 
   const templates = [
-    {
-      id: 'character-web',
-      name: 'Character Web',
-      description: 'Central character with relationship connections',
-      icon: <Network size={16} />,
-      color: 'blue'
-    },
-    {
-      id: 'three-act-structure',
-      name: 'Three-Act Structure',
-      description: 'Classic story structure with setup, confrontation, resolution',
-      icon: <BookOpen size={16} />,
-      color: 'purple'
-    },
-    {
-      id: 'heros-journey',
-      name: "Hero's Journey",
-      description: "Campbell's monomyth structure",
-      icon: <User size={16} />,
-      color: 'yellow'
-    },
-    {
-      id: 'research-board',
-      name: 'Research Board',
-      description: 'Organized research and world-building workspace',
-      icon: <FileText size={16} />,
-      color: 'green'
-    }
+    { id: 'three-act', name: 'Three-Act Structure', description: 'Classic storytelling structure' },
+    { id: 'heroes-journey', name: "Hero's Journey", description: 'Monomyth story structure' },
+    { id: 'character-web', name: 'Character Relationship Web', description: 'Character connections' },
+    { id: 'world-building', name: 'World Building Map', description: 'Fantasy/sci-fi world structure' }
   ];
 
-  const aiAnalysisOptions = [
-    {
-      id: 'auto',
-      name: 'Smart Analysis',
-      description: 'AI automatically analyzes all story elements',
-      icon: <Brain size={16} />,
-      color: 'indigo'
-    },
-    {
-      id: 'character',
-      name: 'Character Analysis',
-      description: 'Analyze character development and traits',
-      icon: <Users size={16} />,
-      color: 'green'
-    },
-    {
-      id: 'story-coherence',
-      name: 'Story Coherence',
-      description: 'Check plot consistency and identify holes',
-      icon: <TrendingUp size={16} />,
-      color: 'blue'
-    },
-    {
-      id: 'relationships',
-      name: 'Suggest Relations',
-      description: 'Recommend character and plot connections',
-      icon: <Users size={16} />,
-      color: 'pink'
-    },
-    {
-      id: 'character-arcs',
-      name: 'Character Arcs',
-      description: 'Analyze character development through story',
-      icon: <Zap size={16} />,
-      color: 'orange'
-    }
+  const samples = [
+    { id: 'mystery-plot', name: 'Mystery Plot Example', description: 'Sample detective story structure' },
+    { id: 'fantasy-world', name: 'Fantasy World', description: 'Example fantasy world map' },
+    { id: 'character-arcs', name: 'Character Development', description: 'Sample character growth arcs' }
   ];
 
-  const getColorClasses = (color: string) => {
-    const colorMap = {
-      blue: 'bg-blue-100 hover:bg-blue-200 text-blue-800',
-      purple: 'bg-purple-100 hover:bg-purple-200 text-purple-800',
-      yellow: 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800',
-      green: 'bg-green-100 hover:bg-green-200 text-green-800',
-      indigo: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-800',
-      pink: 'bg-pink-100 hover:bg-pink-200 text-pink-800',
-      orange: 'bg-orange-100 hover:bg-orange-200 text-orange-800'
-    };
-    return colorMap[color as keyof typeof colorMap] || 'bg-gray-100 hover:bg-gray-200 text-gray-800';
+  const canvasModes = [
+    { id: 'explore', name: 'Explore', icon: Sparkles, description: 'Free exploration mode' },
+    { id: 'master', name: 'Master', icon: Brain, description: 'AI-generated master view' }
+  ];
+
+  const formatLastSaved = (date: Date | null) => {
+    if (!date) return 'Never saved';
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return date.toLocaleDateString();
   };
 
-  const hasAIResults = aiResults && aiResults.length > 0;
-  const successfulAnalyses = hasAIResults ? aiResults.filter(r => r.success).length : 0;
-
   return (
-    <div className="canvas-toolbar h-full overflow-y-auto">
-      {/* Add Node Section */}
-      <div className="toolbar-section">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <Plus size={16} />
-          Add Elements
-        </h4>
-        <div className="grid grid-cols-1 gap-2">
-          <button 
-            onClick={() => onCreateNode('character')}
-            className="flex items-center gap-3 px-3 py-3 bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors text-sm font-medium"
-          >
-            <User size={18} />
-            <div className="text-left">
-              <div className="font-medium">Character</div>
-              <div className="text-xs opacity-75">Add a story character</div>
-            </div>
-          </button>
-          <button 
-            onClick={() => onCreateNode('plot')}
-            className="flex items-center gap-3 px-3 py-3 bg-red-100 hover:bg-red-200 text-red-800 rounded-lg transition-colors text-sm font-medium"
-          >
-            <BookOpen size={18} />
-            <div className="text-left">
-              <div className="font-medium">Plot Point</div>
-              <div className="text-xs opacity-75">Add story events</div>
-            </div>
-          </button>
-          <button 
-            onClick={() => onCreateNode('research')}
-            className="flex items-center gap-3 px-3 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 rounded-lg transition-colors text-sm font-medium"
-          >
-            <FileText size={18} />
-            <div className="text-left">
-              <div className="font-medium">Research</div>
-              <div className="text-xs opacity-75">Add notes & references</div>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Templates Section */}
-      <div className="toolbar-section">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <Target size={16} />
-            Templates
-          </h4>
-          <button
-            onClick={() => setShowTemplates(!showTemplates)}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
-            <MoreHorizontal size={14} />
-          </button>
-        </div>
-        
-        {showTemplates ? (
-          <div className="space-y-2">
-            {templates.map(template => (
+    <div className="bg-white border-b border-gray-200 p-4">
+      <div className="flex items-center justify-between">
+        {/* Left Section - Node Creation */}
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 mr-4">
+            {nodeTypes.map(({ type, icon: Icon, label, color }) => (
               <button
-                key={template.id}
-                onClick={() => {
-                  onTemplate(template.id);
-                  setShowTemplates(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors text-sm ${getColorClasses(template.color)}`}
+                key={type}
+                onClick={() => onCreateNode(type)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 ${color}`}
+                title={`Add ${label}`}
               >
-                {template.icon}
-                <div className="text-left flex-1">
-                  <div className="font-medium">{template.name}</div>
-                  <div className="text-xs opacity-75">{template.description}</div>
-                </div>
+                <Icon className="w-4 h-4" />
+                <span className="hidden lg:inline">{label}</span>
               </button>
             ))}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <button 
-              onClick={() => onTemplate('character-web')}
-              className="flex flex-col items-center gap-1 px-2 py-3 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors text-xs font-medium"
-            >
-              <Network size={16} />
-              Character Web
-            </button>
-            <button 
-              onClick={() => onTemplate('three-act-structure')}
-              className="flex flex-col items-center gap-1 px-2 py-3 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg transition-colors text-xs font-medium"
-            >
-              <BookOpen size={16} />
-              Three-Act
-            </button>
-          </div>
-        )}
-      </div>
 
-      {/* AI Analysis Section */}
-      <div className="toolbar-section">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <Brain size={16} />
-            AI Assistant
-            {hasAIResults && (
-              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
-                {successfulAnalyses}
-              </span>
+          {/* Divider */}
+          <div className="h-8 w-px bg-gray-300 mx-2" />
+
+          {/* Templates & Samples */}
+          <div className="relative">
+            <button
+              onClick={() => setShowTemplates(!showTemplates)}
+              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Templates</span>
+            </button>
+            
+            {showTemplates && (
+              <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                <div className="p-2">
+                  {templates.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => {
+                        onTemplate(template.id);
+                        setShowTemplates(false);
+                      }}
+                      className="w-full text-left p-3 hover:bg-gray-50 rounded-lg"
+                    >
+                      <div className="font-medium text-gray-900">{template.name}</div>
+                      <div className="text-sm text-gray-600">{template.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
-          </h4>
-          <button
-            onClick={() => setShowAIOptions(!showAIOptions)}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
-            <MoreHorizontal size={14} />
-          </button>
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowSamples(!showSamples)}
+              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Samples</span>
+            </button>
+            
+            {showSamples && (
+              <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                <div className="p-2">
+                  {samples.map((sample) => (
+                    <button
+                      key={sample.id}
+                      onClick={() => {
+                        onLoadSample(sample.id);
+                        setShowSamples(false);
+                      }}
+                      className="w-full text-left p-3 hover:bg-gray-50 rounded-lg"
+                    >
+                      <div className="font-medium text-gray-900">{sample.name}</div>
+                      <div className="text-sm text-gray-600">{sample.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Quick AI Actions */}
-        <div className="space-y-2 mb-3">
-          <button 
-            onClick={() => onAnalyzeAI()}
-            disabled={isAnalyzing}
-            className="w-full flex items-center gap-3 px-3 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
-          >
-            {isAnalyzing ? (
-              <RefreshCw size={18} className="animate-spin" />
-            ) : (
-              <Brain size={18} />
-            )}
-            <div className="text-left flex-1">
-              <div className="font-medium">
-                {isAnalyzing ? 'Analyzing...' : 'Smart Analysis'}
-              </div>
-              <div className="text-xs opacity-75">
-                {isAnalyzing ? 'AI is working...' : 'Auto-analyze all elements'}
-              </div>
-            </div>
-          </button>
+        {/* Center Section - Canvas Mode & Stats */}
+        <div className="flex items-center space-x-4">
+          {/* Canvas Mode Selector */}
+          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+            {canvasModes.map(({ id, name, icon: Icon, description }) => (
+              <button
+                key={id}
+                onClick={() => onModeChange(id)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                  canvasMode === id
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title={description}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{name}</span>
+              </button>
+            ))}
+          </div>
 
-          {hasAIResults && (
-            <button 
-              onClick={onShowAIPanel}
-              className="w-full flex items-center gap-3 px-3 py-3 bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors text-sm font-medium"
-            >
-              <Lightbulb size={18} />
-              <div className="text-left flex-1">
-                <div className="font-medium">View Results</div>
-                <div className="text-xs opacity-75">{successfulAnalyses} analyses ready</div>
-              </div>
-            </button>
+          {/* Canvas Stats */}
+          {hasNodes && (
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <span>{nodeCount} nodes</span>
+              <span>{edgeCount} connections</span>
+              {selectedNodes.length > 0 && (
+                <span className="text-blue-600">{selectedNodes.length} selected</span>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Specific AI Options */}
-        {showAIOptions && (
-          <div className="space-y-2">
-            <div className="text-xs font-medium text-gray-600 mb-2">Specific Analysis:</div>
-            {aiAnalysisOptions.slice(1).map(option => (
-              <button
-                key={option.id}
-                onClick={() => {
-                  onAnalyzeAI(option.id);
-                  setShowAIOptions(false);
-                }}
-                disabled={isAnalyzing}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${getColorClasses(option.color)} disabled:opacity-50`}
-              >
-                {option.icon}
-                <div className="text-left flex-1">
-                  <div className="font-medium text-xs">{option.name}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+        {/* Right Section - Actions & Status */}
+        <div className="flex items-center space-x-2">
+          {/* AI Analysis */}
+          <button
+            onClick={onAnalyzeAI}
+            disabled={isAnalyzing || !hasNodes}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              isAnalyzing
+                ? 'bg-purple-100 text-purple-700'
+                : hasNodes
+                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <Brain className={`w-4 h-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
+            <span>{isAnalyzing ? 'Analyzing...' : 'AI Analysis'}</span>
+          </button>
 
-      {/* Save/Load Section */}
-      <div className="toolbar-section">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <Save size={16} />
-          Save & Load
-        </h4>
-        <div className="grid grid-cols-2 gap-2">
-          <button 
+          {/* Divider */}
+          <div className="h-8 w-px bg-gray-300 mx-2" />
+
+          {/* File Operations */}
+          <button
             onClick={onSave}
             disabled={isSaving}
-            className="flex flex-col items-center gap-2 px-3 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+            className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Save canvas"
           >
-            <Save size={16} />
-            <span className="text-xs">{isSaving ? 'Saving...' : 'Export'}</span>
+            <Save className={`w-4 h-4 ${isSaving ? 'animate-pulse' : ''}`} />
+            <span className="hidden lg:inline">{isSaving ? 'Saving...' : 'Save'}</span>
           </button>
-          <button 
+
+          <button
             onClick={onLoad}
-            className="flex flex-col items-center gap-2 px-3 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors text-sm font-medium"
+            className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Load canvas"
           >
-            <Upload size={16} />
-            <span className="text-xs">Import</span>
+            <Upload className="w-4 h-4" />
+            <span className="hidden lg:inline">Load</span>
           </button>
-        </div>
-        
-        {lastSaved && (
-          <div className="mt-2 text-xs text-gray-500 text-center">
-            Last saved: {lastSaved.toLocaleTimeString()}
-          </div>
-        )}
-      </div>
 
-      {/* Cloud Sync Status */}
-      <div className="toolbar-section">
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center gap-2">
+          {/* Export Menu */}
+          {onExport && (
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden lg:inline">Export</span>
+              </button>
+              
+              {showExportMenu && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  <div className="p-2">
+                    {['PNG', 'SVG', 'PDF', 'JSON'].map((format) => (
+                      <button
+                        key={format}
+                        onClick={() => {
+                          onExport(format.toLowerCase());
+                          setShowExportMenu(false);
+                        }}
+                        className="w-full text-left p-2 hover:bg-gray-50 rounded-lg text-sm"
+                      >
+                        Export as {format}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Clear Canvas */}
+          {hasNodes && (
+            <button
+              onClick={onClear}
+              className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              title="Clear canvas"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden lg:inline">Clear</span>
+            </button>
+          )}
+
+          {/* Sync Status */}
+          <div className="flex items-center space-x-2">
             {isOnline ? (
-              <Cloud size={16} className="text-green-500" />
+              <Cloud className="w-4 h-4 text-green-600" title="Online" />
             ) : (
-              <CloudOff size={16} className="text-red-500" />
+              <CloudOff className="w-4 h-4 text-red-600" title="Offline" />
             )}
-            <div>
-              <div className="text-sm font-medium text-gray-700">
-                {isOnline ? 'Online' : 'Offline'}
-              </div>
-              <div className="text-xs text-gray-500 capitalize">
-                {syncStatus}
-              </div>
+            
+            <div className="text-xs text-gray-500">
+              <div>Last saved: {formatLastSaved(lastSaved)}</div>
+              {syncStatus && (
+                <div className="text-xs text-gray-400">{syncStatus}</div>
+              )}
             </div>
           </div>
-          <div className={`w-2 h-2 rounded-full ${
-            syncStatus === 'synced' ? 'bg-green-500' :
-            syncStatus === 'syncing' ? 'bg-yellow-500' :
-            syncStatus === 'error' ? 'bg-red-500' :
-            'bg-gray-500'
-          }`} />
         </div>
       </div>
 
-      {/* Usage Stats (if AI results available) */}
-      {hasAIResults && (
-        <div className="toolbar-section">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <TrendingUp size={16} />
-            Analysis Summary
-          </h4>
-          <div className="grid grid-cols-2 gap-2 text-center">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <div className="text-lg font-bold text-blue-600">{successfulAnalyses}</div>
-              <div className="text-xs text-blue-600">Completed</div>
-            </div>
-            <div className="p-2 bg-green-50 rounded-lg">
-              <div className="text-lg font-bold text-green-600">
-                {hasAIResults ? Math.round(aiResults.reduce((acc, r) => acc + r.confidence, 0) / aiResults.length * 100) : 0}%
-              </div>
-              <div className="text-xs text-green-600">Confidence</div>
-            </div>
+      {/* AI Analysis Results */}
+      {isAnalyzing && (
+        <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Brain className="w-5 h-5 text-purple-600 animate-pulse" />
+            <span className="text-purple-700 font-medium">Analyzing your story structure...</span>
+          </div>
+          <div className="mt-2 text-sm text-purple-600">
+            Looking for plot holes, character inconsistencies, and narrative gaps.
           </div>
         </div>
       )}
