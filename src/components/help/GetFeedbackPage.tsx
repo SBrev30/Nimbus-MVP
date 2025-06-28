@@ -241,6 +241,7 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
         title="Feedback Submitted"
         description="Thank you for helping us improve WritersBlock"
         showBackButton
+showBreadcrumb={false}
       >
         <div className="max-w-2xl mx-auto text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
