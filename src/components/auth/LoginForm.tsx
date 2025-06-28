@@ -41,7 +41,7 @@ export function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#A5F7AC]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff4e00]"
               required
             />
           </div>
@@ -55,7 +55,7 @@ export function LoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#A5F7AC]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff4e00]"
               required
             />
           </div>
@@ -65,7 +65,7 @@ export function LoginForm() {
               <input
                 id="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-[#A5F7AC] focus:ring-[#A5F7AC] border-gray-300 rounded"
+                className="h-4 w-4 text-[#ff4e00] focus:ring-[#ff4e00] border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                 Remember me
@@ -73,7 +73,7 @@ export function LoginForm() {
             </div>
             
             <div className="text-sm">
-              <a href="#" className="text-[#A5F7AC] hover:underline">
+              <a href="#" className="text-[#ff4e00] hover:underline">
                 Forgot password?
               </a>
             </div>
@@ -82,7 +82,7 @@ export function LoginForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+            className="w-full bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -91,7 +91,7 @@ export function LoginForm() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
-            <a href="#" className="text-[#A5F7AC] hover:underline" onClick={() => window.location.hash = '#signup'}>
+            <a href="#" className="text-[#ff4e00] hover:underline" onClick={() => window.location.hash = '#signup'}>
               Sign up
             </a>
           </p>
