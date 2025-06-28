@@ -162,6 +162,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
         title="Question Submitted"
         description="Your support inquiry has been received"
         showBackButton
+        showBreadcrumb={false}
       >
         <div className="max-w-2xl mx-auto text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
