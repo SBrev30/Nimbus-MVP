@@ -20,7 +20,6 @@ import 'reactflow/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
 import './Canvas.css';
 import { useAuth } from '../contexts/AuthContext';
-import { useAuth } from '../contexts/AuthContext';
 
 // Import the enhanced auto-save hook
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
