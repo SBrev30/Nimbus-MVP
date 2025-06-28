@@ -1,16 +1,16 @@
 import React, { useState, useCallback, Suspense, lazy } from 'react';
-import { Sidebar } from './components/Sidebar';
-import { Breadcrumb } from './components/Breadcrumb';
-import { Editor } from './components/Editor';
-import { NotesPanel } from './components/NotesPanel';
-import { KanbanApp } from './components/KanbanApp';
-import { StatusDashboard } from './components/StatusDashboard';
-import { Files } from './components/Files';
-import { ProjectsPage } from './components/projects-page';
+import { Sidebar } from './Sidebar';
+import { Breadcrumb } from './Breadcrumb';
+import { Editor } from './Editor';
+import { NotesPanel } from './NotesPanel';
+import { KanbanApp } from './KanbanApp';
+import { StatusDashboard } from './StatusDashboard';
+import { Files } from './Files';
+import { ProjectsPage } from './projects-page';
 import { Search } from 'lucide-react';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { useAutoSave } from './hooks/useAutoSave';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useAutoSave } from '../hooks/useAutoSave';
+import { ThemeProvider } from '../contexts/ThemeContext';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -30,21 +30,21 @@ interface Note {
 }
 
 // Import planning components
-import { OutlinePage } from './components/planning/OutlinePage';
-import { PlotPage } from './components/planning/PlotPage';
-import { CharactersPage } from './components/planning/CharactersPage';
-import { WorldBuildingPage } from './components/planning/WorldBuildingPage';
+import { OutlinePage } from './planning/OutlinePage';
+import { PlotPage } from './planning/PlotPage';
+import { CharactersPage } from './planning/CharactersPage';
+import { WorldBuildingPage } from './planning/WorldBuildingPage';
 
 // Import help components
-import { HelpTopicsPage } from './components/help/HelpTopicsPage';
-import { GetStartedPage } from './components/help/GetStartedPage';
-import { AskQuestionPage } from './components/help/AskQuestionPage';
-import { GetFeedbackPage } from './components/help/GetFeedbackPage';
+import { HelpTopicsPage } from './help/HelpTopicsPage';
+import { GetStartedPage } from './help/GetStartedPage';
+import { AskQuestionPage } from './help/AskQuestionPage';
+import { GetFeedbackPage } from './help/GetFeedbackPage';
 
 // Lazy load heavy components
-const Canvas = lazy(() => import('./components/Canvas').then(module => ({ default: module.default || module })));
-const Integration = lazy(() => import('./components/Integration').then(module => ({ default: module.default || module })));
-const History = lazy(() => import('./components/History').then(module => ({ default: module.default || module })));
+const Canvas = lazy(() => import('./Canvas').then(module => ({ default: module.default || module })));
+const Integration = lazy(() => import('./Integration').then(module => ({ default: module.default || module })));
+const History = lazy(() => import('./History').then(module => ({ default: module.default || module })));
 
 // Loading component with message support
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
