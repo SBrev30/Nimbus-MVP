@@ -8,6 +8,10 @@ export default {
         accent: '#A5F7AC',
         sidebar: '#EAE9E9',
         background: '#F9FAFB',
+        'page-bg': 'rgb(246, 246, 241)', // Your new page background color
+        'true-white': '#ffffff', // For areas that should stay pure white (inputs, modals, etc.)
+        // Override white to use your custom color for pages
+        white: 'rgb(246, 246, 241)',
       },
       fontFamily: {
         inter: ['Inter', 'sans-serif'],
