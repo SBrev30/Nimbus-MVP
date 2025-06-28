@@ -24,15 +24,15 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
   const onboardingSteps: OnboardingStep[] = [
     {
       id: 'welcome',
-      title: 'Welcome to WritersBlock',
+      title: 'Welcome to Nimbus Note',
       description: 'Your creative writing platform with AI assistance',
       duration: '30 seconds',
       content: (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-[#A5F7AC] to-green-200 p-6 rounded-lg">
-            <h3 className="text-xl font-bold text-gray-900 mb-3 font-inter">Welcome to WritersBlock!</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-3 font-inter">Welcome to Nimbus Note!</h3>
             <p className="text-gray-800 font-inter leading-relaxed">
-              WritersBlock is a visual writing platform that combines traditional writing tools with infinite canvas brainstorming and AI assistance. Whether you're writing a novel, screenplay, or game narrative, we've got you covered.
+              Nimbus Note is a visual writing platform that combines traditional writing tools with infinite canvas brainstorming and AI assistance. Whether you're writing a novel, screenplay, or game narrative, we've got you covered.
             </p>
           </div>
           
@@ -158,7 +158,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
       activeView={activeView}
       onNavigate={onNavigate}
       title="Get Started"
-      description="Interactive walkthrough of WritersBlock features"
+      description="Interactive walkthrough of Nimbus Note features"
       showBackButton
       showBreadcrumb={false}
     >
