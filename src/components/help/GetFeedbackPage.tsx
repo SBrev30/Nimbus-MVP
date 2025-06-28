@@ -322,6 +322,7 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
       title="Give Feedback"
       description="Help us improve WritersBlock with your insights"
       showBackButton
+      showBreadcrumb={false}
     >
       <div className="max-w-2xl">
         {/* Introduction */}
