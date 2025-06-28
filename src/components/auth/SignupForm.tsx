@@ -53,7 +53,7 @@ export function SignupForm() {
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#A5F7AC]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff4e00]"
               required
             />
           </div>
@@ -67,7 +67,7 @@ export function SignupForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#A5F7AC]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff4e00]"
               required
             />
           </div>
@@ -81,7 +81,7 @@ export function SignupForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#A5F7AC]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff4e00]"
               required
               minLength={8}
             />
@@ -93,7 +93,7 @@ export function SignupForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+            className="w-full bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
           >
             {isLoading ? 'Creating account...' : 'Sign Up'}
           </button>
@@ -102,7 +102,7 @@ export function SignupForm() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <a href="#" className="text-[#A5F7AC] hover:underline" onClick={() => window.location.hash = '#login'}>
+            <a href="#" className="text-[#ff4e00] hover:underline" onClick={() => window.location.hash = '#login'}>
               Sign in
             </a>
           </p>
