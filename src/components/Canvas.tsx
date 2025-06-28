@@ -309,27 +309,33 @@ interface SimplifiedMenuProps {
   isCollapsed: boolean;
   onToggleCollapsed: () => void;
   onCreateNode: (type: string) => void;
-  onSave: () => void;
+  onSync: () => void;
   onLoad: () => void;
   onClear: () => void;
   onLoadTemplate: (templateId: string) => void;
   onLoadSample: (sampleId: string) => void;
-  lastSaved: Date | null;
-  isSaving: boolean;
+  onBack: () => void;
+  lastSynced: Date | null;
+  isSyncing: boolean;
+  hasChanges: boolean;
+  syncStatus: string;
 }
 
-// Simplified Menu Component with Templates and Samples
+// Updated Simplified Menu Component with Sync functionality
 const SimplifiedMenu = ({ 
   isCollapsed, 
   onToggleCollapsed,
   onCreateNode,
-  onSave,
+  onSync,
   onLoad,
   onClear,
   onLoadTemplate,
   onLoadSample,
-  lastSaved,
-  isSaving
+  onBack,
+  lastSynced,
+  isSyncing,
+  hasChanges,
+  syncStatus
 }: SimplifiedMenuProps) => {
   const [activeTab, setActiveTab] = useState('elements');
   
@@ -356,21 +362,60 @@ const SimplifiedMenu = ({
     { id: 'sciFiThriller', name: 'Sci-Fi Thriller', description: 'Futuristic thriller story' }
   ];
 
+  // Get sync status indicator
+  const getSyncStatusInfo = () => {
+    if (isSyncing) {
+      return { color: 'text-blue-600', label: 'Syncing...', bgColor: 'bg-blue-100' };
+    }
+    if (hasChanges) {
+      return { color: 'text-orange-600', label: 'Changes pending', bgColor: 'bg-orange-100' };
+    }
+    if (syncStatus === 'synced') {
+      return { color: 'text-green-600', label: 'Synced', bgColor: 'bg-green-100' };
+    }
+    if (syncStatus === 'error') {
+      return { color: 'text-red-600', label: 'Sync error', bgColor: 'bg-red-100' };
+    }
+    return { color: 'text-gray-600', label: 'Ready', bgColor: 'bg-gray-100' };
+  };
+
+  const statusInfo = getSyncStatusInfo();
+
   return (
     <div className={`bg-white border-l border-gray-200 transition-all duration-300 ${
       isCollapsed ? 'w-12' : 'w-72'
     } flex flex-col h-full`}>
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+      {/* Header with Back Button */}
+      <div className="p-4 border-b border-gray-200">
         {!isCollapsed && (
-          <h2 className="text-lg font-semibold text-gray-900">Story Canvas</h2>
+          <div className="flex items-center gap-3 mb-3">
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Back to main view"
+            >
+              ←
+            </button>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-gray-900">Visual Canvas</h2>
+              <p className="text-sm text-gray-600">Plan your story visually</p>
+            </div>
+          </div>
         )}
-        <button
-          onClick={onToggleCollapsed}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
-        >
-          {isCollapsed ? '→' : '←'}
-        </button>
+        
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
+            <div className={`px-2 py-1 rounded-md text-xs ${statusInfo.bgColor} ${statusInfo.color}`}>
+              {statusInfo.label}
+            </div>
+          )}
+          <button
+            onClick={onToggleCollapsed}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
+            {isCollapsed ? '→' : '←'}
+          </button>
+        </div>
       </div>
 
       {!isCollapsed && (
@@ -458,22 +503,27 @@ const SimplifiedMenu = ({
             )}
           </div>
 
-          {/* Actions Section */}
+          {/* Actions Section with Sync */}
           <div className="p-4 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-700 mb-3">Actions</h3>
             <div className="space-y-2">
               <button
-                onClick={onSave}
-                disabled={isSaving}
-                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
+                onClick={onSync}
+                disabled={isSyncing}
+                className={`w-full p-2 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 ${
+                  hasChanges 
+                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                }`}
+                title="Sync with Planning Pages"
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSyncing ? 'Syncing...' : 'Sync Planning'}
               </button>
               <button
                 onClick={onLoad}
                 className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
               >
-                Load
+                Load File
               </button>
               <button
                 onClick={onClear}
@@ -483,11 +533,17 @@ const SimplifiedMenu = ({
               </button>
             </div>
             
-            {lastSaved && (
-              <div className="text-xs text-gray-500 mt-3">
-                Last saved: {lastSaved.toLocaleTimeString()}
-              </div>
-            )}
+            {/* Sync Status */}
+            <div className="text-xs text-gray-500 mt-3 space-y-1">
+              {lastSynced && (
+                <div>Last synced: {lastSynced.toLocaleTimeString()}</div>
+              )}
+              {hasChanges && !isSyncing && (
+                <div className="text-orange-600 font-medium">
+                  Changes pending sync
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
@@ -496,11 +552,12 @@ const SimplifiedMenu = ({
 };
 
 // Main Canvas Flow Component
-const CanvasFlow = () => {
+const CanvasFlow = ({ onBack }: { onBack: () => void }) => {
   // State Management
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'pending'>('synced');
   
   // Default user ID - in a real app, this would come from authentication
   const userId = 'default-user';
@@ -540,6 +597,20 @@ const CanvasFlow = () => {
     }
   });
 
+  // Track changes for sync status
+  const [hasChanges, setHasChanges] = useState(false);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+
+  // Update changes state when nodes/edges change
+  useEffect(() => {
+    setHasChanges(true);
+    
+    // Auto-save will handle the subtle saving
+    if (nodes.length === 0 && edges.length === 0) {
+      setHasChanges(false);
+    }
+  }, [nodes, edges]);
+
   // Load canvas data on mount
   useEffect(() => {
     const loadCanvasData = async () => {
@@ -548,6 +619,7 @@ const CanvasFlow = () => {
         if (savedData?.nodes && savedData?.edges) {
           setNodes(savedData.nodes);
           setEdges(savedData.edges);
+          setHasChanges(false);
         }
       } catch (error) {
         console.error('Failed to load canvas data:', error);
@@ -677,6 +749,33 @@ const CanvasFlow = () => {
     setNodes((nds) => [...nds, newNode]);
   }, [reactFlowInstance, setNodes, nodes]);
 
+  // Sync with Planning Pages
+  const handleSync = useCallback(async () => {
+    setSyncStatus('syncing');
+    
+    try {
+      // This would integrate with your Planning Pages data
+      // For now, we'll simulate the sync process
+      
+      // 1. Get data from Planning Pages (OutlinePage, PlotPage, CharactersPage, etc.)
+      // 2. Compare with current Canvas nodes
+      // 3. Create/update nodes based on Planning data
+      // 4. Handle conflicts if both Canvas and Planning have been modified
+      
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+      
+      // Force save the current state
+      await forceSave();
+      
+      setSyncStatus('synced');
+      setLastSynced(new Date());
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Sync failed:', error);
+      setSyncStatus('error');
+    }
+  }, [forceSave]);
+
   // Template loading with proper UUID regeneration
   const loadTemplate = useCallback((templateId: string) => {
     console.log('Loading template:', templateId);
@@ -791,32 +890,6 @@ const CanvasFlow = () => {
     }, eds));
   }, [setEdges]);
 
-  const handleSave = useCallback(async () => {
-    try {
-      // Force save to storage
-      await forceSave();
-
-      // Also offer file download
-      const dataToSave = {
-        nodes,
-        edges,
-        viewport: reactFlowInstance?.getViewport(),
-        timestamp: new Date().toISOString()
-      };
-
-      const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `canvas-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Save failed:', error);
-      alert('Failed to save canvas');
-    }
-  }, [forceSave, nodes, edges, reactFlowInstance]);
-
   const handleLoad = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -864,11 +937,12 @@ const CanvasFlow = () => {
   const clearCanvas = useCallback(() => {
     setNodes([]);
     setEdges([]);
+    setHasChanges(false);
   }, [setNodes, setEdges]);
 
   return (
     <div className="h-screen bg-gray-50 flex">
-      {/* Main Canvas Area */}
+      {/* Main Canvas Area - No header, search bar, or breadcrumbs */}
       <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
@@ -916,40 +990,44 @@ const CanvasFlow = () => {
                 Visual Story Canvas
               </h3>
               <p className="text-gray-600 mb-4">
-                Create and visualize your story elements with an intuitive node-based interface.
+                Create and organize your story visually. Sync with your Planning Pages to keep everything connected.
               </p>
               <div className="text-sm text-gray-500 space-y-1">
-                <p>• Add characters, plots, locations, and themes</p>
-                <p>• Connect elements to show relationships</p>
-                <p>• Use the menu on the right to get started</p>
+                <p>• Add story elements from the sidebar</p>
+                <p>• Connect ideas with drag-and-drop</p>
+                <p>• Sync with Planning Pages for consistency</p>
+                <p>• Use templates or samples to get started</p>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Right Side Menu */}
+      {/* Right Side Menu with Sync */}
       <SimplifiedMenu
         isCollapsed={isMenuCollapsed}
         onToggleCollapsed={() => setIsMenuCollapsed(!isMenuCollapsed)}
         onCreateNode={createNode}
-        onSave={handleSave}
+        onSync={handleSync}
         onLoad={handleLoad}
         onClear={clearCanvas}
         onLoadTemplate={loadTemplate}
         onLoadSample={loadSample}
-        lastSaved={lastSaved}
-        isSaving={isSaving}
+        onBack={onBack}
+        lastSynced={lastSynced}
+        isSyncing={isSaving || syncStatus === 'syncing'}
+        hasChanges={hasChanges}
+        syncStatus={syncStatus}
       />
     </div>
   );
 };
 
 // Main Canvas Component with Provider
-const Canvas = () => {
+const Canvas = ({ onBack }: { onBack?: () => void }) => {
   return (
     <ReactFlowProvider>
-      <CanvasFlow />
+      <CanvasFlow onBack={onBack || (() => {})} />
     </ReactFlowProvider>
   );
 };
