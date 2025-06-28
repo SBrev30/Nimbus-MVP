@@ -39,7 +39,7 @@ import { WorldBuildingPage } from './planning/WorldBuildingPage';
 import { HelpTopicsPage } from './help/HelpTopicsPage';
 import { GetStartedPage } from './help/GetStartedPage';
 import { AskQuestionPage } from './help/AskQuestionPage';
-import { GetFeedbackPage } from './help/GetFeedbackPage';
+import { GiveFeedbackPage } from './help/GiveFeedbackPage';
 
 // Lazy load heavy components
 const Canvas = lazy(() => import('./Canvas').then(module => ({ default: module.default || module })));
@@ -363,10 +363,10 @@ function AppContent() {
           </ErrorBoundary>
         );
 
-      case 'get-feedback':
+      case 'give-feedback':
         return (
           <ErrorBoundary>
-            <GetFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
+            <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );
 
@@ -478,7 +478,7 @@ function AppContent() {
                   onClick={() => setActiveView('get-feedback')}
                   className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                 >
-                  Get Feedback
+                  Give Feedback
                 </button>
               </div>
             </div>
