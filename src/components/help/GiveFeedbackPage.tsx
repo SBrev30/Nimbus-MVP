@@ -239,7 +239,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
         activeView={activeView}
         onNavigate={onNavigate}
         title="Feedback Submitted"
-        description="Thank you for helping us improve WritersBlock"
+        description="Thank you for helping us improve Nimbus Note"
         showBackButton
         showBreadcrumb={false}
       >
@@ -320,7 +320,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
       activeView={activeView}
       onNavigate={onNavigate}
       title="Give Feedback"
-      description="Help us improve WritersBlock with your insights"
+      description="Help us improve Nimbus Note with your insights"
       showBackButton
       showBreadcrumb={false}
     >
@@ -434,7 +434,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
                   setErrors(prev => ({ ...prev, detailedFeedback: '' }));
                 }
               }}
-              placeholder="What do you love about WritersBlock? What could be improved? Any specific features you'd like to see?"
+              placeholder="What do you love about Nimbus Note? What could be improved? Any specific features you'd like to see?"
               rows={6}
               className="w-full px-4 py-3 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-[#A5F7AC] transition-colors font-inter resize-none"
             />
