@@ -273,6 +273,7 @@ function AppContent() {
                 onBack={() => setActiveView('write')} 
                 onNavigateToWrite={(projectId) => {
                   // Navigate to write page with specific project
+                  // TODO: Store projectId in state or pass to write view
                   setActiveView('write');
                 }} 
               />
