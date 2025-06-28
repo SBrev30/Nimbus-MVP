@@ -1,40 +1,57 @@
 import React, { useState, useCallback, Suspense, lazy } from 'react';
-import { Sidebar } from './Sidebar';
-import { Breadcrumb } from './Breadcrumb';
-import { Editor } from './Editor';
-import { NotesPanel } from './NotesPanel';
+import { Sidebar } from './components/Sidebar';
+import { Breadcrumb } from './components/Breadcrumb';
+import { Editor } from './components/Editor';
+import { NotesPanel } from './components/NotesPanel';
+import { KanbanApp } from './components/KanbanApp';
+import { StatusDashboard } from './components/StatusDashboard';
+import { Files } from './components/Files';
+import { ProjectsPage } from './components/projects-page';
 import { Search } from 'lucide-react';
-import { ThemeProvider } from '../contexts/ThemeContext';
-import { AppDataProvider, useAppData } from '../contexts/AppDataContext';
-import { SettingsProvider } from '../contexts/SettingsContext';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { useAutoSave } from './hooks/useAutoSave';
+import { ThemeProvider } from './contexts/ThemeContext';
 
-// Lightweight immediate components
-import { OutlinePage } from './planning/OutlinePage';
-import { PlotPage } from './planning/PlotPage';
-import { CharactersPage } from './planning/CharactersPage';
-import { WorldBuildingPage } from './planning/WorldBuildingPage';
-import { HelpTopicsPage } from './help/HelpTopicsPage';
-import { GetStartedPage } from './help/GetStartedPage';
-import { AskQuestionPage } from './help/AskQuestionPage';
-import { GetFeedbackPage } from './help/GetFeedbackPage';
+// Define types directly in this file to avoid import issues
+interface EditorContent {
+  title: string;
+  content: string;
+  wordCount: number;
+  lastSaved: Date;
+}
 
-// Heavy lazy-loaded components
-const Canvas = lazy(() => import('./Canvas'));
-const KanbanApp = lazy(() => import('./KanbanApp'));
-const Files = lazy(() => import('./Files'));
-const ProjectsPage = lazy(() => import('./projects-page'));
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  category: 'Person' | 'Place' | 'Plot' | 'Misc';
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-// FIXED: Settings components with proper import handling
-const History = lazy(() => import('./History'));
-const Integration = lazy(() => import('./Integration'));
+// Import planning components
+import { OutlinePage } from './components/planning/OutlinePage';
+import { PlotPage } from './components/planning/PlotPage';
+import { CharactersPage } from './components/planning/CharactersPage';
+import { WorldBuildingPage } from './components/planning/WorldBuildingPage';
 
-// Enhanced loading components with specific messages
+// Import help components
+import { HelpTopicsPage } from './components/help/HelpTopicsPage';
+import { GetStartedPage } from './components/help/GetStartedPage';
+import { AskQuestionPage } from './components/help/AskQuestionPage';
+import { GetFeedbackPage } from './components/help/GetFeedbackPage';
+
+// Lazy load heavy components
+const Canvas = lazy(() => import('./components/Canvas').then(module => ({ default: module.default || module })));
+const Integration = lazy(() => import('./components/Integration').then(module => ({ default: module.default || module })));
+const History = lazy(() => import('./components/History').then(module => ({ default: module.default || module })));
+
+// Loading component with message support
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
   <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
     <div className="text-center">
-      <div className="w-12 h-12 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-      <p className="text-[#889096] font-medium">{message}</p>
-      <p className="text-sm text-gray-400 mt-2">This may take a moment...</p>
+      <div className="w-8 h-8 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-[#889096]">{message}</p>
     </div>
   </div>
 );
@@ -42,15 +59,15 @@ const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
 // Error boundary component
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback?: React.ReactNode },
-  { hasError: boolean; error?: Error }
+  { hasError: boolean }
 > {
   constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error): { hasError: boolean } {
+    return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -61,20 +78,9 @@ class ErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return this.props.fallback || (
         <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
-          <div className="text-center p-8">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24">
-                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
-            <p className="text-gray-600 mb-4">We encountered an error loading this component.</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
-            >
-              Refresh Page
-            </button>
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-2">Something went wrong</h2>
+            <p className="text-gray-600">Please try refreshing the page</p>
           </div>
         </div>
       );
@@ -84,74 +90,196 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-// Define view types
-type ViewType = 'dashboard' | 'projects' | 'canvas' | 'library' | 'planning' | 'outline' | 'plot' | 
-               'characters' | 'world-building' | 'files' | 'settings' | 'history' | 'integrations' | 
-               'help' | 'help-topics' | 'get-started' | 'ask-question' | 'get-feedback';
-
+// App Content Component
 function AppContent() {
-  const [activeView, setActiveView] = useState<ViewType>('dashboard');
-  const [selectedChapter, setSelectedChapter] = useState<any>(null);
+  // State management
+  const [activeView, setActiveView] = useState('write');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
+  const [currentChapter, setCurrentChapter] = useState<{ id: string; title: string } | null>(null);
+  
+  // Editor content state
+  const [editorContent, setEditorContent] = useLocalStorage<EditorContent>('editorContent', {
+    title: 'Untitled Document',
+    content: '<p>Start writing your story here...</p>',
+    wordCount: 0,
+    lastSaved: new Date(),
+  });
 
-  const handleViewChange = useCallback((view: ViewType) => {
+  // Chapter contents state
+  const [chapterContents, setChapterContents] = useLocalStorage<Record<string, EditorContent>>('chapterContents', {});
+
+  // Notes state
+  const [notes, setNotes] = useLocalStorage<Note[]>('notes', []);
+
+  // Auto-save functionality
+  useAutoSave(editorContent, 'editorContent', 5000);
+
+  // Handler functions
+  const handleEditorChange = useCallback((content: EditorContent) => {
+    setEditorContent(content);
+    
+    // Save current chapter if we're editing a specific chapter
+    if (currentChapter) {
+      setChapterContents(prev => ({
+        ...prev,
+        [currentChapter.id]: content
+      }));
+    }
+  }, [setEditorContent, currentChapter, setChapterContents]);
+
+  const handleViewChange = useCallback((view: string) => {
     setActiveView(view);
+    
+    // Clear current chapter when navigating away from editor
+    if (view !== 'write' && view !== 'editor') {
+      setCurrentChapter(null);
+    }
   }, []);
 
-  const handleSelectChapter = useCallback((chapter: any) => {
-    setSelectedChapter(chapter);
-    setActiveView('dashboard');
-  }, []);
+  const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
+    // Save current content before switching
+    if (currentChapter) {
+      setChapterContents(prev => ({
+        ...prev,
+        [currentChapter.id]: editorContent
+      }));
+    }
 
-  const handleBackToSettings = useCallback(() => {
-    setActiveView('settings');
-  }, []);
+    // Set new chapter
+    setCurrentChapter({ id: chapterId, title: chapterTitle });
+    setActiveView('editor');
+    
+    // Load existing content or create new
+    const existingContent = chapterContents[chapterId];
+    const chapterContent = existingContent || {
+      title: chapterTitle,
+      content: '<p>Start writing your chapter here...</p>',
+      wordCount: 0,
+      lastSaved: new Date(),
+    };
+    
+    setEditorContent(chapterContent);
+  }, [currentChapter, editorContent, chapterContents, setEditorContent, setChapterContents]);
 
-  const WritePage = () => {
-    return (
-      <div className="flex-1 flex">
-        <div className="flex-1 flex flex-col">
-          <Editor 
-            selectedChapter={selectedChapter}
-            onSelectChapter={handleSelectChapter}
-          />
-        </div>
-        <NotesPanel />
-      </div>
-    );
-  };
+  // Notes handlers
+  const handleAddNote = useCallback((note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newNote: Note = {
+      ...note,
+      id: Date.now().toString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setNotes(prev => [...prev, newNote]);
+  }, [setNotes]);
 
-  const renderContent = () => {
+  const handleEditNote = useCallback((id: string, updates: Partial<Note>) => {
+    setNotes(prev => prev.map(note => 
+      note.id === id 
+        ? { ...note, ...updates, updatedAt: new Date() }
+        : note
+    ));
+  }, [setNotes]);
+
+  const handleDeleteNote = useCallback((id: string) => {
+    setNotes(prev => prev.filter(note => note.id !== id));
+  }, [setNotes]);
+
+  // Navigation handlers
+  const handleBackToSettings = useCallback(() => setActiveView('settings'), []);
+  const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
+  const handleBackToWrite = useCallback(() => setActiveView('write'), []);
+  const handleBackToProjects = useCallback(() => {
+    // Save current content before leaving
+    if (currentChapter) {
+      setChapterContents(prev => ({
+        ...prev,
+        [currentChapter.id]: editorContent
+      }));
+    }
+    setCurrentChapter(null);
+    setActiveView('projects');
+  }, [currentChapter, editorContent, setChapterContents]);
+
+  // Lazy component wrappers with providers
+  const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
+    <Integration onBack={onBack} />
+  ), []);
+
+  const HistoryPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
+    <History onBack={onBack} />
+  ), []);
+
+  // Memoized render content function
+  const renderContent = useCallback(() => {
     switch (activeView) {
-      case 'dashboard':
+      case 'write':
         return (
           <ErrorBoundary>
-            <WritePage />
+            <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 flex flex-col">
+                <Editor
+                  content={editorContent}
+                  onChange={handleEditorChange}
+                />
+              </div>
+              <NotesPanel
+                notes={notes}
+                onAddNote={handleAddNote}
+                onEditNote={handleEditNote}
+                onDeleteNote={handleDeleteNote}
+                isCollapsed={notesPanelCollapsed}
+                onToggleCollapse={() => setNotesPanelCollapsed(!notesPanelCollapsed)}
+              />
+            </div>
+          </ErrorBoundary>
+        );
+
+      case 'editor':
+        return (
+          <ErrorBoundary>
+            <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 flex flex-col">
+                <Editor
+                  content={editorContent}
+                  onChange={handleEditorChange}
+                />
+              </div>
+              <NotesPanel
+                notes={notes}
+                onAddNote={handleAddNote}
+                onEditNote={handleEditNote}
+                onDeleteNote={handleDeleteNote}
+                isCollapsed={notesPanelCollapsed}
+                onToggleCollapse={() => setNotesPanelCollapsed(!notesPanelCollapsed)}
+              />
+            </div>
           </ErrorBoundary>
         );
 
       case 'projects':
         return (
           <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading projects..." />}>
-              <ProjectsPage />
+            <Suspense fallback={<LoadingSpinner message="Loading Projects..." />}>
+              <ProjectsPage onBack={handleBackToWrite} />
             </Suspense>
           </ErrorBoundary>
         );
-
+      
+      case 'dashboard':
+        return (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading Project Dashboard..." />}>
+              <KanbanApp />
+            </Suspense>
+          </ErrorBoundary>
+        );
+      
       case 'canvas':
         return (
           <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading canvas..." />}>
+            <Suspense fallback={<LoadingSpinner message="Loading Visual Canvas..." />}>
               <Canvas />
-            </Suspense>
-          </ErrorBoundary>
-        );
-
-      case 'library':
-        return (
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading library..." />}>
-              <KanbanApp />
             </Suspense>
           </ErrorBoundary>
         );
@@ -159,66 +287,61 @@ function AppContent() {
       case 'files':
         return (
           <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading files..." />}>
-              <Files />
+            <Suspense fallback={<LoadingSpinner message="Loading Files..." />}>
+              <Files onBack={handleBackToWrite} />
             </Suspense>
           </ErrorBoundary>
         );
 
-      case 'settings':
-        return (
-          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
-                  <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Settings</h2>
-              <p className="text-gray-600 mb-6">Choose a setting category</p>
-              <div className="space-y-2">
-                <button
-                  onClick={() => setActiveView('history')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
-                >
-                  View History
-                </button>
-                <button
-                  onClick={() => setActiveView('integrations')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
-                >
-                  Manage Integrations
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-
-      // FIXED: Integration component with proper error handling
-      case 'integrations':
+      // Planning pages (immediate loading - lightweight)
+      case 'outline':
         return (
           <ErrorBoundary>
-            <SettingsProvider>
-              <Suspense fallback={<LoadingSpinner message="Loading integrations..." />}>
-                <Integration onBack={handleBackToSettings} />
-              </Suspense>
-            </SettingsProvider>
+            <OutlinePage onBack={handleBackToPlanning} />
+          </ErrorBoundary>
+        );
+
+      case 'plot':
+        return (
+          <ErrorBoundary>
+            <PlotPage onBack={handleBackToPlanning} />
+          </ErrorBoundary>
+        );
+
+      case 'characters':
+        return (
+          <ErrorBoundary>
+            <CharactersPage onBack={handleBackToPlanning} />
+          </ErrorBoundary>
+        );
+
+      case 'world-building':
+        return (
+          <ErrorBoundary>
+            <WorldBuildingPage onBack={handleBackToPlanning} />
           </ErrorBoundary>
         );
       
-      // FIXED: History component with proper error handling
+      // Settings pages (lazy with providers)
+      case 'integrations':
+        return (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading Integration Settings..." />}>
+              <IntegrationPageWithProvider onBack={handleBackToSettings} />
+            </Suspense>
+          </ErrorBoundary>
+        );
+      
       case 'history':
         return (
           <ErrorBoundary>
-            <SettingsProvider>
-              <Suspense fallback={<LoadingSpinner message="Loading history..." />}>
-                <History onBack={handleBackToSettings} />
-              </Suspense>
-            </SettingsProvider>
+            <Suspense fallback={<LoadingSpinner message="Loading Change History..." />}>
+              <HistoryPageWithProvider onBack={handleBackToSettings} />
+            </Suspense>
           </ErrorBoundary>
         );
 
+      // Help pages (immediate loading - lightweight)
       case 'help-topics':
         return (
           <ErrorBoundary>
@@ -247,6 +370,7 @@ function AppContent() {
           </ErrorBoundary>
         );
 
+      // Static pages (immediate)
       case 'planning':
         return (
           <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
@@ -267,19 +391,19 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => setActiveView('plot')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                 >
                   Plot Development
                 </button>
                 <button
                   onClick={() => setActiveView('characters')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                 >
                   Characters
                 </button>
                 <button
                   onClick={() => setActiveView('world-building')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                 >
                   World Building
                 </button>
@@ -288,32 +412,34 @@ function AppContent() {
           </div>
         );
 
-      case 'outline':
+      case 'settings':
         return (
-          <ErrorBoundary>
-            <OutlinePage activeView={activeView} onNavigate={handleViewChange} />
-          </ErrorBoundary>
-        );
-
-      case 'plot':
-        return (
-          <ErrorBoundary>
-            <PlotPage activeView={activeView} onNavigate={handleViewChange} />
-          </ErrorBoundary>
-        );
-
-      case 'characters':
-        return (
-          <ErrorBoundary>
-            <CharactersPage activeView={activeView} onNavigate={handleViewChange} />
-          </ErrorBoundary>
-        );
-
-      case 'world-building':
-        return (
-          <ErrorBoundary>
-            <WorldBuildingPage activeView={activeView} onNavigate={handleViewChange} />
-          </ErrorBoundary>
+          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Settings</h2>
+              <p className="text-gray-600 mb-6">Configure your application settings</p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setActiveView('history')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                >
+                  Change History
+                </button>
+                <button
+                  onClick={() => setActiveView('integrations')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                >
+                  Integrations
+                </button>
+              </div>
+            </div>
+          </div>
         );
 
       case 'help':
@@ -322,35 +448,37 @@ function AppContent() {
             <div className="text-center">
               <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
-                  <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="17" r="1" fill="currentColor"/>
                 </svg>
               </div>
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Help & Support</h2>
-              <p className="text-gray-600 mb-6">Choose how we can help you</p>
+              <p className="text-gray-600 mb-6">Get help and support for WritersBlock</p>
               <div className="space-y-2">
                 <button
                   onClick={() => setActiveView('help-topics')}
                   className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
                 >
-                  Browse Help Topics
+                  Help Topics
                 </button>
                 <button
                   onClick={() => setActiveView('get-started')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                 >
-                  Get Started Guide
+                  Get Started
                 </button>
                 <button
                   onClick={() => setActiveView('ask-question')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                 >
-                  Ask a Question
+                  Ask A Question
                 </button>
                 <button
                   onClick={() => setActiveView('get-feedback')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                 >
-                  Send Feedback
+                  Get Feedback
                 </button>
               </div>
             </div>
@@ -358,49 +486,76 @@ function AppContent() {
         );
 
       default:
+        console.warn(`Unknown view: ${activeView}`);
         return (
           <ErrorBoundary>
-            <WritePage />
+            <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">View Not Found</h2>
+                <p className="text-gray-600 mb-4">The requested view "{activeView}" was not found.</p>
+                <button 
+                  onClick={() => handleViewChange('write')} 
+                  className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                >
+                  Go to Write
+                </button>
+              </div>
+            </div>
           </ErrorBoundary>
         );
     }
-  };
+  }, [
+    activeView,
+    editorContent,
+    handleEditorChange,
+    notes,
+    handleAddNote,
+    handleEditNote,
+    handleDeleteNote,
+    notesPanelCollapsed,
+    handleBackToSettings,
+    handleBackToPlanning,
+    handleBackToWrite,
+    handleBackToProjects,
+    handleViewChange,
+    IntegrationPageWithProvider,
+    HistoryPageWithProvider
+  ]);
 
   return (
-    <div className="min-h-screen bg-[#F8F7F7] flex">
+    <div className="h-screen bg-[#F9FAFB] flex font-inter overflow-hidden">
       <Sidebar 
-        activeView={activeView} 
+        isCollapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        activeView={activeView}
         onViewChange={handleViewChange}
       />
-      
-      <div className="flex-1 flex flex-col">
-        <div className="h-[80px] bg-white border-b border-[#C6C5C5] flex items-center justify-between px-6">
-          <Breadcrumb activeView={activeView} />
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="h-[72px] flex items-end justify-between px-6 pb-3">
+          <Breadcrumb activeView={activeView} onNavigate={handleViewChange} />
           
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#889096] w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 border border-[#C6C5C5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent w-64"
-              />
-            </div>
+          <div className="bg-[#FAF9F9] rounded-[20px] h-[29px] w-[171px] flex items-center px-3 gap-2">
+            <Search className="w-[17px] h-[17px] text-[#889096]" />
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              className="bg-transparent text-sm text-gray-600 outline-none flex-1 font-inter"
+            />
           </div>
         </div>
-        
+
         {renderContent()}
       </div>
     </div>
   );
 }
 
+// Root App with all providers in correct order
 function App() {
   return (
     <ThemeProvider>
-      <AppDataProvider>
-        <AppContent />
-      </AppDataProvider>
+      <AppContent />
     </ThemeProvider>
   );
 }
