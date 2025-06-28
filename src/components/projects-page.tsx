@@ -307,14 +307,14 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-16 h-16 border-4 border-[#ff4e00] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-[#889096]">Loading your projects...</p>
           </div>
         </div>
       ) : (
         <>
           {/* Header */}
-          <div className="bg-white border-b border-[#C6C5C5] p-6">
+          <div className="bg-white border-b border-[#f2eee2 ] p-6">
             <div className="max-w-7xl mx-auto">
               {/* Back button and title */}
               <div className="flex items-center gap-4 mb-6">
@@ -350,7 +350,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                 <select
                   value={genreFilter}
                   onChange={(e) => setGenreFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                 >
                   {genreFilterOptions.map(option => (
                     <option key={option.value} value={option.value}>
@@ -363,7 +363,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                 >
                   <option value="lastModified">Last Modified</option>
                   <option value="title">Title</option>
@@ -374,7 +374,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                 {/* New Project Button */}
                 <button
                   onClick={() => setShowNewProjectModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 rounded-lg font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg font-medium transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   New Project
@@ -410,7 +410,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                   ) : null}
                   <button
                     onClick={() => setShowNewProjectModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 rounded-lg font-medium transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg font-medium transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     {hasActiveFilters ? 'Create New Project' : 'Create Your First Project'}
@@ -452,7 +452,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
-                            className="bg-[#A5F7AC] h-2 rounded-full transition-all duration-300"
+                            className="bg-[#ff4e00] h-2 rounded-full transition-all duration-300"
                             style={{ width: `${Math.min(project.completionPercentage, 100)}%` }}
                           />
                         </div>
@@ -484,7 +484,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                         </button>
                         <button
                           onClick={() => handleStartWriting(project)}
-                          className="flex-1 px-3 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 rounded-lg transition-colors text-sm font-medium"
+                          className="flex-1 px-3 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors text-sm font-medium"
                         >
                           {project.chapterCount > 0 ? 'Continue Writing' : 'Start Writing'}
                         </button>
@@ -525,7 +525,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                   value={newProject.title}
                   onChange={(e) => setNewProject({...newProject, title: e.target.value})}
                   placeholder="Enter your project title"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                 />
               </div>
               
@@ -538,7 +538,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                   onChange={(e) => setNewProject({...newProject, description: e.target.value})}
                   placeholder="Describe your project"
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                 />
               </div>
               
@@ -550,7 +550,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                   <select
                     value={newProject.genre}
                     onChange={(e) => setNewProject({...newProject, genre: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                   >
                     <option value="Fantasy">Fantasy</option>
                     <option value="Science Fiction">Science Fiction</option>
@@ -571,7 +571,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                     type="number"
                     value={newProject.wordCountTarget}
                     onChange={(e) => setNewProject({...newProject, wordCountTarget: parseInt(e.target.value) || 0})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                     min="0"
                     step="1000"
                   />
@@ -585,7 +585,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                 <select
                   value={newProject.status}
                   onChange={(e) => setNewProject({...newProject, status: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                 >
                   <option value="planning">Planning</option>
                   <option value="writing">Writing</option>
@@ -605,7 +605,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
               <button
                 onClick={handleCreateProject}
                 disabled={!newProject.title}
-                className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors disabled:opacity-50"
               >
                 Create Project
               </button>
