@@ -20,6 +20,7 @@ import 'reactflow/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
 import './Canvas.css';
 import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 // Import the enhanced auto-save hook
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
@@ -521,6 +522,7 @@ const SimplifiedMenu = ({
 const CanvasFlow = () => {
   // Get authenticated user
   const { user } = useAuth();
+  const { user } = useAuth();
   
   // State Management
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -528,7 +530,7 @@ const CanvasFlow = () => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'pending'>('synced');
   
-  // Use authenticated user ID or fallback for anonymous users
+  // Use authenticated user ID or fallback to 'anonymous' for unauthenticated users
   const userId = user?.id || 'anonymous';
   
   // Get react flow instance and viewport
@@ -543,7 +545,7 @@ const CanvasFlow = () => {
     lastModified: Date.now()
   }), [nodes, edges, viewport]);
 
-  // Enhanced auto-save hook
+  // Enhanced auto-save hook with cloud sync only for authenticated users
   const {
     lastSaved,
     isSaving,
@@ -557,7 +559,7 @@ const CanvasFlow = () => {
   } = useUnifiedAutoSave(canvasState, userId, {
     localKey: `enhanced-canvas-${userId}`,
     delay: 2000,
-    enableCloud: user ? true : false, // Only enable cloud storage for authenticated users
+    enableCloud: !!user, // Only enable cloud storage for authenticated users
     onSaveSuccess: (data) => {
       console.log('Canvas auto-saved successfully at:', new Date());
     },

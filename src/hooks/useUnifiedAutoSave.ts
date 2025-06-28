@@ -23,7 +23,7 @@ interface AutoSaveOptions {
  */
 export function useUnifiedAutoSave<T>(
   data: T,
-  userId: string,
+  userId: string | null,
   options: AutoSaveOptions
 ) {
   const { saveToCloud, loadFromCloud, syncStatus, isOnline } = useCloudStorage(userId);
@@ -65,7 +65,7 @@ export function useUnifiedAutoSave<T>(
         localStorage.setItem(options.localKey, JSON.stringify(dataWithTimestamp));
         
         // Step 2: Attempt cloud save if online and enabled
-        if (options.enableCloud && isOnline && userId) {
+        if (options.enableCloud && isOnline && userId && userId !== 'anonymous') {
           setState(prev => ({ ...prev, cloudSyncStatus: 'syncing' }));
           const cloudSuccess = await saveToCloud(dataWithTimestamp);
           
@@ -147,7 +147,7 @@ export function useUnifiedAutoSave<T>(
       const parsedLocal = localData ? JSON.parse(localData) : null;
 
       // If cloud is enabled and online, attempt sync
-      if (options.enableCloud && isOnline && userId) {
+      if (options.enableCloud && isOnline && userId && userId !== 'anonymous') {
         try {
           const cloudData = await loadFromCloud();
           
