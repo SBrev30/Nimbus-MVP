@@ -34,7 +34,7 @@ export function HelpSearch({
           placeholder={placeholder}
           value={searchQuery}
           onChange={handleSearchChange}
-          className="w-full pl-10 pr-4 py-3 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-[#A5F7AC] transition-colors font-inter text-gray-900 placeholder-[#889096]"
+          className="w-full pl-10 pr-4 py-3 border border-[#e8ddc1] rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-[#A5F7AC] transition-colors font-inter text-gray-900 placeholder-[#889096]"
         />
       </div>
     </form>
