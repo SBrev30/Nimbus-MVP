@@ -257,12 +257,12 @@ function AppContent() {
           </ErrorBoundary>
         );
 
-      // Fixed Canvas case - removed duplicate and properly integrated Sync
+      // Fixed Canvas case - no back button needed
       case 'canvas':
         return (
           <ErrorBoundary>
             <Suspense fallback={<LoadingSpinner message="Loading Visual Canvas..." />}>
-              <Canvas onBack={() => setActiveView('write')} />
+              <Canvas />
             </Suspense>
           </ErrorBoundary>
         );
