@@ -113,7 +113,7 @@ function AppContent() {
   const [notes, setNotes] = useLocalStorage<Note[]>('notes', []);
 
   // Auto-save functionality
-  useAutoSave(editorContent, 'editorContent', 5000);
+  useAutoSave(editorContent, setEditorContent, 5000);
 
   // Handler functions
   const handleEditorChange = useCallback((content: EditorContent) => {
