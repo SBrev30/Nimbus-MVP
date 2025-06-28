@@ -15,7 +15,8 @@ import {
   ExternalLink,
   RefreshCw // Changed from Refresh to RefreshCw
 } from 'lucide-react';
-import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
+// Remove the problematic import - we'll use localStorage directly
+// import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 
 interface Integration {
   id: string;
@@ -129,8 +130,12 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   const [config, setConfig] = useState<Record<string, string>>({});
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
 
-  // Auto-save integrations
-  useUnifiedAutoSave('integrations', integrations);
+  // Auto-save integrations to localStorage
+  useEffect(() => {
+    if (integrations.length > 0) {
+      localStorage.setItem('integrations', JSON.stringify(integrations));
+    }
+  }, [integrations]);
 
   useEffect(() => {
     loadIntegrations();
@@ -590,4 +595,6 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   );
 };
 
+// Support both named and default export for compatibility
+export { Integration };
 export default Integration;
