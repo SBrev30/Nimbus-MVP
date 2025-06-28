@@ -1,29 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings, 
   Plus, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Refresh, 
-  Edit3, 
   Trash2, 
+  Edit3, 
+  CheckCircle, 
+  AlertCircle, 
+  Globe, 
+  Database, 
+  Cloud, 
+  Zap,
+  Key,
+  Shield,
   ExternalLink,
-  Github,
-  Database,
-  FileText,
-  Cloud,
-  Zap
+  Refresh
 } from 'lucide-react';
+
+// Props interface for the component
+interface IntegrationProps {
+  onBack?: () => void;
+}
 
 interface Integration {
   id: string;
   name: string;
-  type: 'backup' | 'writing_assistant' | 'grammar_checker' | 'cloud_storage' | 'version_control';
-  status: 'connected' | 'pending' | 'error';
+  type: 'cloud_storage' | 'ai_service' | 'publishing' | 'backup' | 'analytics' | 'social';
+  status: 'connected' | 'disconnected' | 'error' | 'pending';
   description: string;
   icon: string;
-  config?: Record<string, any>;
+  config: Record<string, any>;
   lastSync?: Date;
   errorMessage?: string;
   isBuiltIn?: boolean;
@@ -38,78 +43,73 @@ interface IntegrationTemplate {
   configSchema: Array<{
     key: string;
     label: string;
-    type: 'text' | 'password' | 'select' | 'boolean';
+    type: 'text' | 'password' | 'url' | 'select';
     required: boolean;
-    placeholder?: string;
     options?: string[];
+    placeholder?: string;
   }>;
 }
 
 const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
   {
-    id: 'github',
-    name: 'GitHub',
-    type: 'version_control',
-    description: 'Backup your work to GitHub repositories',
-    icon: 'github',
-    configSchema: [
-      { key: 'token', label: 'GitHub Token', type: 'password', required: true, placeholder: 'ghp_...' },
-      { key: 'repository', label: 'Repository', type: 'text', required: true, placeholder: 'username/repo' },
-      { key: 'branch', label: 'Branch', type: 'text', required: false, placeholder: 'main' }
-    ]
-  },
-  {
-    id: 'google-drive',
+    id: 'google_drive',
     name: 'Google Drive',
     type: 'cloud_storage',
-    description: 'Sync and backup your writing to Google Drive',
+    description: 'Automatically backup and sync your work to Google Drive',
+    icon: 'drive',
+    configSchema: [
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'Enter your Google Drive API key' },
+      { key: 'folderId', label: 'Folder ID', type: 'text', required: false, placeholder: 'Optional: Specific folder ID' }
+    ]
+  },
+  {
+    id: 'dropbox',
+    name: 'Dropbox',
+    type: 'cloud_storage',
+    description: 'Sync your writing projects with Dropbox',
     icon: 'cloud',
     configSchema: [
-      { key: 'folder', label: 'Folder Name', type: 'text', required: false, placeholder: 'WritersSpace Backup' },
-      { key: 'autoSync', label: 'Auto Sync', type: 'boolean', required: false }
+      { key: 'accessToken', label: 'Access Token', type: 'password', required: true, placeholder: 'Enter your Dropbox access token' }
     ]
   },
   {
-    id: 'grammarly',
-    name: 'Grammarly API',
-    type: 'grammar_checker',
-    description: 'Enhanced grammar and style checking',
-    icon: 'filetext',
+    id: 'openai_gpt',
+    name: 'OpenAI GPT',
+    type: 'ai_service',
+    description: 'Enhance your writing with AI-powered suggestions and analysis',
+    icon: 'zap',
     configSchema: [
-      { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'Enter your Grammarly API key' }
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'sk-...' },
+      { key: 'model', label: 'Model', type: 'select', required: true, options: ['gpt-4', 'gpt-3.5-turbo'] }
     ]
   },
   {
-    id: 'notion',
-    name: 'Notion',
-    type: 'backup',
-    description: 'Export your work to Notion databases',
-    icon: 'database',
+    id: 'medium',
+    name: 'Medium',
+    type: 'publishing',
+    description: 'Publish your completed articles directly to Medium',
+    icon: 'globe',
     configSchema: [
-      { key: 'token', label: 'Integration Token', type: 'password', required: true },
-      { key: 'databaseId', label: 'Database ID', type: 'text', required: true }
+      { key: 'integrationToken', label: 'Integration Token', type: 'password', required: true, placeholder: 'Enter your Medium integration token' }
+    ]
+  },
+  {
+    id: 'wordpress',
+    name: 'WordPress',
+    type: 'publishing',
+    description: 'Publish to your WordPress blog or website',
+    icon: 'globe',
+    configSchema: [
+      { key: 'siteUrl', label: 'Site URL', type: 'url', required: true, placeholder: 'https://yoursite.wordpress.com' },
+      { key: 'username', label: 'Username', type: 'text', required: true, placeholder: 'Your WordPress username' },
+      { key: 'password', label: 'Application Password', type: 'password', required: true, placeholder: 'WordPress application password' }
     ]
   }
 ];
 
-interface IntegrationProps {
-  onBack: () => void;
-}
-
 const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
-  const [integrations, setIntegrations] = useState<Integration[]>([
-    {
-      id: '1',
-      name: 'Auto-Save',
-      type: 'backup',
-      status: 'connected',
-      description: 'Automatically saves your work locally every few seconds',
-      icon: 'database',
-      isBuiltIn: true,
-      lastSync: new Date()
-    }
-  ]);
-
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<IntegrationTemplate | null>(null);
@@ -117,43 +117,119 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   const [config, setConfig] = useState<Record<string, any>>({});
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
 
-  const getIntegrationIcon = (iconName: string) => {
-    const iconProps = { className: "w-5 h-5 text-gray-600" };
-    switch (iconName) {
-      case 'github': return <Github {...iconProps} />;
-      case 'cloud': return <Cloud {...iconProps} />;
-      case 'database': return <Database {...iconProps} />;
-      case 'filetext': return <FileText {...iconProps} />;
-      case 'zap': return <Zap {...iconProps} />;
-      default: return <Settings {...iconProps} />;
+  useEffect(() => {
+    loadIntegrations();
+  }, []);
+
+  const loadIntegrations = async () => {
+    try {
+      const stored = localStorage.getItem('integrations');
+      const loadedIntegrations: Integration[] = stored ? JSON.parse(stored, (key, value) => {
+        // Handle Date serialization
+        if (key === 'lastSync' && value) {
+          return new Date(value);
+        }
+        return value;
+      }) : [];
+      
+      // Add built-in integrations if they don't exist
+      const builtInIntegrations: Integration[] = [
+        {
+          id: 'local_storage',
+          name: 'Local Storage',
+          type: 'backup',
+          status: 'connected',
+          description: 'Automatic local backup of your work',
+          icon: 'database',
+          config: {},
+          isBuiltIn: true,
+          lastSync: new Date()
+        }
+      ];
+
+      const mergedIntegrations = [
+        ...builtInIntegrations,
+        ...loadedIntegrations.filter(integration => !integration.isBuiltIn)
+      ];
+
+      setIntegrations(mergedIntegrations);
+    } catch (error) {
+      console.error('Failed to load integrations:', error);
+      setIntegrations([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveIntegrationsToStorage = (integrationsToSave: Integration[]) => {
+    try {
+      // Filter out built-in integrations before saving
+      const userIntegrations = integrationsToSave.filter(integration => !integration.isBuiltIn);
+      localStorage.setItem('integrations', JSON.stringify(userIntegrations));
+    } catch (error) {
+      console.error('Failed to save integrations:', error);
+    }
+  };
+
+  const getIntegrationIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'drive':
+      case 'cloud':
+        return <Cloud className="w-6 h-6" />;
+      case 'zap':
+        return <Zap className="w-6 h-6" />;
+      case 'globe':
+        return <Globe className="w-6 h-6" />;
+      case 'database':
+        return <Database className="w-6 h-6" />;
+      default:
+        return <Settings className="w-6 h-6" />;
+    }
+  };
+
+  const getStatusIcon = (status: Integration['status']) => {
+    switch (status) {
+      case 'connected':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'pending':
+        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-gray-400" />;
     }
   };
 
   const getStatusColor = (status: Integration['status']) => {
     switch (status) {
-      case 'connected': return 'bg-green-50 text-green-700 border-green-200';
-      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'error': return 'bg-red-50 text-red-700 border-red-200';
-    }
-  };
-
-  const getStatusIcon = (status: Integration['status']) => {
-    const iconProps = { className: "w-3 h-3" };
-    switch (status) {
-      case 'connected': return <CheckCircle {...iconProps} />;
-      case 'pending': return <Clock {...iconProps} />;
-      case 'error': return <XCircle {...iconProps} />;
+      case 'connected':
+        return 'text-green-700 bg-green-50 border-green-200';
+      case 'error':
+        return 'text-red-700 bg-red-50 border-red-200';
+      case 'pending':
+        return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+      default:
+        return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
 
   const openAddModal = () => {
+    setSelectedTemplate(null);
+    setConfig({});
     setShowAddModal(true);
   };
 
-  const openConfigModal = (template: IntegrationTemplate, integration?: Integration) => {
+  const openConfigModal = (template: IntegrationTemplate, existingIntegration?: Integration) => {
     setSelectedTemplate(template);
-    setEditingIntegration(integration || null);
-    setConfig(integration?.config || {});
+    setEditingIntegration(existingIntegration || null);
+    
+    // Pre-fill config if editing
+    if (existingIntegration) {
+      setConfig(existingIntegration.config);
+    } else {
+      setConfig({});
+    }
+    
     setShowAddModal(false);
     setShowConfigModal(true);
   };
@@ -161,13 +237,15 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   const testConnection = async (integrationId: string) => {
     setTestingConnection(integrationId);
     
-    // Simulate API call
+    // Simulate connection test
     setTimeout(() => {
-      setIntegrations(prev => prev.map(integration =>
+      const updatedIntegrations = integrations.map(integration =>
         integration.id === integrationId
           ? { ...integration, status: 'connected' as const, lastSync: new Date(), errorMessage: undefined }
           : integration
-      ));
+      );
+      setIntegrations(updatedIntegrations);
+      saveIntegrationsToStorage(updatedIntegrations);
       setTestingConnection(null);
     }, 2000);
   };
@@ -195,15 +273,19 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
       config: { ...config }
     };
 
+    let updatedIntegrations: Integration[];
     if (editingIntegration) {
       // Update existing integration
-      setIntegrations(prev => prev.map(integration =>
+      updatedIntegrations = integrations.map(integration =>
         integration.id === editingIntegration.id ? integrationData : integration
-      ));
+      );
     } else {
       // Add new integration
-      setIntegrations(prev => [...prev, integrationData]);
+      updatedIntegrations = [...integrations, integrationData];
     }
+
+    setIntegrations(updatedIntegrations);
+    saveIntegrationsToStorage(updatedIntegrations);
 
     // Test connection automatically
     setTimeout(() => testConnection(integrationData.id), 500);
@@ -216,56 +298,64 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
 
   const deleteIntegration = (id: string) => {
     if (confirm('Are you sure you want to remove this integration?')) {
-      setIntegrations(prev => prev.filter(integration => integration.id !== id));
+      const updatedIntegrations = integrations.filter(integration => integration.id !== id);
+      setIntegrations(updatedIntegrations);
+      saveIntegrationsToStorage(updatedIntegrations);
     }
   };
 
   const syncIntegration = async (id: string) => {
-    setIntegrations(prev => prev.map(integration =>
+    const updatedIntegrations = integrations.map(integration =>
       integration.id === id
         ? { ...integration, status: 'pending' as const }
         : integration
-    ));
+    );
+    setIntegrations(updatedIntegrations);
 
     // Simulate sync process
     setTimeout(() => {
-      setIntegrations(prev => prev.map(integration =>
+      const finalIntegrations = integrations.map(integration =>
         integration.id === id
           ? { ...integration, status: 'connected' as const, lastSync: new Date() }
           : integration
-      ));
+      );
+      setIntegrations(finalIntegrations);
+      saveIntegrationsToStorage(finalIntegrations);
     }, 1500);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#889096]">Loading integrations...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 bg-white rounded-t-[17px] overflow-hidden flex flex-col">
+    <div className="flex-1 bg-gray-50 rounded-t-[17px] flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 px-6 py-4 rounded-t-[17px]">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
             <p className="text-gray-600 mt-1">Connect external services to enhance your writing workflow</p>
           </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={onBack}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Back to Settings
-            </button>
-            <button
-              onClick={openAddModal}
-              className="flex items-center space-x-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Integration</span>
-            </button>
-          </div>
+          <button
+            onClick={openAddModal}
+            className="flex items-center space-x-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Integration</span>
+          </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 p-6">
         {integrations.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -281,7 +371,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
             </div>
           </div>
         ) : (
-          <div className="p-6 space-y-4">
+          <div className="space-y-4">
             {integrations.map((integration) => (
               <div
                 key={integration.id}
@@ -375,7 +465,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
               <h2 className="text-lg font-semibold text-gray-900">Add Integration</h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors text-2xl"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 ×
               </button>
@@ -422,12 +512,11 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
               </div>
               <button
                 onClick={() => setShowConfigModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors text-2xl"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 ×
               </button>
             </div>
-            
             <div className="p-6 overflow-y-auto">
               <div className="space-y-4">
                 {selectedTemplate.configSchema.map((field) => (
@@ -436,25 +525,15 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                       {field.label}
                       {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
-                    
-                    {field.type === 'boolean' ? (
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={config[field.key] || false}
-                          onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.checked }))}
-                          className="w-4 h-4 text-[#A5F7AC] border-gray-300 rounded focus:ring-[#A5F7AC]"
-                        />
-                        <span className="ml-2 text-sm text-gray-600">{field.placeholder}</span>
-                      </div>
-                    ) : field.type === 'select' ? (
+                    {field.type === 'select' ? (
                       <select
                         value={config[field.key] || ''}
                         onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                        required={field.required}
                       >
-                        <option value="">Select...</option>
-                        {field.options?.map(option => (
+                        <option value="">Select {field.label}</option>
+                        {field.options?.map((option) => (
                           <option key={option} value={option}>{option}</option>
                         ))}
                       </select>
@@ -465,6 +544,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                         onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
                         placeholder={field.placeholder}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                        required={field.required}
                       />
                     )}
                   </div>
@@ -473,15 +553,11 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
 
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                  </div>
+                  <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-medium text-blue-900">Privacy & Security</h4>
+                    <h4 className="text-sm font-medium text-blue-900">Security Notice</h4>
                     <p className="text-sm text-blue-700 mt-1">
-                      Your credentials are encrypted and stored securely. 
+                      Your credentials are stored locally in your browser and are never sent to our servers. 
                       They are only used to connect to your chosen services.
                     </p>
                   </div>
