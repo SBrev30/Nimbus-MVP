@@ -31,7 +31,7 @@ export function DashboardPage({ onViewChange }: DashboardPageProps) {
             </button>
             <button
               onClick={() => onViewChange?.('write')}
-              className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 rounded-lg transition-colors font-medium"
+              className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors font-medium"
             >
               Start Writing
             </button>
