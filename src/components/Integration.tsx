@@ -321,7 +321,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
     return (
       <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-[#ff4e00] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-[#889096]">Loading integrations...</p>
         </div>
       </div>
@@ -348,7 +348,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
         </div>
         <button
           onClick={openAddModal}
-          className="flex items-center space-x-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>Add Integration</span>
@@ -365,7 +365,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
               <p className="text-gray-600 mb-6">Connect services to backup your work, enhance your writing, and streamline your workflow</p>
               <button
                 onClick={openAddModal}
-                className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors"
               >
                 Add Your First Integration
               </button>
@@ -479,7 +479,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                 {INTEGRATION_TEMPLATES.map((template) => (
                   <div
                     key={template.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-[#A5F7AC] hover:shadow-md transition-all cursor-pointer"
+                    className="border border-gray-200 rounded-lg p-4 hover:border-[#ff4e00] hover:shadow-md transition-all cursor-pointer"
                     onClick={() => openConfigModal(template)}
                   >
                     <div className="flex items-start space-x-3">
@@ -540,7 +540,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                       <select
                         value={config[field.key] || ''}
                         onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                       >
                         <option value="">Select {field.label}</option>
                         {field.options?.map((option) => (
@@ -553,7 +553,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                         value={config[field.key] || ''}
                         onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
                         placeholder={field.placeholder}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                       />
                     )}
                   </div>
@@ -582,7 +582,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                 </button>
                 <button
                   onClick={saveIntegration}
-                  className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors"
                 >
                   {editingIntegration ? 'Update' : 'Connect'} Integration
                 </button>
