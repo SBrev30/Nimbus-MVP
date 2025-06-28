@@ -235,14 +235,6 @@ export function ProjectsPage({ onBack }: ProjectsPageProps) {
                 </button>
                 
                 <div className="flex-1">
-                  <nav className="flex items-center space-x-2 text-sm text-[#889096] font-semibold mb-2">
-                    <button onClick={onBack} className="hover:text-gray-700 transition-colors">
-                      Write
-                    </button>
-                    <span className="text-[#889096]">›</span>
-                    <span className="text-gray-900">Projects</span>
-                  </nav>
-                  
                   <div className="flex items-center justify-between">
                     <div>
                       <h1 className="text-2xl font-semibold text-gray-900 font-inter">
