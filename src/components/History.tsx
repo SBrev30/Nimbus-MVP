@@ -249,7 +249,7 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
             <select
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value as any)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
             >
               <option value="all">All time</option>
               <option value="today">Today</option>
@@ -269,7 +269,7 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="w-8 h-8 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-8 h-8 border-4 border-[#ff4e00] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-600">Loading history...</p>
             </div>
           </div>
