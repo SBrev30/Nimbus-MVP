@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Edit, Plus, Trash2, FileText, User, MapPin, Zap } from 'lucide-react';
+import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
 
 interface HistoryEntry {
   id: string;
@@ -23,7 +24,60 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'create' | 'edit' | 'delete'>('all');
+
+  // Define filter options for activity types
+  const typeFilterOptions = [
+    { value: 'all', label: 'All Actions' },
+    { value: 'create', label: 'Created' },
+    { value: 'edit', label: 'Edited' },
+    { value: 'delete', label: 'Deleted' }
+  ];
+
+  // Use simplified filter hook for search and type filtering
+  const {
+    searchTerm,
+    setSearchTerm,
+    filterValue: typeFilter,
+    setFilterValue: setTypeFilter,
+    filteredItems: typeFilteredEntries,
+    clearFilters,
+    hasActiveFilters
+  } = useSimpleFilter(
+    historyEntries,
+    (entry, search) => 
+      entry.title.toLowerCase().includes(search.toLowerCase()) ||
+      entry.description.toLowerCase().includes(search.toLowerCase()),
+    (entry, filter) => filter === 'all' || entry.type === filter
+  );
+
+  // Apply time filter after type filter
+  const filteredEntries = typeFilteredEntries.filter(entry => {
+    if (timeFilter === 'all') return true;
+    
+    const now = new Date();
+    const cutoff = new Date();
+    
+    switch (timeFilter) {
+      case 'today':
+        cutoff.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        cutoff.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        cutoff.setMonth(now.getMonth() - 1);
+        break;
+    }
+    
+    return entry.timestamp >= cutoff;
+  }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  const clearAllFilters = () => {
+    clearFilters();
+    setTimeFilter('all');
+  };
+
+  const hasAnyActiveFilters = hasActiveFilters || timeFilter !== 'all';
 
   useEffect(() => {
     loadHistoryData();
@@ -96,37 +150,6 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
     }, 800);
   };
 
-  const getFilteredEntries = () => {
-    let filtered = historyEntries;
-
-    // Time filter
-    if (timeFilter !== 'all') {
-      const now = new Date();
-      const cutoff = new Date();
-      
-      switch (timeFilter) {
-        case 'today':
-          cutoff.setHours(0, 0, 0, 0);
-          break;
-        case 'week':
-          cutoff.setDate(now.getDate() - 7);
-          break;
-        case 'month':
-          cutoff.setMonth(now.getMonth() - 1);
-          break;
-      }
-      
-      filtered = filtered.filter(entry => entry.timestamp >= cutoff);
-    }
-
-    // Type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(entry => entry.type === typeFilter);
-    }
-
-    return filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  };
-
   const getIcon = (type: HistoryEntry['type'], target: HistoryEntry['target']) => {
     const iconProps = { className: "w-4 h-4" };
     
@@ -187,8 +210,6 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
     }
   };
 
-  const filteredEntries = getFilteredEntries();
-
   return (
     <div className="flex-1 bg-white rounded-t-[17px] overflow-hidden flex flex-col">
       {/* Header */}
@@ -207,16 +228,28 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Simplified Search and Filters */}
       <div className="p-6 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 mb-4">
+          <SimpleSearchFilter
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search activity..."
+            filterValue={typeFilter}
+            onFilterChange={setTypeFilter}
+            filterOptions={typeFilterOptions}
+            onClear={clearAllFilters}
+            showClearAll={hasAnyActiveFilters}
+            className="flex-1"
+          />
+
+          {/* Time Filter */}
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Time:</span>
             <select
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value as any)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
             >
               <option value="all">All time</option>
               <option value="today">Today</option>
@@ -224,22 +257,8 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
               <option value="month">Past month</option>
             </select>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Type:</span>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as any)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-            >
-              <option value="all">All actions</option>
-              <option value="create">Created</option>
-              <option value="edit">Edited</option>
-              <option value="delete">Deleted</option>
-            </select>
-          </div>
 
-          <div className="ml-auto text-sm text-gray-500">
+          <div className="text-sm text-gray-500">
             {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'}
           </div>
         </div>
@@ -258,13 +277,23 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No activity found</h3>
-              <p className="text-gray-600">
-                {timeFilter !== 'all' || typeFilter !== 'all' 
-                  ? 'Try adjusting your filters to see more results.'
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {hasAnyActiveFilters ? 'No activity matches your filters' : 'No activity found'}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {hasAnyActiveFilters 
+                  ? 'Try adjusting your search or filters to see more results.'
                   : 'Your writing activity will appear here as you work.'
                 }
               </p>
+              {hasAnyActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              )}
             </div>
           </div>
         ) : (
