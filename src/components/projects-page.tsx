@@ -28,7 +28,7 @@ interface ProjectWithChapters extends Project {
   completionPercentage: number;
 }
 
-export default function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
+export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
   const [projects, setProjects] = useState<ProjectWithChapters[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
