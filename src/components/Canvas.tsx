@@ -521,8 +521,7 @@ const SimplifiedMenu = ({
 const CanvasFlow = () => {
   // Get authenticated user
   const { user } = useAuth();
-  const { user } = useAuth();
-  
+   
   // State Management
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
