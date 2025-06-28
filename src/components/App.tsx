@@ -1,4 +1,4 @@
-import React, { useState, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useCallback, Suspense, lazy, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Breadcrumb } from './Breadcrumb';
 import { Editor } from './Editor';
@@ -7,10 +7,13 @@ import { KanbanApp } from './KanbanApp';
 import { StatusDashboard } from './StatusDashboard';
 import { Files } from './Files';
 import { ProjectsPage } from './projects-page';
+import { AuthPage } from './auth/AuthPage';
 import { Search } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { supabase } from '../lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -92,6 +95,10 @@ class ErrorBoundary extends React.Component<
 
 // App Content Component
 function AppContent() {
+  // Authentication state
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   // State management
   const [activeView, setActiveView] = useState('write');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -114,6 +121,33 @@ function AppContent() {
 
   // Auto-save functionality
   useAutoSave(editorContent, setEditorContent, 5000);
+
+  // Check authentication state on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') {
+        setActiveView('write');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Handler functions
   const handleEditorChange = useCallback((content: EditorContent) => {
@@ -185,6 +219,17 @@ function AppContent() {
     setNotes(prev => prev.filter(note => note.id !== id));
   }, [setNotes]);
 
+  // Sign out handler
+  const handleSignOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setActiveView('write');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  }, []);
+
   // Navigation handlers
   const handleBackToSettings = useCallback(() => setActiveView('settings'), []);
   const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
@@ -209,6 +254,24 @@ function AppContent() {
   const HistoryPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
     <History onBack={onBack} />
   ), []);
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#F9FAFB]">
+        <LoadingSpinner message="Checking authentication..." />
+      </div>
+    );
+  }
+
+  // Show auth page if user is not authenticated
+  if (!user) {
+    return (
+      <ThemeProvider>
+        <AuthPage />
+      </ThemeProvider>
+    );
+  }
 
   // Memoized render content function
   const renderContent = useCallback(() => {
@@ -438,6 +501,12 @@ function AppContent() {
                 >
                   Integrations
                 </button>
+                <button
+                  onClick={handleSignOut}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
+                >
+                  Sign Out
+                </button>
               </div>
             </div>
           </div>
@@ -519,6 +588,7 @@ function AppContent() {
     handleBackToWrite,
     handleBackToProjects,
     handleViewChange,
+    handleSignOut,
     IntegrationPageWithProvider,
     HistoryPageWithProvider
   ]);
