@@ -13,13 +13,9 @@ import {
   Key,
   Shield,
   ExternalLink,
-  Refresh
+  RefreshCw // Changed from Refresh to RefreshCw
 } from 'lucide-react';
-
-// Props interface for the component
-interface IntegrationProps {
-  onBack?: () => void;
-}
+import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 
 interface Integration {
   id: string;
@@ -84,28 +80,44 @@ const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
     ]
   },
   {
-    id: 'medium',
-    name: 'Medium',
-    type: 'publishing',
-    description: 'Publish your completed articles directly to Medium',
+    id: 'anthropic_claude',
+    name: 'Anthropic Claude',
+    type: 'ai_service',
+    description: 'Get writing assistance from Claude AI',
+    icon: 'zap',
+    configSchema: [
+      { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'sk-ant-...' },
+      { key: 'model', label: 'Model', type: 'select', required: true, options: ['claude-3-sonnet', 'claude-3-haiku'] }
+    ]
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    type: 'backup',
+    description: 'Version control and backup your writing projects',
     icon: 'globe',
     configSchema: [
-      { key: 'integrationToken', label: 'Integration Token', type: 'password', required: true, placeholder: 'Enter your Medium integration token' }
+      { key: 'token', label: 'Personal Access Token', type: 'password', required: true, placeholder: 'ghp_...' },
+      { key: 'repository', label: 'Repository', type: 'text', required: true, placeholder: 'username/repository-name' }
     ]
   },
   {
     id: 'wordpress',
     name: 'WordPress',
     type: 'publishing',
-    description: 'Publish to your WordPress blog or website',
+    description: 'Publish your content directly to WordPress',
     icon: 'globe',
     configSchema: [
-      { key: 'siteUrl', label: 'Site URL', type: 'url', required: true, placeholder: 'https://yoursite.wordpress.com' },
-      { key: 'username', label: 'Username', type: 'text', required: true, placeholder: 'Your WordPress username' },
-      { key: 'password', label: 'Application Password', type: 'password', required: true, placeholder: 'WordPress application password' }
+      { key: 'siteUrl', label: 'Site URL', type: 'url', required: true, placeholder: 'https://yoursite.com' },
+      { key: 'username', label: 'Username', type: 'text', required: true },
+      { key: 'applicationPassword', label: 'Application Password', type: 'password', required: true }
     ]
   }
 ];
+
+interface IntegrationProps {
+  onBack: () => void;
+}
 
 const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
@@ -114,8 +126,11 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<IntegrationTemplate | null>(null);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
-  const [config, setConfig] = useState<Record<string, any>>({});
+  const [config, setConfig] = useState<Record<string, string>>({});
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
+
+  // Auto-save integrations
+  useUnifiedAutoSave('integrations', integrations);
 
   useEffect(() => {
     loadIntegrations();
@@ -124,13 +139,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   const loadIntegrations = async () => {
     try {
       const stored = localStorage.getItem('integrations');
-      const loadedIntegrations: Integration[] = stored ? JSON.parse(stored, (key, value) => {
-        // Handle Date serialization
-        if (key === 'lastSync' && value) {
-          return new Date(value);
-        }
-        return value;
-      }) : [];
+      const loadedIntegrations: Integration[] = stored ? JSON.parse(stored) : [];
       
       // Add built-in integrations if they don't exist
       const builtInIntegrations: Integration[] = [
@@ -158,16 +167,6 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
       setIntegrations([]);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const saveIntegrationsToStorage = (integrationsToSave: Integration[]) => {
-    try {
-      // Filter out built-in integrations before saving
-      const userIntegrations = integrationsToSave.filter(integration => !integration.isBuiltIn);
-      localStorage.setItem('integrations', JSON.stringify(userIntegrations));
-    } catch (error) {
-      console.error('Failed to save integrations:', error);
     }
   };
 
@@ -239,13 +238,11 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
     
     // Simulate connection test
     setTimeout(() => {
-      const updatedIntegrations = integrations.map(integration =>
+      setIntegrations(prev => prev.map(integration =>
         integration.id === integrationId
           ? { ...integration, status: 'connected' as const, lastSync: new Date(), errorMessage: undefined }
           : integration
-      );
-      setIntegrations(updatedIntegrations);
-      saveIntegrationsToStorage(updatedIntegrations);
+      ));
       setTestingConnection(null);
     }, 2000);
   };
@@ -273,19 +270,15 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
       config: { ...config }
     };
 
-    let updatedIntegrations: Integration[];
     if (editingIntegration) {
       // Update existing integration
-      updatedIntegrations = integrations.map(integration =>
+      setIntegrations(prev => prev.map(integration =>
         integration.id === editingIntegration.id ? integrationData : integration
-      );
+      ));
     } else {
       // Add new integration
-      updatedIntegrations = [...integrations, integrationData];
+      setIntegrations(prev => [...prev, integrationData]);
     }
-
-    setIntegrations(updatedIntegrations);
-    saveIntegrationsToStorage(updatedIntegrations);
 
     // Test connection automatically
     setTimeout(() => testConnection(integrationData.id), 500);
@@ -298,29 +291,24 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
 
   const deleteIntegration = (id: string) => {
     if (confirm('Are you sure you want to remove this integration?')) {
-      const updatedIntegrations = integrations.filter(integration => integration.id !== id);
-      setIntegrations(updatedIntegrations);
-      saveIntegrationsToStorage(updatedIntegrations);
+      setIntegrations(prev => prev.filter(integration => integration.id !== id));
     }
   };
 
   const syncIntegration = async (id: string) => {
-    const updatedIntegrations = integrations.map(integration =>
+    setIntegrations(prev => prev.map(integration =>
       integration.id === id
         ? { ...integration, status: 'pending' as const }
         : integration
-    );
-    setIntegrations(updatedIntegrations);
+    ));
 
     // Simulate sync process
     setTimeout(() => {
-      const finalIntegrations = integrations.map(integration =>
+      setIntegrations(prev => prev.map(integration =>
         integration.id === id
           ? { ...integration, status: 'connected' as const, lastSync: new Date() }
           : integration
-      );
-      setIntegrations(finalIntegrations);
-      saveIntegrationsToStorage(finalIntegrations);
+      ));
     }, 1500);
   };
 
@@ -336,26 +324,34 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="flex-1 bg-gray-50 rounded-t-[17px] flex flex-col">
+    <div className="flex-1 flex flex-col bg-white rounded-t-[17px] overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 rounded-t-[17px]">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
-            <p className="text-gray-600 mt-1">Connect external services to enhance your writing workflow</p>
-          </div>
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center space-x-4">
           <button
-            onClick={openAddModal}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
+            onClick={onBack}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            <span>Add Integration</span>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Integrations</h1>
+            <p className="text-gray-600">Connect external services to enhance your writing workflow</p>
+          </div>
         </div>
+        <button
+          onClick={openAddModal}
+          className="flex items-center space-x-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Integration</span>
+        </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 overflow-auto">
         {integrations.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -371,7 +367,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="p-6 space-y-4">
             {integrations.map((integration) => (
               <div
                 key={integration.id}
@@ -414,7 +410,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                         className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                         title="Sync now"
                       >
-                        <Refresh className="w-4 h-4" />
+                        <RefreshCw className="w-4 h-4" />
                       </button>
                     )}
                     
@@ -459,23 +455,26 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
 
       {/* Add Integration Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Add Integration</h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold">Add Integration</h2>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {INTEGRATION_TEMPLATES.map((template) => (
                   <div
                     key={template.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    className="border border-gray-200 rounded-lg p-4 hover:border-[#A5F7AC] hover:shadow-md transition-all cursor-pointer"
                     onClick={() => openConfigModal(template)}
                   >
                     <div className="flex items-start space-x-3">
@@ -483,13 +482,12 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                         {getIntegrationIcon(template.icon)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-1">{template.name}</h3>
-                        <p className="text-xs text-gray-600 mb-2">{template.description}</p>
-                        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded capitalize">
+                        <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{template.description}</p>
+                        <span className="text-xs text-gray-500 capitalize">
                           {template.type.replace('_', ' ')}
                         </span>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-gray-400" />
                     </div>
                   </div>
                 ))}
@@ -499,29 +497,37 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
         </div>
       )}
 
-      {/* Configuration Modal */}
+      {/* Configure Integration Modal */}
       {showConfigModal && selectedTemplate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {getIntegrationIcon(selectedTemplate.icon)}
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {editingIntegration ? 'Edit' : 'Configure'} {selectedTemplate.name}
-                </h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0 p-2 bg-gray-100 rounded-lg">
+                    {getIntegrationIcon(selectedTemplate.icon)}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold">
+                      {editingIntegration ? 'Edit' : 'Configure'} {selectedTemplate.name}
+                    </h2>
+                    <p className="text-gray-600">{selectedTemplate.description}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowConfigModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={() => setShowConfigModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto">
+
               <div className="space-y-4">
                 {selectedTemplate.configSchema.map((field) => (
                   <div key={field.key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       {field.label}
                       {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
@@ -529,8 +535,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                       <select
                         value={config[field.key] || ''}
                         onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                        required={field.required}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
                       >
                         <option value="">Select {field.label}</option>
                         {field.options?.map((option) => (
@@ -539,12 +544,11 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
                       </select>
                     ) : (
                       <input
-                        type={field.type}
+                        type={field.type === 'password' ? 'password' : 'text'}
                         value={config[field.key] || ''}
                         onChange={(e) => setConfig(prev => ({ ...prev, [field.key]: e.target.value }))}
                         placeholder={field.placeholder}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                        required={field.required}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
                       />
                     )}
                   </div>
@@ -552,10 +556,10 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
               </div>
 
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div className="flex items-start space-x-2">
+                  <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="text-sm font-medium text-blue-900">Security Notice</h4>
+                    <h4 className="text-sm font-semibold text-blue-900">Security Notice</h4>
                     <p className="text-sm text-blue-700 mt-1">
                       Your credentials are stored locally in your browser and are never sent to our servers. 
                       They are only used to connect to your chosen services.
