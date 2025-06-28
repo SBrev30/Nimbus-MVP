@@ -46,6 +46,9 @@ const Canvas = lazy(() => import('./Canvas').then(module => ({ default: module.d
 const Integration = lazy(() => import('./Integration').then(module => ({ default: module.default || module })));
 const History = lazy(() => import('./History').then(module => ({ default: module.default || module })));
 
+// Also ensure the Canvas import is updated:
+const Canvas = lazy(() => import('./components/Canvas'));
+
 // Loading component with message support
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
   <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
@@ -256,7 +259,14 @@ function AppContent() {
             </div>
           </ErrorBoundary>
         );
-
+case 'canvas':
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingSpinner message="Loading Visual Canvas..." />}>
+        <Canvas onBack={() => setActiveView('write')} />
+      </Suspense>
+    </ErrorBoundary>
+  );
       case 'projects':
         return (
           <ErrorBoundary>
