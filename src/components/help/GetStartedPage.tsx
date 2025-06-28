@@ -160,6 +160,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
       title="Get Started"
       description="Interactive walkthrough of WritersBlock features"
       showBackButton
+      showBreadcrumb={false}
     >
       {/* Progress Bar */}
       <div className="mb-8">
