@@ -87,23 +87,40 @@ const UserAvatar = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const initials = "SB"; // SBrev30 initials
   
   return (
-    <div className={`${isCollapsed ? 'w-6 h-6' : 'w-8 h-8'} bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300`}>
+    <div className={`${isCollapsed ? 'w-6 h-6' : 'w-8 h-8'} bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300 hover:border-[#e8ddc1] transition-colors duration-150`}>
       <span className={`text-gray-700 font-semibold ${isCollapsed ? 'text-xs' : 'text-sm'}`}>{initials}</span>
     </div>
   );
 };
 
-// Tooltip Component for collapsed state
-const Tooltip = ({ content, children }: { content: string; children: React.ReactNode }) => (
-  <div className="relative group">
-    {children}
-    <div className="absolute left-16 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100] whitespace-nowrap">
-      {content}
-    </div>
-  </div>
-);
+// Enhanced Tooltip Component for collapsed state
+const Tooltip = ({ content, children, position = 'right' }: { 
+  content: string; 
+  children: React.ReactNode;
+  position?: 'right' | 'left' | 'top' | 'bottom';
+}) => {
+  const positionClasses = {
+    right: 'left-16 top-1/2 transform -translate-y-1/2',
+    left: 'right-16 top-1/2 transform -translate-y-1/2',
+    top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
+    bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-2'
+  };
 
-// Dropdown Menu for collapsed state
+  return (
+    <div className="relative group">
+      {children}
+      <div className={`absolute ${positionClasses[position]} px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100] whitespace-nowrap`}>
+        {content}
+        {/* Arrow for tooltip */}
+        {position === 'right' && (
+          <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Dropdown Menu for collapsed state
 const CollapsedDropdownMenu = ({ 
   item, 
   onItemClick, 
@@ -127,8 +144,8 @@ const CollapsedDropdownMenu = ({
               onClick={() => onItemClick(subItem.id)}
               className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${
                 isSubActive
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-[#e8ddc1] text-gray-900 font-medium'
+                  : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
               }`}
             >
               {subItem.label}
@@ -140,7 +157,7 @@ const CollapsedDropdownMenu = ({
       <div className="py-1">
         <button
           onClick={() => onItemClick(item.id)}
-          className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
+          className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900 transition-colors duration-150"
         >
           Go to {item.label}
         </button>
@@ -176,7 +193,8 @@ const menuItems: MenuItem[] = [
   {
     id: 'canvas',
     label: 'Canvas',
-    icon: Layers
+    icon: Layers,
+    isNew: true
   },
   {
     id: 'planning',
@@ -258,7 +276,11 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-center">
-            <NimbusLogo isCollapsed={isCollapsed} />
+            <Tooltip content="Nimbus Note" position={isCollapsed ? 'right' : 'bottom'}>
+              <div>
+                <NimbusLogo isCollapsed={isCollapsed} />
+              </div>
+            </Tooltip>
           </div>
         </div>
 
@@ -277,8 +299,8 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
                         onClick={() => handleItemClick(item.id)}
                         className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
                           isActive 
-                            ? 'bg-gray-100 text-gray-900' 
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            ? 'bg-[#e8ddc1] text-gray-900' 
+                            : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
                         }`}
                       >
                         <Icon className="w-5 h-5 flex-shrink-0" />
@@ -313,8 +335,8 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2.5 text-left rounded-lg transition-colors duration-150 ${
                         isActive 
-                          ? 'bg-gray-100 text-gray-900' 
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-[#e8ddc1] text-gray-900' 
+                          : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
@@ -351,8 +373,8 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
                               onClick={() => handleItemClick(subItem.id)}
                               className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors duration-150 ${
                                 isSubActive
-                                  ? 'bg-gray-100 text-gray-900 font-medium'
-                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                  ? 'bg-[#e8ddc1] text-gray-900 font-medium'
+                                  : 'text-gray-600 hover:text-gray-900 hover:bg-[#e8ddc1]'
                               }`}
                             >
                               {subItem.label}
@@ -372,7 +394,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
         <div className="border-t border-gray-200">
           {/* User profile */}
           <div className="p-3">
-            <div className={`flex items-center p-3 rounded-lg bg-gray-50 ${
+            <div className={`flex items-center p-3 rounded-lg bg-gray-50 hover:bg-[#e8ddc1] transition-colors duration-150 ${
               isCollapsed ? 'justify-center' : 'space-x-3'
             }`}>
               <UserAvatar isCollapsed={isCollapsed} />
@@ -385,12 +407,12 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
               {!isCollapsed && (
                 <div className="flex space-x-1">
                   <Tooltip content="Profile">
-                    <button className="p-1 hover:bg-gray-200 rounded transition-colors duration-150">
+                    <button className="p-1 hover:bg-[#e8ddc1] rounded transition-colors duration-150">
                       <User className="w-4 h-4 text-gray-400" />
                     </button>
                   </Tooltip>
                   <Tooltip content="Sign Out">
-                    <button className="p-1 hover:bg-gray-200 rounded transition-colors duration-150">
+                    <button className="p-1 hover:bg-[#e8ddc1] rounded transition-colors duration-150">
                       <LogOut className="w-4 h-4 text-gray-400" />
                     </button>
                   </Tooltip>
@@ -405,7 +427,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
               <Tooltip content="Expand Sidebar">
                 <button 
                   onClick={() => setIsCollapsed(false)}
-                  className="w-full flex justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
+                  className="w-full flex justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-[#e8ddc1] rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
                 >
                   <PanelLeftClose className="w-4 h-4 rotate-180" />
                 </button>
@@ -413,7 +435,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
             ) : (
               <button 
                 onClick={() => setIsCollapsed(true)}
-                className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-[#e8ddc1] rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
               >
                 <PanelLeftClose className="w-4 h-4" />
                 <span className="font-medium">Collapse</span>
@@ -422,7 +444,8 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
           </div>
         </div>
       </div>
-            </div>
+    </div>
   );
 }
+
 export const Sidebar = EnhancedNimbusSidebar;
