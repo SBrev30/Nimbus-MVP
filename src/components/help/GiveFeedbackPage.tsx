@@ -257,7 +257,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
               Your feedback helps us make Nimbus Note better for everyone. We really appreciate you taking the time to share your thoughts.
             </p>
             <div className="text-sm text-green-700 font-inter">
-              <p><strong>Feedback Type:</strong> {feedbackTypes.find(t => t.value === feedbackData.feedbackType)?.label}</p>
+              <p><strong>Feedback Type:</strong> {Types.find(t => t.value === feedbackData.feedbackType)?.label}</p>
               <p><strong>Overall Rating:</strong> {feedbackData.overallRating}/5 stars</p>
               {getAverageRating() > 0 && (
                 <p><strong>Average Feature Rating:</strong> {getAverageRating()}/5 stars</p>
@@ -341,7 +341,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
               What type of feedback do you have?
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {feedbackTypes.map((type) => (
+              {Types.map((type) => (
                 <label
                   key={type.value}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors ${
