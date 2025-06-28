@@ -216,7 +216,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                     attachments: []
                   });
                 }}
-                className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-inter font-medium"
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-inter font-medium"
               >
                 Ask Another Question
               </button>
@@ -262,7 +262,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-[#A5F7AC] transition-colors font-inter"
+                className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter"
                 required
               />
               <p className="text-xs text-[#889096] mt-1 font-inter">We'll use this to respond to your inquiry</p>
@@ -276,7 +276,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-[#A5F7AC] transition-colors font-inter"
+                className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter"
                 required
               />
             </div>
@@ -293,7 +293,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                   key={category.value}
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                     formData.category === category.value
-                      ? 'border-[#A5F7AC] bg-[#A5F7AC]/10'
+                      ? 'border-[#ff4e00] bg-[#ff4e00]/10'
                       : 'border-[#C6C5C5] hover:border-gray-400'
                   }`}
                 >
@@ -326,7 +326,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                   key={priority.value}
                   className={`flex-1 p-3 border rounded-lg cursor-pointer transition-colors ${
                     formData.priority === priority.value
-                      ? 'border-[#A5F7AC] bg-[#A5F7AC]/10'
+                      ? 'border-[#ff4e00] bg-[#ff4e00]/10'
                       : 'border-[#C6C5C5] hover:border-gray-400'
                   }`}
                 >
@@ -355,7 +355,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
               value={formData.subject}
               onChange={(e) => handleInputChange('subject', e.target.value)}
               placeholder="Brief description of your question"
-              className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-[#A5F7AC] transition-colors font-inter"
+              className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter"
               required
             />
             {errors.subject && (
@@ -373,7 +373,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Please provide as much detail as possible. Include steps to reproduce if reporting a bug."
               rows={6}
-              className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-[#A5F7AC] transition-colors font-inter resize-none"
+              className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter resize-none"
               required
             />
             <div className="flex justify-between items-center mt-1">
@@ -460,7 +460,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg transition-colors font-inter font-medium"
               >
                 {isSubmitting ? (
                   <>
