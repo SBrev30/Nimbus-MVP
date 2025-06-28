@@ -20,12 +20,12 @@ interface FeedbackData {
   isAnonymous: boolean;
 }
 
-interface GetFeedbackPageProps {
+interface GiveFeedbackPageProps {
   activeView: string;
   onNavigate?: (view: string) => void;
 }
 
-export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps) {
+export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPageProps) {
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({
     feedbackType: 'ux',
     overallRating: 0,
@@ -48,7 +48,7 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const feedbackTypes = [
+  const Types = [
     {
       value: 'feature',
       label: 'Feature Requests',
@@ -254,7 +254,7 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
           
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
             <p className="text-green-800 font-inter mb-4">
-              Your feedback helps us make WritersBlock better for everyone. We really appreciate you taking the time to share your thoughts.
+              Your feedback helps us make Nimbus Note better for everyone. We really appreciate you taking the time to share your thoughts.
             </p>
             <div className="text-sm text-green-700 font-inter">
               <p><strong>Feedback Type:</strong> {feedbackTypes.find(t => t.value === feedbackData.feedbackType)?.label}</p>
