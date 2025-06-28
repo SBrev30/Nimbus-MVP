@@ -12,7 +12,9 @@ import {
   Folder,
   Settings,
   HelpCircle,
-  PanelLeftClose
+  PanelLeftClose,
+  FolderOpen,
+  FileText
 } from 'lucide-react';
 
 // Nimbus Note Logo Component
@@ -165,12 +167,13 @@ const menuItems: MenuItem[] = [
     icon: LayoutDashboard,
   },
   {
-    id: 'write',
+    id: 'projects', // Changed to directly navigate to projects
     label: 'Write',
     icon: Edit3,
     hasDropdown: true,
     subItems: [
-      { id: 'projects', label: 'Projects' }
+      { id: 'projects', label: 'Projects' },
+      { id: 'write', label: 'Chapters' }
     ]
   },
   {
@@ -214,7 +217,7 @@ const menuItems: MenuItem[] = [
       { id: 'help-topics', label: 'Help Topics' },
       { id: 'get-started', label: 'Get Started' },
       { id: 'ask-question', label: 'Ask A Question' },
-      { id: 'give-feedback', label: 'Give Feedback' }
+      { id: 'get-feedback', label: 'Get Feedback' }
     ]
   }
 ];
@@ -222,11 +225,29 @@ const menuItems: MenuItem[] = [
 interface SidebarProps {
   activeView?: string;
   onViewChange?: (view: string) => void;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
 }
 
-export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onViewChange }: SidebarProps) {
-  const [expandedItems, setExpandedItems] = useState<string[]>(['planning', 'settings']);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+export default function Sidebar({ 
+  activeView = 'dashboard', 
+  onViewChange,
+  isCollapsed: externalCollapsed,
+  onToggle
+}: SidebarProps) {
+  const [expandedItems, setExpandedItems] = useState<string[]>(['projects', 'planning', 'settings']);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+
+  // Use external collapsed state if provided, otherwise use internal
+  const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
+  
+  const toggleCollapsed = () => {
+    if (onToggle) {
+      onToggle();
+    } else {
+      setInternalCollapsed(prev => !prev);
+    }
+  };
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
@@ -245,184 +266,189 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
   };
 
   const isItemActive = (itemId: string, subItems?: { id: string; label: string }[]) => {
+    // Special handling for write section
+    if (itemId === 'projects' && (activeView === 'projects' || activeView === 'write' || activeView === 'editor')) {
+      return true;
+    }
+    
     return activeView === itemId || (subItems?.some(sub => activeView === sub.id));
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar */}
-      <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
-        isCollapsed ? 'w-16' : 'w-64'
-      } flex flex-col flex-shrink-0`}>
-        
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-center">
-            <NimbusLogo isCollapsed={isCollapsed} />
-          </div>
+    <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
+      isCollapsed ? 'w-16' : 'w-64'
+    } flex flex-col flex-shrink-0 h-screen`}>
+      
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-center">
+          <NimbusLogo isCollapsed={isCollapsed} />
         </div>
+      </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-3">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = isItemActive(item.id, item.subItems);
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4">
+        <ul className="space-y-1 px-3">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = isItemActive(item.id, item.subItems);
 
-              if (isCollapsed) {
-                return (
-                  <li key={item.id} className="relative group">
-                    <Tooltip content={item.label}>
-                      <button
-                        onClick={() => handleItemClick(item.id)}
-                        className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
-                          isActive 
-                            ? 'bg-gray-100 text-gray-900' 
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                      >
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                        {item.isNew && (
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
-                        )}
-                      </button>
-                    </Tooltip>
-                    
-                    {/* Collapsed Dropdown Menu */}
-                    {item.hasDropdown && (
-                      <CollapsedDropdownMenu 
-                        item={item}
-                        onItemClick={handleItemClick}
-                        activeView={activeView}
-                      />
-                    )}
-                  </li>
-                );
-              }
-
+            if (isCollapsed) {
               return (
-                <li key={item.id}>
-                  <div>
+                <li key={item.id} className="relative group">
+                  <Tooltip content={item.label}>
                     <button
-                      onClick={() => {
-                        if (item.hasDropdown) {
-                          toggleExpanded(item.id);
-                        } else {
-                          handleItemClick(item.id);
-                        }
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 text-left rounded-lg transition-colors duration-150 ${
+                      onClick={() => handleItemClick(item.id)}
+                      className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
                         isActive 
                           ? 'bg-gray-100 text-gray-900' 
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                        <span className="font-medium">{item.label}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {item.isNew && (
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium">
-                            New
-                          </span>
-                        )}
-                        {item.hasDropdown && (
-                          <div className="flex-shrink-0">
-                            {isExpanded(item.id) ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      {item.isNew && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+                      )}
                     </button>
-                  </div>
-
-                  {/* Dropdown items */}
-                  {item.hasDropdown && isExpanded(item.id) && (
-                    <ul className="mt-1 ml-8 space-y-1">
-                      {item.subItems?.map((subItem) => {
-                        const isSubActive = activeView === subItem.id;
-                        return (
-                          <li key={subItem.id}>
-                            <button 
-                              onClick={() => handleItemClick(subItem.id)}
-                              className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors duration-150 ${
-                                isSubActive
-                                  ? 'bg-gray-100 text-gray-900 font-medium'
-                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                              }`}
-                            >
-                              {subItem.label}
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                  </Tooltip>
+                  
+                  {/* Collapsed Dropdown Menu */}
+                  {item.hasDropdown && (
+                    <CollapsedDropdownMenu 
+                      item={item}
+                      onItemClick={handleItemClick}
+                      activeView={activeView}
+                    />
                   )}
                 </li>
               );
-            })}
-          </ul>
-        </nav>
+            }
 
-        {/* Bottom section */}
-        <div className="border-t border-gray-200">
-          {/* User profile */}
-          <div className="p-3">
-            <div className={`flex items-center p-3 rounded-lg bg-gray-50 ${
-              isCollapsed ? 'justify-center' : 'space-x-3'
-            }`}>
-              <UserAvatar isCollapsed={isCollapsed} />
-              {!isCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 truncate">SBrev30</div>
-                  <div className="text-sm text-gray-500">Admin</div>
+            return (
+              <li key={item.id}>
+                <div>
+                  <button
+                    onClick={() => {
+                      if (item.hasDropdown) {
+                        toggleExpanded(item.id);
+                        // Also navigate to the main item
+                        handleItemClick(item.id);
+                      } else {
+                        handleItemClick(item.id);
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left rounded-lg transition-colors duration-150 ${
+                      isActive 
+                        ? 'bg-gray-100 text-gray-900' 
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="font-medium">{item.label}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {item.isNew && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium">
+                          New
+                        </span>
+                      )}
+                      {item.hasDropdown && (
+                        <div className="flex-shrink-0">
+                          {isExpanded(item.id) ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </button>
                 </div>
-              )}
-              {!isCollapsed && (
-                <div className="flex space-x-1">
-                  <Tooltip content="Profile">
-                    <button className="p-1 hover:bg-gray-200 rounded transition-colors duration-150">
-                      <User className="w-4 h-4 text-gray-400" />
-                    </button>
-                  </Tooltip>
-                  <Tooltip content="Sign Out">
-                    <button className="p-1 hover:bg-gray-200 rounded transition-colors duration-150">
-                      <LogOut className="w-4 h-4 text-gray-400" />
-                    </button>
-                  </Tooltip>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* Collapse button */}
-          <div className="p-3">
-            {isCollapsed ? (
-              <Tooltip content="Expand Sidebar">
-                <button 
-                  onClick={() => setIsCollapsed(false)}
-                  className="w-full flex justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
-                >
-                  <PanelLeftClose className="w-4 h-4 rotate-180" />
-                </button>
-              </Tooltip>
-            ) : (
-              <button 
-                onClick={() => setIsCollapsed(true)}
-                className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
-              >
-                <PanelLeftClose className="w-4 h-4" />
-                <span className="font-medium">Collapse</span>
-              </button>
+                {/* Dropdown items */}
+                {item.hasDropdown && isExpanded(item.id) && (
+                  <ul className="mt-1 ml-8 space-y-1">
+                    {item.subItems?.map((subItem) => {
+                      const isSubActive = activeView === subItem.id;
+                      return (
+                        <li key={subItem.id}>
+                          <button 
+                            onClick={() => handleItemClick(subItem.id)}
+                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors duration-150 ${
+                              isSubActive
+                                ? 'bg-gray-100 text-gray-900 font-medium'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
+                          >
+                            {subItem.label}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* Bottom section */}
+      <div className="border-t border-gray-200">
+        {/* User profile */}
+        <div className="p-3">
+          <div className={`flex items-center p-3 rounded-lg bg-gray-50 ${
+            isCollapsed ? 'justify-center' : 'space-x-3'
+          }`}>
+            <UserAvatar isCollapsed={isCollapsed} />
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-gray-900 truncate">SBrev30</div>
+                <div className="text-sm text-gray-500">Admin</div>
+              </div>
+            )}
+            {!isCollapsed && (
+              <div className="flex space-x-1">
+                <Tooltip content="Profile">
+                  <button className="p-1 hover:bg-gray-200 rounded transition-colors duration-150">
+                    <User className="w-4 h-4 text-gray-400" />
+                  </button>
+                </Tooltip>
+                <Tooltip content="Sign Out">
+                  <button className="p-1 hover:bg-gray-200 rounded transition-colors duration-150">
+                    <LogOut className="w-4 h-4 text-gray-400" />
+                  </button>
+                </Tooltip>
+              </div>
             )}
           </div>
         </div>
+
+        {/* Collapse button */}
+        <div className="p-3">
+          {isCollapsed ? (
+            <Tooltip content="Expand Sidebar">
+              <button 
+                onClick={toggleCollapsed}
+                className="w-full flex justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
+              >
+                <PanelLeftClose className="w-4 h-4 rotate-180" />
+              </button>
+            </Tooltip>
+          ) : (
+            <button 
+              onClick={toggleCollapsed}
+              className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+              <span className="font-medium">Collapse</span>
+            </button>
+          )}
+        </div>
       </div>
-            </div>
+    </div>
   );
 }
-export const Sidebar = EnhancedNimbusSidebar;
+
+export { Sidebar };
