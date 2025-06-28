@@ -41,13 +41,10 @@ import { GetStartedPage } from './help/GetStartedPage';
 import { AskQuestionPage } from './help/AskQuestionPage';
 import { GiveFeedbackPage } from './help/GiveFeedbackPage';
 
-// Lazy load heavy components
+// Lazy load heavy components - Fixed Canvas import
 const Canvas = lazy(() => import('./Canvas').then(module => ({ default: module.default || module })));
 const Integration = lazy(() => import('./Integration').then(module => ({ default: module.default || module })));
 const History = lazy(() => import('./History').then(module => ({ default: module.default || module })));
-
-// Also ensure the Canvas import is updated:
-const Canvas = lazy(() => import('./components/Canvas'));
 
 // Loading component with message support
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
@@ -259,14 +256,17 @@ function AppContent() {
             </div>
           </ErrorBoundary>
         );
-case 'canvas':
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner message="Loading Visual Canvas..." />}>
-        <Canvas onBack={() => setActiveView('write')} />
-      </Suspense>
-    </ErrorBoundary>
-  );
+
+      // Fixed Canvas case - removed duplicate and properly integrated Sync
+      case 'canvas':
+        return (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading Visual Canvas..." />}>
+              <Canvas onBack={() => setActiveView('write')} />
+            </Suspense>
+          </ErrorBoundary>
+        );
+
       case 'projects':
         return (
           <ErrorBoundary>
@@ -281,15 +281,6 @@ case 'canvas':
           <ErrorBoundary>
             <Suspense fallback={<LoadingSpinner message="Loading Project Dashboard..." />}>
               <KanbanApp />
-            </Suspense>
-          </ErrorBoundary>
-        );
-      
-      case 'canvas':
-        return (
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading Visual Canvas..." />}>
-              <Canvas />
             </Suspense>
           </ErrorBoundary>
         );
@@ -532,6 +523,9 @@ case 'canvas':
     HistoryPageWithProvider
   ]);
 
+  // Determine if we should show header (hide for canvas view)
+  const shouldShowHeader = activeView !== 'canvas';
+
   return (
     <div className="h-screen bg-[#F9FAFB] flex font-inter overflow-hidden">
       <Sidebar 
@@ -542,18 +536,21 @@ case 'canvas':
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="h-[72px] flex items-end justify-between px-6 pb-3">
-          <Breadcrumb activeView={activeView} onNavigate={handleViewChange} />
-          
-          <div className="bg-[#FAF9F9] rounded-[20px] h-[29px] w-[171px] flex items-center px-3 gap-2">
-            <Search className="w-[17px] h-[17px] text-[#889096]" />
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              className="bg-transparent text-sm text-gray-600 outline-none flex-1 font-inter"
-            />
+        {/* Conditionally render header - hidden for canvas */}
+        {shouldShowHeader && (
+          <div className="h-[72px] flex items-end justify-between px-6 pb-3">
+            <Breadcrumb activeView={activeView} onNavigate={handleViewChange} />
+            
+            <div className="bg-[#FAF9F9] rounded-[20px] h-[29px] w-[171px] flex items-center px-3 gap-2">
+              <Search className="w-[17px] h-[17px] text-[#889096]" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                className="bg-transparent text-sm text-gray-600 outline-none flex-1 font-inter"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {renderContent()}
       </div>
