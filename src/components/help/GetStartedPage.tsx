@@ -29,7 +29,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
       duration: '30 seconds',
       content: (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-[#A5F7AC] to-green-200 p-6 rounded-lg">
+          <div className="bg-gradient-to-r from-[#ff4e00] to-green-200 p-6 rounded-lg">
             <h3 className="text-xl font-bold text-gray-900 mb-3 font-inter">Welcome to Nimbus Note!</h3>
             <p className="text-gray-800 font-inter leading-relaxed">
               Nimbus Note is a visual writing platform that combines traditional writing tools with infinite canvas brainstorming and AI assistance. Whether you're writing a novel, screenplay, or game narrative, we've got you covered.
@@ -78,7 +78,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
           
           <div className="space-y-4">
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
-              <div className="w-8 h-8 bg-[#A5F7AC] rounded flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
                 <span className="text-sm font-bold">W</span>
               </div>
               <div>
@@ -88,7 +88,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             </div>
             
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
-              <div className="w-8 h-8 bg-[#A5F7AC] rounded flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
                 <span className="text-sm font-bold">C</span>
               </div>
               <div>
@@ -98,7 +98,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             </div>
             
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
-              <div className="w-8 h-8 bg-[#A5F7AC] rounded flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
                 <span className="text-sm font-bold">P</span>
               </div>
               <div>
@@ -174,7 +174,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
-            className="bg-[#A5F7AC] h-2 rounded-full transition-all duration-300"
+            className="bg-[#ff4e00] h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -212,7 +212,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             onClick={() => goToStep(index)}
             className={`px-3 py-1 text-xs rounded-full transition-colors font-inter ${
               index === currentStep
-                ? 'bg-[#A5F7AC] text-gray-900'
+                ? 'bg-[#ff4e00] text-gray-900'
                 : completedSteps.has(index)
                 ? 'bg-green-100 text-green-800'
                 : 'bg-gray-100 text-[#889096] hover:bg-gray-200'
@@ -286,7 +286,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
               markStepComplete(currentStep);
               onNavigate?.('projects');
             }}
-            className="inline-flex items-center gap-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+            className="inline-flex items-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
           >
             Start Writing
             <ChevronRight className="w-4 h-4" />
@@ -294,7 +294,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         ) : (
           <button
             onClick={nextStep}
-            className="inline-flex items-center gap-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+            className="inline-flex items-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
           >
             Next
             <ChevronRight className="w-4 h-4" />
