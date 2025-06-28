@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LoginForm } from './LoginForm';
 import { SignupForm } from './SignupForm';
 
-function AuthPage() {
+export function AuthPage() {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
   // Check URL hash for tab selection
@@ -31,7 +31,7 @@ function AuthPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">WritersBlock</h1>
           <p className="text-gray-600">Visual writing platform for storytellers</p>
         </div>
-
+        
         <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <div className="flex border-b border-gray-200 mb-6">
             <button
@@ -61,7 +61,7 @@ function AuthPage() {
               Sign Up
             </button>
           </div>
-
+          
           {activeTab === 'login' ? <LoginForm /> : <SignupForm />}
         </div>
       </div>
