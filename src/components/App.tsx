@@ -53,7 +53,7 @@ const History = lazy(() => import('./History').then(module => ({ default: module
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
   <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
     <div className="text-center">
-      <div className="w-8 h-8 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <div className="w-8 h-8 border-4 border-[#ff4e00] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
       <p className="text-[#889096]">{message}</p>
     </div>
   </div>
@@ -439,7 +439,7 @@ function AppContent() {
         return (
           <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
                   <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -449,7 +449,7 @@ function AppContent() {
               <div className="space-y-2">
                 <button
                   onClick={() => setActiveView('outline')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
                 >
                   Story Outline
                 </button>
@@ -480,7 +480,7 @@ function AppContent() {
         return (
           <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2"/>
@@ -491,7 +491,7 @@ function AppContent() {
               <div className="space-y-2">
                 <button
                   onClick={() => setActiveView('history')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
                 >
                   Change History
                 </button>
@@ -516,7 +516,7 @@ function AppContent() {
         return (
           <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
             <div className="text-center">
-              <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                   <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -528,7 +528,7 @@ function AppContent() {
               <div className="space-y-2">
                 <button
                   onClick={() => setActiveView('help-topics')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
                 >
                   Help Topics
                 </button>
@@ -565,7 +565,7 @@ function AppContent() {
                 <p className="text-gray-600 mb-4">The requested view "{activeView}" was not found.</p>
                 <button 
                   onClick={() => handleViewChange('write')} 
-                  className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                  className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
                 >
                   Go to Write
                 </button>
