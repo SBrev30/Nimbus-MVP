@@ -361,44 +361,17 @@ const SimplifiedMenu = ({
     { id: 'sciFiThriller', name: 'Sci-Fi Thriller', description: 'Futuristic thriller story' }
   ];
 
-  // Get sync status indicator
-  const getSyncStatusInfo = () => {
-    if (isSyncing) {
-      return { color: 'text-blue-600', label: 'Syncing...', bgColor: 'bg-blue-100' };
-    }
-    if (hasChanges) {
-      return { color: 'text-orange-600', label: 'Changes pending', bgColor: 'bg-orange-100' };
-    }
-    if (syncStatus === 'synced') {
-      return { color: 'text-green-600', label: 'Synced', bgColor: 'bg-green-100' };
-    }
-    if (syncStatus === 'error') {
-      return { color: 'text-red-600', label: 'Sync error', bgColor: 'bg-red-100' };
-    }
-    return { color: 'text-gray-600', label: 'Ready', bgColor: 'bg-gray-100' };
-  };
-
-  const statusInfo = getSyncStatusInfo();
-
   return (
     <div className={`bg-white border-l border-gray-200 transition-all duration-300 ${
       isCollapsed ? 'w-12' : 'w-72'
     } flex flex-col h-full`}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
-        {!isCollapsed && (
-          <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-gray-900">Story Canvas</h2>
               <p className="text-sm text-gray-600">Plan your story visually</p>
-            </div>
-          </div>
-        )}
-        
-        <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <div className={`px-2 py-1 rounded-md text-xs ${statusInfo.bgColor} ${statusInfo.color}`}>
-              {statusInfo.label}
             </div>
           )}
           <button
