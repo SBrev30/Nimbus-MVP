@@ -269,14 +269,6 @@ export function PlotPage({ onBack }: PlotPageProps) {
           </button>
           
           <div className="flex-1">
-            <nav className="flex items-center space-x-2 text-sm text-[#889096] font-semibold mb-2">
-              <button onClick={onBack} className="hover:text-gray-700 transition-colors">
-                Planning
-              </button>
-              <span className="text-[#889096]">›</span>
-              <span className="text-gray-900">Plot</span>
-            </nav>
-            
             <h1 className="text-2xl font-semibold text-gray-900">Plot Development</h1>
             <p className="text-[#889096] mt-1">
               Multi-threaded story management with {filteredThreads.length} active plot threads
