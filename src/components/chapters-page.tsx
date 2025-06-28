@@ -206,7 +206,7 @@ export function ChaptersPage({
           {isLoading ? (
             <div className="flex items-center gap-4 mb-6">
               <div className="p-2">
-                <div className="w-5 h-5 rounded-full border-2 border-[#A5F7AC] border-t-transparent animate-spin"></div>
+                <div className="w-5 h-5 rounded-full border-2 border-[#ff4e00] border-t-transparent animate-spin"></div>
               </div>
               <div className="flex-1">
                 <h1 className="text-2xl font-semibold text-gray-900">Loading...</h1>
@@ -242,7 +242,7 @@ export function ChaptersPage({
                 
                 <button
                   onClick={() => setShowNewChapterModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-semibold"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-semibold"
                 >
                   <Plus className="w-4 h-4" />
                   New Chapter
@@ -267,7 +267,7 @@ export function ChaptersPage({
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                 >
                   <option value="order">Chapter Order</option>
                   <option value="title">Title</option>
@@ -308,7 +308,7 @@ export function ChaptersPage({
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div 
-                    className="bg-[#A5F7AC] h-3 rounded-full transition-all duration-300"
+                    className="bg-[#ff4e00] h-3 rounded-full transition-all duration-300"
                     style={{ width: `${overallProgress}%` }}
                   />
                 </div>
@@ -322,7 +322,7 @@ export function ChaptersPage({
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-16 h-16 border-4 border-[#ff4e00] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-[#889096]">Loading chapters...</p>
           </div>
         </div>
@@ -350,7 +350,7 @@ export function ChaptersPage({
                   ) : (
                     <button
                       onClick={() => setShowNewChapterModal(true)}
-                      className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                      className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
                     >
                       <Plus className="w-4 h-4 inline mr-2" />
                       New Chapter
@@ -389,7 +389,7 @@ export function ChaptersPage({
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
-                              className="bg-[#A5F7AC] h-2 rounded-full transition-all duration-300"
+                              className="bg-[#ff4e00] h-2 rounded-full transition-all duration-300"
                               style={{ width: `${getProgressPercentage(chapter.wordCount)}%` }}
                             />
                           </div>
@@ -481,7 +481,7 @@ export function ChaptersPage({
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-[#A5F7AC] h-2 rounded-full transition-all duration-300"
+                          className="bg-[#ff4e00] h-2 rounded-full transition-all duration-300"
                           style={{ width: `${getProgressPercentage(chapter.wordCount)}%` }}
                         />
                       </div>
@@ -557,7 +557,7 @@ export function ChaptersPage({
                   type="text"
                   value={newChapter.title}
                   onChange={(e) => setNewChapter({...newChapter, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                   placeholder="Enter chapter title"
                   required
                 />
@@ -570,7 +570,7 @@ export function ChaptersPage({
                 <textarea
                   value={newChapter.summary}
                   onChange={(e) => setNewChapter({...newChapter, summary: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                   placeholder="Brief summary of this chapter"
                   rows={3}
                 />
@@ -583,7 +583,7 @@ export function ChaptersPage({
                 <select
                   value={newChapter.status}
                   onChange={(e) => setNewChapter({...newChapter, status: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-transparent"
                 >
                   <option value="outline">Outline</option>
                   <option value="draft">Draft</option>
@@ -603,7 +603,7 @@ export function ChaptersPage({
               <button
                 onClick={handleCreateChapter}
                 disabled={!newChapter.title}
-                className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors disabled:opacity-50"
               >
                 Create Chapter
               </button>
