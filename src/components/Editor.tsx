@@ -128,7 +128,7 @@ const AutoSaveNotification = ({
 export const Editor: React.FC<EditorProps> = ({ 
   content, 
   onChange, 
-  selectedChapter,
+  selectedChapter = null, // Default to null to prevent undefined
   isLoading = false,
   className = ''
 }) => {
@@ -144,6 +144,14 @@ export const Editor: React.FC<EditorProps> = ({
   const [currentAlignment, setCurrentAlignment] = useState('left');
   const [showWordCount, setShowWordCount] = useState(true);
   
+  // Helper function to get text content safely
+  function getTextContent(): string {
+    if (editorRef.current) {
+      return editorRef.current.textContent || '';
+    }
+    return '';
+  }
+
   // Enhanced hooks
   const { words, characters, charactersNoSpaces, readingTime } = useWordCount(getTextContent());
   const { state: undoState, setState: setUndoState, undo, redo, canUndo, canRedo } = useUndo({
@@ -197,13 +205,6 @@ export const Editor: React.FC<EditorProps> = ({
       formatText('underline');
     }
   }, [canUndo, canRedo, undo, redo]);
-
-  function getTextContent(): string {
-    if (editorRef.current) {
-      return editorRef.current.textContent || '';
-    }
-    return '';
-  }
 
   const handleContentChange = useCallback(() => {
     if (editorRef.current && !isReadOnly) {
@@ -482,13 +483,13 @@ export const Editor: React.FC<EditorProps> = ({
             borderTopRightRadius: `${containerDimensions.borderRadius}px`
           }}
         >
-          {/* Chapter Info */}
-          {selectedChapter && (
+          {/* Chapter Info - FIXED: Added proper null checking */}
+          {selectedChapter?.title && (
             <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <FileText className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-700">
-                  Chapter {selectedChapter.number}: {selectedChapter.title}
+                  Chapter {selectedChapter?.number || 'Unknown'}: {selectedChapter.title}
                 </span>
               </div>
               {showWordCount && (
@@ -573,10 +574,10 @@ export const Editor: React.FC<EditorProps> = ({
             </div>
           )}
 
-          {/* Chapter Navigation */}
-          {selectedChapter && (
+          {/* Chapter Navigation - FIXED: Added proper null checking */}
+          {selectedChapter?.title && (
             <div className="flex items-center space-x-2">
-              <span className="text-gray-500">Chapter {selectedChapter.number}</span>
+              <span className="text-gray-500">Chapter {selectedChapter?.number || 'Unknown'}</span>
             </div>
           )}
 
