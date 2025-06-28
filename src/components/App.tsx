@@ -1,16 +1,19 @@
-import React, { useState, useCallback, Suspense, lazy } from 'react';
-import { Sidebar } from './components/Sidebar';
-import { Breadcrumb } from './components/Breadcrumb';
-import { Editor } from './components/Editor';
-import { NotesPanel } from './components/NotesPanel';
-import { DashboardPage } from './components/DashboardPage';
-import { WritePage } from './components/WritePage';
-import { Files } from './components/Files';
-import { ProjectsPage } from './components/projects-page';
+import React, { useState, useCallback, Suspense, lazy, useEffect } from 'react';
+import { Sidebar } from './Sidebar';
+import { Breadcrumb } from './Breadcrumb';
+import { Editor } from './Editor';
+import { NotesPanel } from './NotesPanel';
+import { DashboardPage } from './DashboardPage';
+import { WritePage } from './WritePage';
+import { Files } from './Files';
+import { ProjectsPage } from './projects-page';
+import { AuthPage } from './auth/AuthPage';
 import { Search } from 'lucide-react';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { useAutoSave } from './hooks/useAutoSave';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useAutoSave } from '../hooks/useAutoSave';
+import { ThemeProvider } from '../contexts/ThemeContext';
+import { supabase } from '../lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -30,21 +33,21 @@ interface Note {
 }
 
 // Import planning components
-import { OutlinePage } from './components/planning/OutlinePage';
-import { PlotPage } from './components/planning/PlotPage';
-import { CharactersPage } from './components/planning/CharactersPage';
-import { WorldBuildingPage } from './components/planning/WorldBuildingPage';
+import { OutlinePage } from './planning/OutlinePage';
+import { PlotPage } from './planning/PlotPage';
+import { CharactersPage } from './planning/CharactersPage';
+import { WorldBuildingPage } from './planning/WorldBuildingPage';
 
 // Import help components
-import { HelpTopicsPage } from './components/help/HelpTopicsPage';
-import { GetStartedPage } from './components/help/GetStartedPage';
-import { AskQuestionPage } from './components/help/AskQuestionPage';
-import { GetFeedbackPage } from './components/help/GetFeedbackPage';
+import { HelpTopicsPage } from './help/HelpTopicsPage';
+import { GetStartedPage } from './help/GetStartedPage';
+import { AskQuestionPage } from './help/AskQuestionPage';
+import { GetFeedbackPage } from './help/GetFeedbackPage';
 
 // Lazy load heavy components
-const Canvas = lazy(() => import('./components/Canvas'));
-const Integration = lazy(() => import('./components/Integration'));
-const History = lazy(() => import('./components/History'));
+const Canvas = lazy(() => import('./Canvas'));
+const Integration = lazy(() => import('./Integration'));
+const History = lazy(() => import('./History'));
 
 // Enhanced loading component with specific messages
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
@@ -108,6 +111,10 @@ class ErrorBoundary extends React.Component<
 
 // Main App Component
 function AppContent() {
+  // Authentication state
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   // State variables
   const [activeView, setActiveView] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -160,6 +167,33 @@ function AppContent() {
       updatedAt: new Date(),
     },
   ]);
+
+  // Check authentication state on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') {
+        setActiveView('dashboard');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Auto-save editor content
   useAutoSave(editorContent, setEditorContent, 2000);
@@ -255,6 +289,34 @@ function AppContent() {
     setActiveView('projects');
   }, [currentChapter, editorContent, setChapterContents]);
 
+  const handleSignOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setActiveView('dashboard');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  }, []);
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#F9FAFB]">
+        <LoadingSpinner message="Checking authentication..." />
+      </div>
+    );
+  }
+
+  // Show auth page if user is not authenticated
+  if (!user) {
+    return (
+      <ThemeProvider>
+        <AuthPage />
+      </ThemeProvider>
+    );
+  }
+
   // Render content based on active view
   const renderContent = useCallback(() => {
     switch (activeView) {
@@ -271,11 +333,6 @@ function AppContent() {
             <Suspense fallback={<LoadingSpinner message="Loading Projects..." />}>
               <ProjectsPage 
                 onBack={() => setActiveView('write')} 
-                onNavigateToWrite={(projectId) => {
-                  // Navigate to write page with specific project
-                  // TODO: Store projectId in state or pass to write view
-                  setActiveView('write');
-                }} 
               />
             </Suspense>
           </ErrorBoundary>
@@ -429,6 +486,12 @@ function AppContent() {
                   >
                     Manage Integrations
                   </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="block w-full max-w-xs mx-auto px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
+                  >
+                    Sign Out
+                  </button>
                 </div>
               </div>
             </div>
@@ -567,7 +630,8 @@ function AppContent() {
     handleSelectChapter,
     handleBackToSettings,
     handleBackToPlanning,
-    handleBackToWrite
+    handleBackToWrite,
+    handleSignOut
   ]);
 
   return (
