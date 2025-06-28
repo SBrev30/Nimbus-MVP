@@ -1,10 +1,8 @@
-// src/components/projects-page.tsx - Enhanced with proper navigation
+// src/components/projects-page.tsx - Enhanced with simplified search and filter
 
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
-  Search, 
-  Filter, 
   ChevronDown, 
   FileText, 
   Clock, 
@@ -17,6 +15,7 @@ import {
 import { projectService, Project } from '../services/projectService';
 import { chapterService, Chapter } from '../services/chapterService';
 import { ChaptersPage } from './chapters-page';
+import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
 
 interface ProjectsPageProps {
   onBack?: () => void;
@@ -31,9 +30,6 @@ interface ProjectWithChapters extends Project {
 export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
   const [projects, setProjects] = useState<ProjectWithChapters[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterGenre, setFilterGenre] = useState('all');
   const [sortBy, setSortBy] = useState('lastModified');
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [currentView, setCurrentView] = useState<'overview' | 'chapters'>('overview');
@@ -46,6 +42,68 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
     wordCountTarget: 50000,
     status: 'planning' as const
   });
+
+  // Define filter options
+  const statusFilterOptions = [
+    { value: 'all', label: 'All Status' },
+    { value: 'planning', label: 'Planning' },
+    { value: 'writing', label: 'Writing' },
+    { value: 'editing', label: 'Editing' },
+    { value: 'complete', label: 'Complete' }
+  ];
+
+  const genreFilterOptions = [
+    { value: 'all', label: 'All Genres' },
+    ...Array.from(new Set(projects.map(p => p.genre))).map(genre => ({
+      value: genre,
+      label: genre
+    }))
+  ];
+
+  // Use simplified filter hook for status
+  const {
+    searchTerm,
+    setSearchTerm,
+    filterValue: filterStatus,
+    setFilterValue: setFilterStatus,
+    filteredItems: statusFilteredProjects,
+    clearFilters: clearStatusFilters,
+    hasActiveFilters: hasStatusFilters
+  } = useSimpleFilter(
+    projects,
+    (project, search) => 
+      project.title.toLowerCase().includes(search.toLowerCase()) ||
+      project.description.toLowerCase().includes(search.toLowerCase()),
+    (project, filter) => filter === 'all' || project.status === filter
+  );
+
+  // Additional genre filter
+  const [genreFilter, setGenreFilter] = useState('all');
+
+  // Apply genre filter and sorting
+  const filteredAndSortedProjects = statusFilteredProjects
+    .filter(project => genreFilter === 'all' || project.genre === genreFilter)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'lastModified':
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        case 'progress':
+          return b.completionPercentage - a.completionPercentage;
+        case 'wordCount':
+          return b.wordCountCurrent - a.wordCountCurrent;
+        default:
+          return 0;
+      }
+    });
+
+  const clearAllFilters = () => {
+    clearStatusFilters();
+    setGenreFilter('all');
+  };
+
+  const hasActiveFilters = hasStatusFilters || genreFilter !== 'all';
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -77,32 +135,6 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
 
     fetchProjects();
   }, []);
-
-  const statuses = ['all', 'planning', 'writing', 'editing', 'complete'];
-  const genres = ['all', ...Array.from(new Set(projects.map(p => p.genre)))];
-
-  const filteredAndSortedProjects = projects
-    .filter(project => {
-      const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           project.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
-      const matchesGenre = filterGenre === 'all' || project.genre === filterGenre;
-      return matchesSearch && matchesStatus && matchesGenre;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'title':
-          return a.title.localeCompare(b.title);
-        case 'lastModified':
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        case 'progress':
-          return b.completionPercentage - a.completionPercentage;
-        case 'wordCount':
-          return b.wordCountCurrent - a.wordCountCurrent;
-        default:
-          return 0;
-      }
-    });
 
   const handleProjectSelect = (project: ProjectWithChapters) => {
     setSelectedProject(project);
@@ -288,59 +320,44 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                 </div>
               </div>
 
-              {/* Search and filters */}
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div className="flex flex-1 gap-4 max-w-2xl">
-                  {/* Search */}
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#889096] w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder="Search projects..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                    />
-                  </div>
+              {/* Simplified Search and Filters */}
+              <div className="flex items-center gap-4 mb-4">
+                <SimpleSearchFilter
+                  searchValue={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  searchPlaceholder="Search projects..."
+                  filterValue={filterStatus}
+                  onFilterChange={setFilterStatus}
+                  filterOptions={statusFilterOptions}
+                  onClear={clearAllFilters}
+                  showClearAll={true}
+                  className="flex-1"
+                />
 
-                  {/* Status Filter */}
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                  >
-                    {statuses.map(status => (
-                      <option key={status} value={status}>
-                        {status === 'all' ? 'All Status' : status.charAt(0).toUpperCase() + status.slice(1)}
-                      </option>
-                    ))}
-                  </select>
+                {/* Genre Filter */}
+                <select
+                  value={genreFilter}
+                  onChange={(e) => setGenreFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                >
+                  {genreFilterOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
 
-                  {/* Genre Filter */}
-                  <select
-                    value={filterGenre}
-                    onChange={(e) => setFilterGenre(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                  >
-                    {genres.map(genre => (
-                      <option key={genre} value={genre}>
-                        {genre === 'all' ? 'All Genres' : genre}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Sort */}
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                  >
-                    <option value="lastModified">Last Modified</option>
-                    <option value="title">Title</option>
-                    <option value="progress">Progress</option>
-                    <option value="wordCount">Word Count</option>
-                  </select>
-                </div>
+                {/* Sort */}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
+                >
+                  <option value="lastModified">Last Modified</option>
+                  <option value="title">Title</option>
+                  <option value="progress">Progress</option>
+                  <option value="wordCount">Word Count</option>
+                </select>
 
                 {/* New Project Button */}
                 <button
@@ -362,18 +379,29 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                   <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <FileText className="w-12 h-12 text-gray-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No projects found</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    {hasActiveFilters ? 'No projects match your filters' : 'No projects found'}
+                  </h3>
                   <p className="text-[#889096] mb-6">
-                    {projects.length === 0 
-                      ? "Start your writing journey by creating your first project" 
-                      : "Try adjusting your search or filters"}
+                    {hasActiveFilters 
+                      ? "Try adjusting your search or filters"
+                      : "Start your writing journey by creating your first project"
+                    }
                   </p>
+                  {hasActiveFilters ? (
+                    <button
+                      onClick={clearAllFilters}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors mr-3"
+                    >
+                      Clear Filters
+                    </button>
+                  ) : null}
                   <button
                     onClick={() => setShowNewProjectModal(true)}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-gray-900 rounded-lg font-medium transition-colors"
                   >
                     <Plus className="w-4 h-4" />
-                    Create Your First Project
+                    {hasActiveFilters ? 'Create New Project' : 'Create Your First Project'}
                   </button>
                 </div>
               ) : (
