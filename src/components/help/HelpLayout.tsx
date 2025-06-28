@@ -8,6 +8,7 @@ interface HelpLayoutProps {
   title: string;
   description?: string;
   showBackButton?: boolean;
+  showBreadcrumb?: boolean;
 }
 
 export function HelpLayout({ 
@@ -16,17 +17,20 @@ export function HelpLayout({
   children, 
   title, 
   description,
-  showBackButton = false 
+  showBackButton = false,
+  showBreadcrumb = false // Changed default to false to hide breadcrumb
 }: HelpLayoutProps) {
   return (
     <div className="flex-1 bg-white rounded-t-[17px] p-8">
-      {/* Breadcrumb Navigation */}
-      <div className="mb-6">
-        <Breadcrumb 
-          activeView={activeView}
-          onNavigate={onNavigate}
-        />
-      </div>
+      {/* Conditionally render Breadcrumb Navigation */}
+      {showBreadcrumb && (
+        <div className="mb-6">
+          <Breadcrumb 
+            activeView={activeView}
+            onNavigate={onNavigate}
+          />
+        </div>
+      )}
 
       {/* Back Button (if needed) */}
       {showBackButton && (
