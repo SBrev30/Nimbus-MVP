@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
-import { ArrowLeft, Plus, Search, Filter, FileText, Clock, TrendingUp, MoreHorizontal, Edit3, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, FileText, Clock, TrendingUp, MoreHorizontal, Edit3, Eye } from 'lucide-react';
 import { chapterService, Chapter } from '../services/chapterService';
 import { X } from 'lucide-react';
+import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
 
 interface ChapterWithMeta extends Chapter {
   tags?: string[];
@@ -28,8 +29,6 @@ export function ChaptersPage({
 }: ChaptersPageProps) {
   const [chapters, setChapters] = useState<ChapterWithMeta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'order' | 'title' | 'lastModified' | 'wordCount'>('order');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showNewChapterModal, setShowNewChapterModal] = useState(false);
@@ -37,6 +36,49 @@ export function ChaptersPage({
     title: '',
     summary: '',
     status: 'draft' as const
+  });
+
+  // Define filter options for chapters
+  const statusFilterOptions = [
+    { value: 'all', label: 'All Status' },
+    { value: 'outline', label: 'Outline' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'revision', label: 'Revision' },
+    { value: 'final', label: 'Final' }
+  ];
+
+  // Use the simplified filter hook
+  const {
+    searchTerm,
+    setSearchTerm,
+    filterValue: filterStatus,
+    setFilterValue: setFilterStatus,
+    filteredItems: filteredChapters,
+    clearFilters,
+    hasActiveFilters
+  } = useSimpleFilter(
+    chapters,
+    (chapter, search) => 
+      chapter.title.toLowerCase().includes(search.toLowerCase()) ||
+      (chapter.summary || '').toLowerCase().includes(search.toLowerCase()) ||
+      (chapter.tags && chapter.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()))),
+    (chapter, filter) => filter === 'all' || chapter.status === filter
+  );
+
+  // Apply sorting to filtered chapters
+  const filteredAndSortedChapters = filteredChapters.sort((a, b) => {
+    switch (sortBy) {
+      case 'order':
+        return a.orderIndex - b.orderIndex;
+      case 'title':
+        return a.title.localeCompare(b.title);
+      case 'lastModified':
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      case 'wordCount':
+        return b.wordCount - a.wordCount;
+      default:
+        return 0;
+    }
   });
 
   // Fetch chapters from Supabase
@@ -98,31 +140,6 @@ export function ChaptersPage({
       console.error('Error creating chapter:', error);
     }
   };
-
-  const statuses = ['all', 'outline', 'draft', 'revision', 'final'];
-
-  const filteredAndSortedChapters = chapters
-    .filter(chapter => {
-      const matchesSearch = chapter.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (chapter.summary || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (chapter.tags && chapter.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
-      const matchesStatus = filterStatus === 'all' || chapter.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'order':
-          return a.orderIndex - b.orderIndex;
-        case 'title':
-          return a.title.localeCompare(b.title);
-        case 'lastModified':
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        case 'wordCount':
-          return b.wordCount - a.wordCount;
-        default:
-          return 0;
-      }
-    });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -196,79 +213,61 @@ export function ChaptersPage({
               </div>
             </div>
           ) : (
-            /* Back button and title */
-            <div className="flex items-center gap-4 mb-6">
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-[#889096]" />
-              </button>
-              
-              <div className="flex-1">
-                <nav className="flex items-center space-x-2 text-sm text-[#889096] font-semibold mb-2">
-                  <button onClick={onBack} className="hover:text-gray-700 transition-colors">
-                    Projects
-                  </button>
-                  <span className="text-[#889096]">›</span>
-                  <span className="text-gray-900">{projectTitle}</span>
-                </nav>
-                
-                <h1 className="text-2xl font-semibold text-gray-900">
-                  Chapters
-                </h1>
-                <p className="text-[#889096] mt-1">
-                  {filteredAndSortedChapters.length} chapters • {formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words • {overallProgress}% complete
-                </p>
-              </div>
-              
-              <button
-                onClick={() => setShowNewChapterModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-semibold"
-              >
-                <Plus className="w-4 h-4" />
-                New Chapter
-              </button>
-            </div>
-          )}
-
-          {!isLoading && (
             <>
-              {/* Search and Filters */}
-              <div className="flex items-center gap-4 mb-4">
-                {/* Search */}
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#889096]" />
-                  <input
-                    type="text"
-                    placeholder="Search chapters..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+              {/* Back button and title */}
+              <div className="flex items-center gap-4 mb-6">
+                <button
+                  onClick={onBack}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-[#889096]" />
+                </button>
+                
+                <div className="flex-1">
+                  <nav className="flex items-center space-x-2 text-sm text-[#889096] font-semibold mb-2">
+                    <button onClick={onBack} className="hover:text-gray-700 transition-colors">
+                      Projects
+                    </button>
+                    <span className="text-[#889096]">›</span>
+                    <span className="text-gray-900">{projectTitle}</span>
+                  </nav>
+                  
+                  <h1 className="text-2xl font-semibold text-gray-900">
+                    Chapters
+                  </h1>
+                  <p className="text-[#889096] mt-1">
+                    {filteredAndSortedChapters.length} chapters • {formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words • {overallProgress}% complete
+                  </p>
                 </div>
+                
+                <button
+                  onClick={() => setShowNewChapterModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-semibold"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Chapter
+                </button>
+              </div>
 
-                {/* Status Filter */}
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-[#889096]" />
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {statuses.map(status => (
-                      <option key={status} value={status}>
-                        {status === 'all' ? 'All Status' : status.charAt(0).toUpperCase() + status.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Simplified Search and Filters */}
+              <div className="flex items-center gap-4 mb-4">
+                <SimpleSearchFilter
+                  searchValue={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  searchPlaceholder="Search chapters..."
+                  filterValue={filterStatus}
+                  onFilterChange={setFilterStatus}
+                  filterOptions={statusFilterOptions}
+                  onClear={clearFilters}
+                  showClearAll={true}
+                  className="flex-1"
+                />
 
                 {/* Sort */}
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
                 >
                   <option value="order">Chapter Order</option>
                   <option value="title">Title</option>
@@ -317,88 +316,6 @@ export function ChaptersPage({
               </div>
             </>
           )}
-
-          {/* Search and Filters */}
-          <div className="flex items-center gap-4 mb-4">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#889096]" />
-              <input
-                type="text"
-                placeholder="Search chapters..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-[#889096]" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {statuses.map(status => (
-                  <option key={status} value={status}>
-                    {status === 'all' ? 'All Status' : status.charAt(0).toUpperCase() + status.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Sort */}
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="order">Chapter Order</option>
-              <option value="title">Title</option>
-              <option value="lastModified">Last Modified</option>
-              <option value="wordCount">Word Count</option>
-            </select>
-
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                List
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Grid
-              </button>
-            </div>
-          </div>
-
-          {/* Overall Progress Bar */}
-          <div className="bg-[#F9FAFB] rounded-lg p-4">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-700 font-medium">Overall Progress</span>
-              <span className="text-gray-600">{formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-[#A5F7AC] h-3 rounded-full transition-all duration-300"
-                style={{ width: `${overallProgress}%` }}
-              />
-            </div>
-            <div className="text-xs text-gray-600 mt-1">{overallProgress}% complete</div>
-          </div>
         </div>
       </div>
 
@@ -417,15 +334,28 @@ export function ChaptersPage({
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No chapters found</h3>
-                  <p className="text-[#889096] mb-4">Create your first chapter to start writing</p>
-                  <button
-                    onClick={() => setShowNewChapterModal(true)}
-                    className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
-                  >
-                    <Plus className="w-4 h-4 inline mr-2" />
-                    New Chapter
-                  </button>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {hasActiveFilters ? 'No chapters match your filters' : 'No chapters found'}
+                  </h3>
+                  <p className="text-[#889096] mb-4">
+                    {hasActiveFilters ? 'Try adjusting your search or filters' : 'Create your first chapter to start writing'}
+                  </p>
+                  {hasActiveFilters ? (
+                    <button
+                      onClick={clearFilters}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Clear Filters
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowNewChapterModal(true)}
+                      className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                    >
+                      <Plus className="w-4 h-4 inline mr-2" />
+                      New Chapter
+                    </button>
+                  )}
                 </div>
               </div>
             ) : viewMode === 'list' ? (
