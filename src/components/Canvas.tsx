@@ -314,7 +314,6 @@ interface SimplifiedMenuProps {
   onClear: () => void;
   onLoadTemplate: (templateId: string) => void;
   onLoadSample: (sampleId: string) => void;
-  onBack: () => void;
   lastSynced: Date | null;
   isSyncing: boolean;
   hasChanges: boolean;
@@ -385,19 +384,12 @@ const SimplifiedMenu = ({
     <div className={`bg-white border-l border-gray-200 transition-all duration-300 ${
       isCollapsed ? 'w-12' : 'w-72'
     } flex flex-col h-full`}>
-      {/* Header with Back Button */}
+      {/* Header */}
       <div className="p-4 border-b border-gray-200">
         {!isCollapsed && (
-          <div className="flex items-center gap-3 mb-3">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Back to main view"
-            >
-              ←
-            </button>
+          <div className="flex items-center justify-between mb-3">
             <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900">Visual Canvas</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Story Canvas</h2>
               <p className="text-sm text-gray-600">Plan your story visually</p>
             </div>
           </div>
@@ -552,7 +544,7 @@ const SimplifiedMenu = ({
 };
 
 // Main Canvas Flow Component
-const CanvasFlow = ({ onBack }: { onBack: () => void }) => {
+const CanvasFlow = () => {
   // State Management
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -1013,7 +1005,6 @@ const CanvasFlow = ({ onBack }: { onBack: () => void }) => {
         onClear={clearCanvas}
         onLoadTemplate={loadTemplate}
         onLoadSample={loadSample}
-        onBack={onBack}
         lastSynced={lastSynced}
         isSyncing={isSaving || syncStatus === 'syncing'}
         hasChanges={hasChanges}
@@ -1024,10 +1015,10 @@ const CanvasFlow = ({ onBack }: { onBack: () => void }) => {
 };
 
 // Main Canvas Component with Provider
-const Canvas = ({ onBack }: { onBack?: () => void }) => {
+const Canvas = () => {
   return (
     <ReactFlowProvider>
-      <CanvasFlow onBack={onBack || (() => {})} />
+      <CanvasFlow />
     </ReactFlowProvider>
   );
 };
