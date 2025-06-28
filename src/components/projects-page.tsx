@@ -16,6 +16,7 @@ import { projectService, Project } from '../services/projectService';
 import { chapterService, Chapter } from '../services/chapterService';
 import { ChaptersPage } from './chapters-page';
 import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProjectsPageProps {
   onBack?: () => void;
@@ -28,6 +29,7 @@ interface ProjectWithChapters extends Project {
 }
 
 export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
+  const { signOut } = useAuth();
   const [projects, setProjects] = useState<ProjectWithChapters[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('lastModified');
@@ -231,6 +233,16 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
       }
     } catch (error) {
       console.error('Error creating project:', error);
+      
+      // Check if the error is due to authentication
+      if (error instanceof Error && error.message.includes('Not authenticated')) {
+        alert('Your session has expired. Please log in again to continue.');
+        signOut();
+        return;
+      }
+      
+      // Handle other errors
+      alert('Failed to create project. Please try again.');
     }
   };
 
