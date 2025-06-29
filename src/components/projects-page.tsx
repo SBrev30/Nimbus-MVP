@@ -470,7 +470,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-[#ff4e00] h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(project.completionPercentage, 100)}%` }}k
+                            style={{ width: `${Math.min(project.completionPercentage, 100)}%` }}
                           />
                         </div>
                       </div>
