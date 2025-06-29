@@ -237,14 +237,14 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
     >
       <div className="max-w-2xl">
         {/* Introduction */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h3 className="font-semibold text-blue-900 mb-2 font-inter">Before you ask...</h3>
-          <p className="text-blue-800 font-inter mb-3">
+        <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6 mb-8">
+          <h3 className="font-semibold text-gray mb-2 font-inter">Before you ask...</h3>
+          <p className="text-gray font-inter mb-3">
             Check our Help Topics for quick answers to common questions. If you can't find what you're looking for, we're here to help!
           </p>
           <button
             onClick={() => onNavigate?.('help-topics')}
-            className="text-sm text-blue-600 hover:text-blue-800 underline font-inter"
+            className="text-sm text-gray hover:text-gray underline font-inter"
           >
             Browse Help Topics →
           </button>
