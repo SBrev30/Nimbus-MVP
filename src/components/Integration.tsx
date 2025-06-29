@@ -331,7 +331,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   return (
     <div className="flex-1 flex flex-col bg-white rounded-t-[17px] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center bg-white justify-between p-6 border-b border-gray-200">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <button
             onClick={onBack}
@@ -348,7 +348,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
         </div>
         <button
           onClick={openAddModal}
-          className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-white rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>Add Integration</span>
