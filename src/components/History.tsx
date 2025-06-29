@@ -221,7 +221,7 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
           </div>
           <button
             onClick={onBack}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors"
           >
             Back to Settings
           </button>
