@@ -7,7 +7,7 @@ interface BookSpineProps {
 }
 
 const genreColors = {
-  Fantasy: 'from-brown-600 to-brown-800',
+  Fantasy: 'from-purple-600 to-purple-800',j
   'Sci-Fi': 'from-blue-600 to-blue-800',
   Romance: 'from-pink-600 to-pink-800',
   Mystery: 'from-gray-600 to-gray-800',
