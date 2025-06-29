@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Star, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  Star, 
+  Send, 
+  CheckCircle, 
+  AlertCircle,
+  Lightbulb,
+  Palette,
+  Zap,
+  BookOpen
+} from 'lucide-react';
 import { HelpLayout } from './HelpLayout';
 
 interface FeedbackData {
@@ -43,7 +52,6 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
     },
     isAnonymous: false
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,25 +61,25 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
       value: 'feature',
       label: 'Feature Requests',
       description: 'New features or enhancements you\'d like to see',
-      icon: '💡'
+      icon: <Lightbulb className="w-5 h-5" />
     },
     {
       value: 'ux',
       label: 'User Experience',
       description: 'Interface design, workflow improvements, usability',
-      icon: '🎨'
+      icon: <Palette className="w-5 h-5" />
     },
     {
       value: 'performance',
       label: 'Performance',
       description: 'Speed, responsiveness, technical issues',
-      icon: '⚡'
+      icon: <Zap className="w-5 h-5" />
     },
     {
       value: 'content',
       label: 'Content & Resources',
       description: 'Help docs, tutorials, onboarding experience',
-      icon: '📚'
+      icon: <BookOpen className="w-5 h-5" />
     }
   ];
 
