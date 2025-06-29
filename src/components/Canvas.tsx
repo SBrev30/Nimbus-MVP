@@ -495,7 +495,7 @@ const SimplifiedMenu = ({
               </button>
               <button
                 onClick={onClear}
-                className="w-full p-2 bg-[#e8ddc1] text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                className="w-full p-2 bg-[#f2eee2] border-[#e8ddc1] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm"
               >
                 Clear All
               </button>
