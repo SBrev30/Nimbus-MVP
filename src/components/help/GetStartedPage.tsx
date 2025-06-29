@@ -40,7 +40,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
       duration: '30 seconds',
       content: (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-[#ff4e00] to-[#ff9602]/200 p-6 rounded-lg">
+          <div className="bg-gradient-to-r from-[#ff4e00] to-[#ff4e00] p-6 rounded-lg">
             <h3 className="text-xl font-bold text-gray-900 mb-3 font-inter">Welcome to Nimbus Note!</h3>
             <p className="text-gray-800 font-inter leading-relaxed">
               Nimbus Note is a visual writing platform that combines traditional writing tools with infinite canvas brainstorming and AI assistance. Whether you're writing a novel, screenplay, or game narrative, we've got you covered.
