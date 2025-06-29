@@ -13,10 +13,14 @@ import {
   PenTool,
   RotateCcw,
   CheckCircle,
-  File
+  File,
+  Trash2,
+  RefreshCw,
+  Download
 } from 'lucide-react';
 import { chapterService, Chapter } from '../services/chapterService';
 import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
+import { ChapterPreviewModal } from './ChapterPreviewModal';
 
 interface ChapterWithMeta extends Chapter {
   tags?: string[];
@@ -50,6 +54,9 @@ export function ChaptersPage({
     summary: '',
     status: 'draft' as const
   });
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [chapterToPreview, setChapterToPreview] = useState<Chapter | null>(null);
+  const [showChapterMenu, setShowChapterMenu] = useState<string | null>(null);
 
   // Define filter options for chapters
   const statusFilterOptions = [
@@ -152,6 +159,56 @@ export function ChaptersPage({
     } catch (error) {
       console.error('Error creating chapter:', error);
     }
+  };
+
+  const handlePreviewChapter = (chapter: Chapter) => {
+    setChapterToPreview(chapter);
+    setShowPreviewModal(true);
+  };
+
+  const handleDeleteChapter = async (chapterId: string) => {
+    if (confirm('Are you sure you want to delete this chapter? This action cannot be undone.')) {
+      try {
+        const success = await chapterService.deleteChapter(chapterId);
+        if (success) {
+          setChapters(prev => prev.filter(chapter => chapter.id !== chapterId));
+        }
+      } catch (error) {
+        console.error('Error deleting chapter:', error);
+      }
+    }
+    setShowChapterMenu(null);
+  };
+
+  const handleChangeStatus = async (chapter: Chapter, newStatus: 'outline' | 'draft' | 'revision' | 'final') => {
+    try {
+      const updatedChapter = await chapterService.updateChapter(chapter.id, { status: newStatus });
+      if (updatedChapter) {
+        setChapters(prev => prev.map(ch => ch.id === chapter.id ? { ...ch, status: newStatus } : ch));
+      }
+    } catch (error) {
+      console.error('Error updating chapter status:', error);
+    }
+    setShowChapterMenu(null);
+  };
+
+  const handleExportChapter = (chapter: Chapter) => {
+    // Create a plain text version of the chapter content
+    const content = chapter.content.replace(/<[^>]*>/g, ' ');
+    const text = `# ${chapter.title}\n\n${chapter.summary ? `## Summary\n\n${chapter.summary}\n\n` : ''}## Content\n\n${content}`;
+    
+    // Create a blob and download it
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${chapter.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setShowChapterMenu(null);
   };
 
   const getStatusColor = (status: string) => {
@@ -443,22 +500,67 @@ export function ChaptersPage({
                       
                       <div className="flex items-center gap-2 ml-4">
                         <button
-                          onClick={() => onSelectChapter?.(chapter.id)}
+                          onClick={() => handlePreviewChapter(chapter)}
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Read Chapter"
                         >
                           <Eye className="w-4 h-4 text-gray-500" />
                         </button>
                         <button
-                          onClick={() => onEditChapter?.(chapter.id)}
+                          onClick={() => onSelectChapter?.(chapter.id, chapter.title)}
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Edit Chapter"
                         >
                           <Edit3 className="w-4 h-4 text-gray-500" />
                         </button>
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <div className="relative">
+                          <button 
+                            onClick={() => setShowChapterMenu(showChapterMenu === chapter.id ? null : chapter.id)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
                           <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                        </button>
+                          </button>
+                          
+                          {/* Chapter Menu Dropdown */}
+                          {showChapterMenu === chapter.id && (
+                            <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => handleDeleteChapter(chapter.id)}
+                                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete Chapter
+                                </button>
+                                
+                                <div className="px-4 py-1 text-xs text-gray-500 border-b border-gray-100">Change Status</div>
+                                
+                                {['outline', 'draft', 'revision', 'final'].map((status) => (
+                                  <button
+                                    key={status}
+                                    onClick={() => handleChangeStatus(chapter, status as any)}
+                                    className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+                                      chapter.status === status 
+                                        ? 'bg-gray-100 text-gray-900 font-medium' 
+                                        : 'text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    <RefreshCw className="w-3 h-3" />
+                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                  </button>
+                                ))}
+                                
+                                <button
+                                  onClick={() => handleExportChapter(chapter)}
+                                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                >
+                                  <Download className="w-4 h-4" />
+                                  Export Chapter
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -526,14 +628,14 @@ export function ChaptersPage({
                       </div>
                       <div className="flex gap-1">
                         <button
-                          onClick={() => onSelectChapter?.(chapter.id)}
+                          onClick={() => handlePreviewChapter(chapter)}
                           className="p-1 hover:bg-gray-200 rounded transition-colors"
                           title="Read"
                         >
                           <Eye className="w-3 h-3" />
                         </button>
                         <button
-                          onClick={() => onEditChapter?.(chapter.id)}
+                          onClick={() => onSelectChapter?.(chapter.id, chapter.title)}
                           className="p-1 hover:bg-gray-200 rounded transition-colors"
                           title="Edit"
                         >
@@ -547,6 +649,14 @@ export function ChaptersPage({
             )}
           </div>
         </div>
+      )}
+
+      {/* Chapter Preview Modal */}
+      {showPreviewModal && chapterToPreview && (
+        <ChapterPreviewModal
+          chapter={chapterToPreview}
+          onClose={() => setShowPreviewModal(false)}
+        />
       )}
       
       {/* New Chapter Modal */}
