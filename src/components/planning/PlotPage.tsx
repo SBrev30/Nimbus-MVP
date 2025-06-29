@@ -195,7 +195,7 @@ export function PlotPage({ onBack }: PlotPageProps) {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'main':
-        return '🎯';
+        return '<BiBullseye />';
       case 'subplot':
         return '🔗';
       case 'side_story':
@@ -275,7 +275,7 @@ export function PlotPage({ onBack }: PlotPageProps) {
             </p>
           </div>
           
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-semibold">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-semibold">
             <Plus className="w-4 h-4" />
             New Plot Thread
           </button>
