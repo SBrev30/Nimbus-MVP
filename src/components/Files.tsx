@@ -310,7 +310,7 @@ export function Files() {
                         {item.tags.map((tag) => (
                           <span
                             key={tag.id}
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-[#ff4e00]-100 text-gray-700 rounded-full text-sm"
                           >
                             <Tag className="w-3 h-3" />
                             {tag.tag_name}
