@@ -119,7 +119,7 @@ export function NotesPanel({
   // Collapsed state - minimal width at right edge
   if (isCollapsed) {
     return (
-      <div className="w-[18px] bg-[#f2eee2] border-l border-[#C6C5C5] flex items-start justify-center pt-3 transition-all duration-300 ease-in-out">
+      <div className="fixed right-0 top-0 w-[18px] h-full bg-[#f2eee2] border-l border-[#C6C5C5] flex items-start justify-center pt-3 transition-all duration-300 ease-in-out z-40">
         <button
           onClick={handleToggleCollapse}
           className="p-1 rounded hover:bg-gray-200 transition-colors"
@@ -136,7 +136,7 @@ export function NotesPanel({
   const hasMaxNotes = currentNoteCount >= maxNotes;
 
   return (
-    <div className="w-[296px] bg-[#f2eee2] border-l border-[#C6C5C5] flex flex-col h-screen relative ml-5 transition-all duration-300 ease-in-out">
+    <div className="fixed right-0 top-0 w-[320px] h-full bg-[#f2eee2] border-l border-[#C6C5C5] flex flex-col transition-all duration-300 ease-in-out z-40">
       {/* Header */}
       <div className="h-[94px] border-b border-[#C6C5C5] p-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
