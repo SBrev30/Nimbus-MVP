@@ -92,15 +92,15 @@ export function OutlinePage({ onBack }: OutlinePageProps) {
                   Start with three acts: Setup, Confrontation, Resolution
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></span>
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
                   Break each act into chapters with clear goals
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></span>
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
                   Add scenes within chapters for detailed planning
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></span>
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
                   Set word count targets to track progress
                 </li>
               </ul>
