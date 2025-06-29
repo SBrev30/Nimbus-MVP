@@ -271,7 +271,7 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
           </button>
           <button
             onClick={onLoad}
-            className="flex items-center justify-center gap-2 py-2 px-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex items-center justify-center gap-2 py-2 px-3 bg-red text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <Upload className="w-4 h-4" />
             <span className="text-sm">Load</span>
