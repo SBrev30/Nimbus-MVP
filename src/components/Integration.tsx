@@ -348,7 +348,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
         </div>
         <button
           onClick={openAddModal}
-          className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-white rounded-lg transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-gray rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>Add Integration</span>
