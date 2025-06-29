@@ -52,7 +52,7 @@ export function TaskLightbox({ task, onUpdate, onDelete, onClose }: TaskLightbox
       taskType: formData.taskType as any,
       priority: formData.priority as any,
       status: formData.status as any,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+      dueDate: formData.dueDate && formData.dueDate.trim() !== '' ? new Date(formData.dueDate) : undefined,
       updatedAt: new Date(),
     };
 
@@ -64,6 +64,10 @@ export function TaskLightbox({ task, onUpdate, onDelete, onClose }: TaskLightbox
   };
 
   const formatDate = (date: Date) => {
+    // Check if the date is valid
+    if (!date || isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',

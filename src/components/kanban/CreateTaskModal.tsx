@@ -39,7 +39,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
 
     const newTask = {
       ...formData,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+      dueDate: formData.dueDate && formData.dueDate.trim() !== '' ? new Date(formData.dueDate) : undefined,
     };
 
     onCreateTask(newTask);
