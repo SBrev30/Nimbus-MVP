@@ -387,7 +387,7 @@ const SimplifiedMenu = ({
       {!isCollapsed && (
         <>
           {/* Tab Navigation */}
-          <div className="flex bg-[#e8ddc1 ] m-2 rounded-lg p-1">
+          <div className="flex bg-[#e8ddc1] m-2 rounded-lg p-1">
             {[
               { id: 'elements', label: 'Elements' },
               { id: 'templates', label: 'Templates' },
