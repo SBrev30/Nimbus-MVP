@@ -20,7 +20,6 @@ import { EditorContent } from '../types';
 import { useWordCount, useUndo, useKeyboard } from '../hooks/useUtilities';
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
-import { NotesPanel } from './NotesPanel';
 
 interface EditorProps {
   content: EditorContent;
