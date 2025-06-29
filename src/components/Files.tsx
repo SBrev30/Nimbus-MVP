@@ -244,7 +244,7 @@ export function Files() {
                 {items.length === 0 && (
                   <button
                     onClick={() => setShowImportWizard(true)}
-                    className="px-6 py-2 bg-[#ff4e00] text-white rounded-lg hover:bg-blue-600"
+                    className="px-6 py-2 bg-[#ff4e00] text-gray rounded-lg hover:bg-blue-600"
                   >
                     Import Content
                   </button>
