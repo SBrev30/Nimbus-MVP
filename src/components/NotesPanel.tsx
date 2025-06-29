@@ -167,7 +167,7 @@ export function NotesPanel({
               onClick={() => handleCategoryChange(category.label)}
               className={`px-2 py-1.5 text-xs font-medium transition-all font-roboto flex-1 ${
                 activeCategory === category.label
-                  ? 'bg-[#A5F7AC] text-[#18181B]'
+                  ? 'bg-[#e8ddc1] text-[#18181B]'
                   : 'bg-transparent text-[#889096] hover:bg-gray-100'
               }`}
             >
@@ -203,7 +203,7 @@ export function NotesPanel({
             <div className="flex gap-2 mt-2">
               <button
                 onClick={handleAddNote}
-                className="text-xs bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 px-3 py-1 rounded transition-colors font-inter"
+                className="text-xs bg-[#e8ddc1] hover:bg-[#e8ddc1]/80 px-3 py-1 rounded transition-colors font-inter"
               >
                 Save
               </button>
@@ -223,7 +223,7 @@ export function NotesPanel({
             <div 
               key={note.id} 
               className={`p-4 rounded ${
-                note.highlighted ? 'bg-[#A5F7AC]' : 'bg-[#FAF9F9]'
+                note.highlighted ? 'bg-[#e8ddc1]' : 'bg-[#FAF9F9]'
               }`}
             >
               <p className={`text-sm mb-2 font-inter leading-relaxed ${
@@ -245,7 +245,7 @@ export function NotesPanel({
             </p>
             <button
               onClick={() => setIsAddingNote(true)}
-              className="mt-2 text-xs text-[#A5F7AC] hover:underline font-inter"
+              className="mt-2 text-xs text-[#e8ddc1] hover:underline font-inter"
             >
               Add your first note
             </button>
