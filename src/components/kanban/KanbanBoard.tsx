@@ -143,7 +143,7 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
                 onClick={() => handleViewChange('board')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   activeView === 'board'
-                    ? 'bg-white text-gray-900 shadow-sm'
+                    ? 'bg-[#f2eee2] text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
