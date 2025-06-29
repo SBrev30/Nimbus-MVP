@@ -20,6 +20,7 @@ import { EditorContent } from '../types';
 import { useWordCount, useUndo, useKeyboard } from '../hooks/useUtilities';
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
+import { NotesPanel } from './NotesPanel';
 
 interface EditorProps {
   content: EditorContent;
@@ -120,150 +121,6 @@ const AutoSaveNotification = ({
             <span>Save failed - changes stored locally</span>
           </>
         )}
-      </div>
-    </div>
-  );
-};
-
-// Notes Panel Component
-const NotesPanel = ({ 
-  notes, 
-  onAddNote, 
-  onEditNote, 
-  onDeleteNote,
-  isCollapsed,
-  onToggleCollapse 
-}: {
-  notes: Note[];
-  onAddNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  onEditNote: (id: string, updates: Partial<Note>) => void;
-  onDeleteNote: (id: string) => void;
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | Note['category']>('all');
-
-  const filteredNotes = notes.filter(note => {
-    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         note.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || note.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  return (
-    <div className={`fixed right-0 top-0 h-full bg-white border-l border-[#C6C5C5] transition-transform duration-300 ease-in-out z-40 ${
-      isCollapsed ? 'translate-x-full' : 'translate-x-0'
-    }`} style={{ width: '320px' }}>
-      <div className="h-full flex flex-col">
-        {/* Notes Header */}
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Notes</h3>
-          
-          {/* Search */}
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#889096]" />
-            <input
-              type="text"
-              placeholder="Search notes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            />
-          </div>
-
-          {/* Category Filter */}
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value as any)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-          >
-            <option value="all">All Categories</option>
-            <option value="Person">Person</option>
-            <option value="Place">Place</option>
-            <option value="Plot">Plot</option>
-            <option value="Misc">Misc</option>
-          </select>
-        </div>
-
-        {/* Notes List */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-3">
-            {filteredNotes.length > 0 ? (
-              filteredNotes.map(note => (
-                <div
-                  key={note.id}
-                  className="p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-gray-900 text-sm">{note.title}</h4>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      note.category === 'Person' ? 'bg-blue-100 text-blue-800' :
-                      note.category === 'Place' ? 'bg-green-100 text-green-800' :
-                      note.category === 'Plot' ? 'bg-purple-100 text-purple-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {note.category}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600 line-clamp-2">{note.content}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-gray-500">
-                      {note.updatedAt.toLocaleDateString()}
-                    </span>
-                    <div className="flex space-x-1">
-                      <button
-                        onClick={() => onEditNote(note.id, note)}
-                        className="text-xs text-blue-600 hover:text-blue-800"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => onDeleteNote(note.id)}
-                        className="text-xs text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500 text-sm">No notes found</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Add Note Button */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => onAddNote({
-              title: 'New Note',
-              content: '',
-              category: 'Misc'
-            })}
-            className="w-full px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors text-sm font-medium"
-          >
-            Add Note
-          </button>
-        </div>
-
-        {/* Collapse Button */}
-        <div className="absolute -left-8 bottom-6">
-          <button
-            onClick={onToggleCollapse}
-            className="w-8 h-8 bg-white border border-[#C6C5C5] rounded-l-lg flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm"
-            title={isCollapsed ? "Show Notes" : "Hide Notes"}
-          >
-            {isCollapsed ? (
-              <ChevronLeft className="w-4 h-4 text-[#889096]" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-[#889096]" />
-            )}
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -509,7 +366,17 @@ export const Editor: React.FC<EditorProps> = ({
             <span className="text-[#889096]">›</span>
             <span className="text-gray-900">Editor</span>
           </div>
-                 
+          
+          {/* Centered Search Bar */}
+          <div className="w-full md:flex-1 md:flex md:justify-center md:max-w-md md:mx-8">
+            <SimpleSearchFilter
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search..."
+              className="w-full md:max-w-md"
+            />
+          </div>
+          
           <div className="hidden md:block w-24"></div>
         </div>
       </div>
@@ -634,6 +501,17 @@ export const Editor: React.FC<EditorProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Notes Panel using existing component */}
+        <NotesPanel
+          notes={notes}
+          onAddNote={handleAddNote}
+          onEditNote={handleEditNote}
+          onDeleteNote={handleDeleteNote}
+          isCollapsed={notesPanelCollapsed}
+          onToggleCollapse={() => setNotesPanelCollapsed(!notesPanelCollapsed)}
+        />
+      </div>
 
       {/* Bottom Status Bar */}
       <div className="bg-white border-t border-[#C6C5C5] px-4 md:px-6 py-2">
