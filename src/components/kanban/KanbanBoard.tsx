@@ -154,7 +154,7 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   activeView === 'library'
                     ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    : 'text-[#f2eee2] hover:text-gray-900'
                 }`}
               >
                 Library
