@@ -11,15 +11,11 @@ import {
   RotateCcw,
   RotateCw,
   Check,
-  Cloud,
-  ChevronLeft,
-  ChevronRight,
-  Search
+  Cloud
 } from 'lucide-react';
 import { EditorContent } from '../types';
 import { useWordCount, useUndo, useKeyboard } from '../hooks/useUtilities';
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
-import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
 
 interface EditorProps {
   content: EditorContent;
@@ -27,15 +23,6 @@ interface EditorProps {
   selectedChapter?: { id: string; title: string; number: number } | null;
   isLoading?: boolean;
   className?: string;
-}
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  category: 'Person' | 'Place' | 'Plot' | 'Misc';
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const FONT_OPTIONS = [
@@ -48,12 +35,6 @@ const FONT_OPTIONS = [
 ];
 
 const FONT_SIZES = [12, 14, 16, 18, 20, 24, 28, 32];
-
-const ALIGNMENT_OPTIONS = [
-  { icon: AlignLeft, value: 'left' },
-  { icon: AlignCenter, value: 'center' },
-  { icon: AlignRight, value: 'right' }
-];
 
 // Auto-save notification component
 const AutoSaveNotification = ({ 
@@ -136,9 +117,6 @@ export const Editor: React.FC<EditorProps> = ({
   const [title, setTitle] = useState(content.title);
   const [editorContent, setEditorContent] = useState(content.content);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   
   // Enhanced editor state
   const [currentFont, setCurrentFont] = useState('Inter, sans-serif');
@@ -273,29 +251,6 @@ export const Editor: React.FC<EditorProps> = ({
     formatText('justify' + alignment.charAt(0).toUpperCase() + alignment.slice(1));
   }, [formatText]);
 
-  // Notes handlers
-  const handleAddNote = useCallback((note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newNote: Note = {
-      ...note,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setNotes(prev => [...prev, newNote]);
-  }, []);
-
-  const handleEditNote = useCallback((id: string, updates: Partial<Note>) => {
-    setNotes(prev => prev.map(note => 
-      note.id === id 
-        ? { ...note, ...updates, updatedAt: new Date() }
-        : note
-    ));
-  }, []);
-
-  const handleDeleteNote = useCallback((id: string) => {
-    setNotes(prev => prev.filter(note => note.id !== id));
-  }, []);
-
   // Restore undo state when undoing/redoing
   useEffect(() => {
     if (undoState.title !== title) {
@@ -357,29 +312,6 @@ export const Editor: React.FC<EditorProps> = ({
         hasUnsavedChanges={hasUnsavedChanges}
       />
 
-      {/* Header with Breadcrumb and Centered Search - Fixed width to not interfere with NotesPanel */}
-      <div className="border-b border-[#C6C5C5] px-4 md:px-6 py-4" style={{ backgroundColor: '#f2eee2', marginRight: notesPanelCollapsed ? '0' : '320px' }}>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center space-x-2 text-sm text-[#889096] font-semibold">
-            <span className="text-gray-900">Write</span>
-            <span className="text-[#889096]">›</span>
-            <span className="text-gray-900">Editor</span>
-          </div>
-          
-          {/* Centered Search Bar */}
-          <div className="w-full md:flex-1 md:flex md:justify-center md:max-w-md md:mx-8">
-            <SimpleSearchFilter
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Search..."
-              className="w-full md:max-w-md"
-            />
-          </div>
-          
-          <div className="hidden md:block w-24"></div>
-        </div>
-      </div>
-
       {/* Floating Toolbar */}
       <div 
         className="fixed left-1/2 transform -translate-x-1/2 flex items-center px-2 py-1 gap-1"
@@ -435,81 +367,69 @@ export const Editor: React.FC<EditorProps> = ({
         </button>
       </div>
 
-      {/* Editor Container */}
+      {/* Editor Container - Full width since NotesPanel is handled by App.tsx */}
       <div className="flex-1 flex overflow-hidden">
-        <div className={`transition-all duration-300 ${notesPanelCollapsed ? 'flex-1' : 'flex-1 mr-80'}`}>
-          <div className="w-full h-full bg-white mx-3 md:mx-6 mb-3 md:mb-6 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* Chapter Info */}
-            {selectedChapter?.title && (
-              <div className="px-4 md:px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-2">
-                <div className="flex items-center space-x-3">
-                  <FileText className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">
-                    Chapter {selectedChapter?.number || 'Unknown'}: {selectedChapter.title}
-                  </span>
-                </div>
-                {showWordCount && (
-                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
-                    <span>{words} words</span>
-                    <span className="hidden sm:inline">{characters} characters</span>
-                    <span className="hidden md:inline">{readingTime} min read</span>
-                  </div>
-                )}
+        <div className="w-full h-full bg-white mx-3 md:mx-6 mb-3 md:mb-6 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          {/* Chapter Info */}
+          {selectedChapter?.title && (
+            <div className="px-4 md:px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-700">
+                  Chapter {selectedChapter?.number || 'Unknown'}: {selectedChapter.title}
+                </span>
               </div>
-            )}
-
-            {/* Editor Content */}
-            <div className="h-full overflow-y-auto">
-              {!selectedChapter ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No chapter selected</h3>
-                    <p className="text-[#889096]">Select a chapter to start writing</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="px-4 md:px-10 pt-6 md:pt-10 pb-20 md:pb-32">
-                  <div className="max-w-[803px] mx-auto">
-                    {/* Title Input */}
-                    <input
-                      type="text"
-                      value={title}
-                      onChange={(e) => handleTitleChange(e.target.value)}
-                      className="text-2xl md:text-4xl font-semibold text-black text-center mb-8 md:mb-16 font-inter w-full bg-transparent border-none outline-none cursor-text"
-                      placeholder="Chapter Title"
-                    />
-                    
-                    {/* Content Editor */}
-                    <div
-                      ref={editorRef}
-                      contentEditable
-                      onInput={handleContentChange}
-                      className="text-sm md:text-base text-black leading-relaxed font-inter outline-none min-h-96 cursor-text focus:outline-none focus:ring-0"
-                      style={{ 
-                        fontFamily: currentFont,
-                        fontSize: isMobile ? `${Math.max(14, currentFontSize - 2)}px` : `${currentFontSize}px`,
-                        textAlign: currentAlignment as any
-                      }}
-                      suppressContentEditableWarning={true}
-                      data-placeholder="Start writing your chapter..."
-                    />
-                  </div>
+              {showWordCount && (
+                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
+                  <span>{words} words</span>
+                  <span className="hidden sm:inline">{characters} characters</span>
+                  <span className="hidden md:inline">{readingTime} min read</span>
                 </div>
               )}
             </div>
+          )}
+
+          {/* Editor Content */}
+          <div className="h-full overflow-y-auto">
+            {!selectedChapter ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No chapter selected</h3>
+                  <p className="text-[#889096]">Select a chapter to start writing</p>
+                </div>
+              </div>
+            ) : (
+              <div className="px-4 md:px-10 pt-6 md:pt-10 pb-20 md:pb-32">
+                <div className="max-w-[803px] mx-auto">
+                  {/* Title Input */}
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    className="text-2xl md:text-4xl font-semibold text-black text-center mb-8 md:mb-16 font-inter w-full bg-transparent border-none outline-none cursor-text"
+                    placeholder="Chapter Title"
+                  />
+                  
+                  {/* Content Editor */}
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    onInput={handleContentChange}
+                    className="text-sm md:text-base text-black leading-relaxed font-inter outline-none min-h-96 cursor-text focus:outline-none focus:ring-0"
+                    style={{ 
+                      fontFamily: currentFont,
+                      fontSize: isMobile ? `${Math.max(14, currentFontSize - 2)}px` : `${currentFontSize}px`,
+                      textAlign: currentAlignment as any
+                    }}
+                    suppressContentEditableWarning={true}
+                    data-placeholder="Start writing your chapter..."
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Notes Panel using existing component */}
-        <NotesPanel
-          notes={notes}
-          onAddNote={handleAddNote}
-          onEditNote={handleEditNote}
-          onDeleteNote={handleDeleteNote}
-          isCollapsed={notesPanelCollapsed}
-          onToggleCollapse={() => setNotesPanelCollapsed(!notesPanelCollapsed)}
-        />
       </div>
 
       {/* Bottom Status Bar */}
