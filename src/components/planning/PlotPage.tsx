@@ -195,15 +195,15 @@ export function PlotPage({ onBack }: PlotPageProps) {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'main':
-        return '<BiBullseye />';
+        return '';
       case 'subplot':
-        return '🔗';
+        return '';
       case 'side_story':
-        return '📖';
+        return '';
       case 'character_arc':
-        return '👤';
+        return '';
       default:
-        return '📝';
+        return '';
     }
   };
 
