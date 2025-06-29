@@ -136,7 +136,7 @@ export function NotesPanel({
   const hasMaxNotes = currentNoteCount >= maxNotes;
 
   return (
-    <div className="w-[296px] bg-[#EAE9E9] border-l border-[#C6C5C5] flex flex-col h-screen relative ml-5 transition-all duration-300 ease-in-out">
+    <div className="w-[296px] bg-[#f2eee2] border-l border-[#C6C5C5] flex flex-col h-screen relative ml-5 transition-all duration-300 ease-in-out">
       {/* Header */}
       <div className="h-[94px] border-b border-[#C6C5C5] p-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
