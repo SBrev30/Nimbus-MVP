@@ -11,7 +11,8 @@ import {
   RotateCcw,
   RotateCw,
   Check,
-  Cloud
+  Cloud,
+  ChevronDown
 } from 'lucide-react';
 import { EditorContent } from '../types';
 import { useWordCount, useUndo, useKeyboard } from '../hooks/useUtilities';
@@ -102,6 +103,62 @@ const AutoSaveNotification = ({
           </>
         )}
       </div>
+    </div>
+  );
+};
+
+// Alignment Dropdown Component
+const AlignmentDropdown = ({ 
+  currentAlignment, 
+  onAlignmentChange 
+}: { 
+  currentAlignment: string; 
+  onAlignmentChange: (alignment: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const alignmentOptions = [
+    { value: 'left', icon: AlignLeft, label: 'Left Align' },
+    { value: 'center', icon: AlignCenter, label: 'Center Align' },
+    { value: 'right', icon: AlignRight, label: 'Right Align' }
+  ];
+
+  const currentOption = alignmentOptions.find(opt => opt.value === currentAlignment) || alignmentOptions[0];
+  const CurrentIcon = currentOption.icon;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center px-2 py-1 rounded hover:bg-gray-200 transition-colors"
+        title="Text Alignment"
+      >
+        <CurrentIcon className="w-3 h-3 text-black" />
+        <ChevronDown className="w-3 h-3 ml-1 text-gray-600" />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[120px]">
+          {alignmentOptions.map((option) => {
+            const Icon = option.icon;
+            return (
+              <button
+                key={option.value}
+                onClick={() => {
+                  onAlignmentChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`flex items-center w-full px-3 py-2 text-xs hover:bg-gray-100 transition-colors ${
+                  currentAlignment === option.value ? 'bg-gray-100' : ''
+                }`}
+              >
+                <Icon className="w-3 h-3 mr-2" />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
@@ -312,61 +369,105 @@ export const Editor: React.FC<EditorProps> = ({
         hasUnsavedChanges={hasUnsavedChanges}
       />
 
-      {/* Floating Toolbar */}
+      {/* Enhanced Floating Toolbar */}
       <div 
-  className="fixed left-1/2 transform -translate-x-1/2 flex items-center px-2 py-1 gap-1"
-  style={{
-    backgroundColor: '#e8ddc1',
-    width: 'auto',           // Allow natural sizing
-    maxWidth: '400px',       // Your requested max width
-    minWidth: '300px',       // Minimum to prevent too small
-    height: '30px',
-    borderRadius: '5.277px',
-    bottom: '60px',
-    zIndex: 50,
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    border: '1px solid rgba(0, 0, 0, 0.1)'
-  }}
->
+        className="fixed left-1/2 transform -translate-x-1/2 flex items-center px-2 py-1 gap-2"
+        style={{
+          backgroundColor: '#e8ddc1',
+          width: 'auto',
+          maxWidth: '450px',
+          minWidth: '300px',
+          height: '32px',
+          borderRadius: '5.277px',
+          bottom: '60px',
+          zIndex: 50,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          border: '1px solid rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        {/* Section 1: Undo/Redo */}
+        <button
+          onClick={undo}
+          disabled={!canUndo}
+          className={`p-1 rounded transition-colors ${
+            canUndo 
+              ? 'hover:bg-gray-200 text-black' 
+              : 'text-gray-400 cursor-not-allowed'
+          }`}
+          title="Undo"
+        >
+          <RotateCcw className="w-3 h-3" />
+        </button>
+        <button
+          onClick={redo}
+          disabled={!canRedo}
+          className={`p-1 rounded transition-colors ${
+            canRedo 
+              ? 'hover:bg-gray-200 text-black' 
+              : 'text-gray-400 cursor-not-allowed'
+          }`}
+          title="Redo"
+        >
+          <RotateCw className="w-3 h-3" />
+        </button>
+
+        {/* 1pt Separator */}
+        <div className="w-px h-4 bg-gray-400"></div>
+
+        {/* Section 2: Font Controls */}
+        <select
+          value={currentFont}
+          onChange={(e) => applyFont(e.target.value)}
+          className="text-xs bg-transparent border-none outline-none cursor-pointer min-w-[80px] text-black"
+          title="Font Family"
+        >
+          {FONT_OPTIONS.map(font => (
+            <option key={font.value} value={font.value}>{font.name}</option>
+          ))}
+        </select>
+
+        <select
+          value={currentFontSize}
+          onChange={(e) => applyFontSize(Number(e.target.value))}
+          className="text-xs bg-transparent border-none outline-none cursor-pointer min-w-[35px] text-black"
+          title="Font Size"
+        >
+          {FONT_SIZES.map(size => (
+            <option key={size} value={size}>{size}</option>
+          ))}
+        </select>
+
+        {/* 1pt Separator */}
+        <div className="w-px h-4 bg-gray-400"></div>
+
+        {/* Section 3: Text Formatting */}
         <button
           onClick={() => formatText('bold')}
-          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors"
+          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors font-bold text-black"
           title="Bold"
         >
           B
         </button>
         <button
           onClick={() => formatText('italic')}
-          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors"
+          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors italic text-black"
           title="Italic"
         >
           I
         </button>
         <button
           onClick={() => formatText('underline')}
-          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors"
+          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors underline text-black"
           title="Underline"
         >
           U
         </button>
-        <div className="w-px h-4 bg-gray-300"></div>
-        <select
-  value={currentFontSize}
-  onChange={(e) => applyFontSize(Number(e.target.value))}
-  className="text-xs bg-transparent border-none outline-none cursor-pointer min-w-[35px]" // Removed fixed width
-  // Remove the style={{ width: '30px' }} line
->
-          {FONT_SIZES.map(size => (
-            <option key={size} value={size}>{size}</option>
-          ))}
-        </select>
-        <button
-          onClick={() => applyAlignment('center')}
-          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors"
-          title="Center Align"
-        >
-          ⟷
-        </button>
+
+        {/* Alignment Dropdown */}
+        <AlignmentDropdown 
+          currentAlignment={currentAlignment} 
+          onAlignmentChange={applyAlignment} 
+        />
       </div>
 
       {/* Editor Container - Full width since NotesPanel is handled by App.tsx */}
