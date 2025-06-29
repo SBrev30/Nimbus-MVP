@@ -91,6 +91,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
       ]
     },
     {
+    }
       id: 'navigation',
       title: 'Dashboard & Navigation',
       description: 'Understanding the main interface and sidebar',
