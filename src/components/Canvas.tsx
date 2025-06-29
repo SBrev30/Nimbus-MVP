@@ -192,11 +192,11 @@ const SimplePlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
       
       {!data.fromPlanning && (
         <button
-          onClick={() => setShowDropdown(!showDropdown)}
-          className="absolute top-1 right-1 text-xs bg-blue-200 hover:bg-blue-300 rounded px-1"
-        >
-          📋
-        </button>
+  onClick={() => setShowDropdown(!showDropdown)}
+  className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-blue-300 rounded px-1"
+>
+  <Atom className="w-4 h-4" />
+</button>
       )}
 
       {showDropdown && (
@@ -242,11 +242,11 @@ const SimpleLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData>)
       
       {!data.fromPlanning && (
         <button
-          onClick={() => setShowDropdown(!showDropdown)}
-          className="absolute top-1 right-1 text-xs bg-purple-200 hover:bg-purple-300 rounded px-1"
-        >
-          📋
-        </button>
+  onClick={() => setShowDropdown(!showDropdown)}
+  className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-purple-300 rounded px-1"
+>
+  <Atom className="w-4 h-4" />
+</button>
       )}
 
       {showDropdown && (
