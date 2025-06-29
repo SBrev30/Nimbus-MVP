@@ -122,7 +122,7 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
               {/* Add Project Button */}
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-[#ff4e00] text-white rounded-lg hover:bg-[#ff4e00]/700 transition-colors font-medium"
               >
                 <Plus className="w-4 h-4" />
                 Add Task
