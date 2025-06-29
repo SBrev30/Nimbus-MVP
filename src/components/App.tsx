@@ -122,34 +122,7 @@ function AppContent() {
   // Auto-save functionality
   useAutoSave(editorContent, setEditorContent, 5000);
 
-  // Check authentication state on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } catch (error) {
-        console.error('Error checking auth:', error);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (event === 'SIGNED_OUT') {
-        setActiveView('write');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Handler functions
+  // ALL CALLBACK HANDLERS - MOVED TO TOP BEFORE ANY CONDITIONAL LOGIC
   const handleEditorChange = useCallback((content: EditorContent) => {
     setEditorContent(content);
     
@@ -254,24 +227,6 @@ function AppContent() {
   const HistoryPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
     <History onBack={onBack} />
   ), []);
-
-  // Show loading spinner while checking authentication
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-[#F9FAFB]">
-        <LoadingSpinner message="Checking authentication..." />
-      </div>
-    );
-  }
-
-  // Show auth page if user is not authenticated
-  if (!user) {
-    return (
-      <ThemeProvider>
-        <AuthPage />
-      </ThemeProvider>
-    );
-  }
 
   // Memoized render content function
   const renderContent = useCallback(() => {
@@ -592,6 +547,51 @@ function AppContent() {
     IntegrationPageWithProvider,
     HistoryPageWithProvider
   ]);
+
+  // Check authentication state on mount - MOVED AFTER ALL CALLBACKS
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') {
+        setActiveView('write');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#F9FAFB]">
+        <LoadingSpinner message="Checking authentication..." />
+      </div>
+    );
+  }
+
+  // Show auth page if user is not authenticated
+  if (!user) {
+    return (
+      <ThemeProvider>
+        <AuthPage />
+      </ThemeProvider>
+    );
+  }
 
   // Determine if we should show header (hide for canvas view)
   const shouldShowHeader = activeView !== 'canvas';
