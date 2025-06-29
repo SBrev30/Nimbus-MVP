@@ -276,13 +276,30 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+  // Fixed formatDate function with proper error handling
+  const formatDate = (dateInput: string | Date | null | undefined) => {
+    if (!dateInput) {
+      return 'No date';
+    }
+    
+    try {
+      const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   const formatWordCount = (count: number) => {
@@ -314,7 +331,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
       ) : (
         <>
           {/* Header */}
-          <div className="bg-white border-b border-[#f2eee2 ] p-6">
+          <div className="bg-white border-b border-[#f2eee2] p-6">
             <div className="max-w-7xl mx-auto">
               {/* Back button and title */}
               <div className="flex items-center gap-4 mb-6">
