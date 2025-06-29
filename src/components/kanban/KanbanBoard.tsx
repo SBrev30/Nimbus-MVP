@@ -102,7 +102,7 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
   return (
     <div className="h-screen bg-[#F8F9FA] flex flex-col font-inter">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="bg-[#f2eee2] border-b border-gray-200 shadow-sm">
         <div className="px-6 py-4">
           {/* Top section with project title and actions */}
           <div className="flex items-center justify-between mb-4">
