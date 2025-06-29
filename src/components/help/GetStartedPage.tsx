@@ -90,8 +90,6 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         'Your progress is automatically saved'
       ]
     },
-    {
-    }
       id: 'navigation',
       title: 'Dashboard & Navigation',
       description: 'Understanding the main interface and sidebar',
