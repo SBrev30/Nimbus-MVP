@@ -426,7 +426,7 @@ const SimplifiedMenu = ({
                 <div className="mt-4 p-3 bg-[#eae4d3]  rounded-lg">
                   <div className="text-xs text-gray-700 font-medium mb-1"> Tip</div>
                   <div className="text-xs text-gray-600">
-                    Click the <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-atom-icon lucide-atom"><circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5Z"/><path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5Z"/></svg> button on nodes to link them to your Planning data!
+                    Click the "lucide lucide-atom-icon lucide-atom" button on nodes to link them to your Planning data!
                   </div>
                 </div>
               </div>
