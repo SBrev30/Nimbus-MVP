@@ -606,18 +606,42 @@ function AppContent() {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Conditionally render header - hidden for canvas */}
+        {/* Enhanced Header with responsive search bar */}
         {shouldShowHeader && (
-          <div className="bg-[#f2eee2] h-[72px] flex items-end justify-between px-6 pb-3">
-            <Breadcrumb activeView={activeView} onNavigate={handleViewChange} />
-            
-            <div className="bg-[#FAF9F9] rounded-[20px] h-[29px] w-[171px] flex items-center px-3 gap-2">
-              <Search className="w-[17px] h-[17px] text-[#889096]" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="bg-transparent text-sm text-gray-600 outline-none flex-1 font-inter"
-              />
+          <div 
+            className="bg-[#f2eee2] h-[72px] flex items-end px-6 pb-3"
+            style={{ 
+              marginRight: (activeView === 'write' || activeView === 'editor') && !notesPanelCollapsed ? '320px' : '0'
+            }}
+          >
+            <div className="flex items-center justify-between w-full">
+              {/* Left side - Breadcrumb */}
+              <div className="flex-shrink-0">
+                <Breadcrumb activeView={activeView} onNavigate={handleViewChange} />
+              </div>
+              
+              {/* Center - Enhanced search bar */}
+              <div className="flex-1 flex justify-center mx-8">
+                <div className={`bg-[#FAF9F9] rounded-[20px] h-[29px] flex items-center px-3 gap-2 transition-all duration-200 ${
+                  (activeView === 'write' || activeView === 'editor') 
+                    ? 'w-[240px]' // Wider search on Editor pages
+                    : 'w-[171px]' // Original width on other pages
+                }`}>
+                  <Search className="w-[17px] h-[17px] text-[#889096] flex-shrink-0" />
+                  <input 
+                    type="text" 
+                    placeholder={
+                      (activeView === 'write' || activeView === 'editor') 
+                        ? "Search chapters, notes..." 
+                        : "Search..."
+                    }
+                    className="bg-transparent text-sm text-gray-600 outline-none flex-1 font-inter"
+                  />
+                </div>
+              </div>
+              
+              {/* Right side - Empty space for balance */}
+              <div className="flex-shrink-0 w-[100px]"></div>
             </div>
           </div>
         )}
