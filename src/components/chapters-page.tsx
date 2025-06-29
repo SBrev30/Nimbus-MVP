@@ -321,7 +321,7 @@ export function ChaptersPage({
                   <span className="text-gray-700 font-medium">Overall Progress</span>
                   <span className="text-gray-600">{formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-white rounded-full h-3">
                   <div 
                     className="bg-[#ff4e00] h-3 rounded-full transition-all duration-300"
                     style={{ width: `${overallProgress}%` }}
