@@ -211,7 +211,7 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="flex-1 bg-f2eee2 rounded-t-[17px] overflow-hidden flex flex-col">
+    <div className="flex-1 bg-[#f2eee2] rounded-t-[17px] overflow-hidden flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
@@ -221,7 +221,7 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
           </div>
           <button
             onClick={onBack}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-white rounded-lg transition-colors"
           >
             Back to Settings
           </button>
