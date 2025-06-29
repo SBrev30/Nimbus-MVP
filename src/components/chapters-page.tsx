@@ -216,7 +216,7 @@ export function ChaptersPage({
   return (
     <div className="h-screen bg-[#F9FAFB] flex flex-col font-inter">
       {/* Header */}
-      <div className="bg-white border-b border-[#C6C5C5] p-6">
+      <div className="bg-[#f2eee2] border-b border-[#C6C5C5] p-6">
         <div className="max-w-7xl mx-auto">
           {isLoading ? (
             <div className="flex items-center gap-4 mb-6">
