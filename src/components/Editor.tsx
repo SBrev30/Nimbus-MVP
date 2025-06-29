@@ -316,8 +316,8 @@ export const Editor: React.FC<EditorProps> = ({
       <div 
         className="fixed left-1/2 transform -translate-x-1/2 flex items-center px-2 py-1 gap-1"
         style={{
-          backgroundColor: '#F6F6F1',
-          width: '300px',
+          backgroundColor: '#e8ddc1',
+          width: '350px',
           height: '30px',
           borderRadius: '5.277px',
           bottom: '60px',
