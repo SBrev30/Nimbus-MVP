@@ -94,7 +94,7 @@ export function CharactersPage({ onBack }: CharactersPageProps) {
         {/* Empty State */}
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md">
-            <div className="w-16 h-16 bg-[#F6F6F1] rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-[#e8ddc1] rounded-full flex items-center justify-center mx-auto mb-6">
               <Users className="w-8 h-8 text-gray-700" />
             </div>
             <h2 className="text-2xl font-semibold text-gray-800 mb-3">Build Your Cast</h2>
