@@ -298,7 +298,7 @@ export function PlotPage({ onBack }: PlotPageProps) {
             </select>
           </div>
 
-          <div className="flex items-center gap-1 bg-[#e8ddc1]-100 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-[#e8ddc1]-50 rounded-lg p-1">
             <button
               onClick={() => setViewMode('threads')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
