@@ -291,7 +291,7 @@ export function ChaptersPage({
                 </select>
 
                 {/* View Toggle */}
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-[#e8ddc1] rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('list')}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
