@@ -167,7 +167,7 @@ export function Files() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-t-[17px] overflow-hidden">
+    <div className="flex-1 flex flex-col bg-[#ff4e00] rounded-t-[17px] overflow-hidden">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
