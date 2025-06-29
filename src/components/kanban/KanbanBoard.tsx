@@ -106,7 +106,7 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
         <div className="px-6 py-4">
           {/* Top section with project title and actions */}
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-semibold text-gray-900">{projectTitle}</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">{projectTitle} Kanban Board</h1>
             
             <div className="flex items-center gap-3">
               {/* Search */}
