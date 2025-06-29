@@ -335,7 +335,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
         <div className="flex items-center space-x-4">
           <button
             onClick={onBack}
-            className="p-2 hover:bg-[#e8ddc1] rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -380,7 +380,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
-                    <div className="flex-shrink-0 p-3 bg-gray-100 rounded-lg">
+                    <div className="flex-shrink-0 p-3 bg-[#e8ddc1] rounded-lg">
                       {getIntegrationIcon(integration.icon)}
                     </div>
                     <div className="flex-1 min-w-0">
