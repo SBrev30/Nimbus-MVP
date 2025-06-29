@@ -296,7 +296,7 @@ export function ChaptersPage({
                     onClick={() => setViewMode('list')}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                       viewMode === 'list'
-                        ? 'bg-white text-gray-900 shadow-sm'
+                        ? 'bg-[#f2eee2] text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -306,7 +306,7 @@ export function ChaptersPage({
                     onClick={() => setViewMode('grid')}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                       viewMode === 'grid'
-                        ? 'bg-[#e8ddc1] text-gray-900 shadow-sm'
+                        ? 'bg-[#f2eee2] text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
