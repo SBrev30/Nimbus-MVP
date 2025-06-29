@@ -138,7 +138,7 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
 
           {/* Bottom section with view toggles */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-[#e8ddc1] rounded-lg p-1">
               <button
                 onClick={() => handleViewChange('board')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
