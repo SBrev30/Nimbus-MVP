@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
-import { useEffect } from 'react';
-import { ArrowLeft, Plus, FileText, Clock, TrendingUp, MoreHorizontal, Edit3, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  ArrowLeft, 
+  Plus, 
+  FileText, 
+  Clock, 
+  TrendingUp, 
+  MoreHorizontal, 
+  Edit3, 
+  Eye,
+  X,
+  ClipboardList,
+  PenTool,
+  RotateCcw,
+  CheckCircle,
+  File
+} from 'lucide-react';
 import { chapterService, Chapter } from '../services/chapterService';
-import { X } from 'lucide-react';
 import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
 
 interface ChapterWithMeta extends Chapter {
@@ -157,17 +170,19 @@ export function ChaptersPage({
   };
 
   const getStatusIcon = (status: string) => {
+    const iconClass = "w-4 h-4";
+    
     switch (status) {
       case 'outline':
-        return '📋';
+        return <ClipboardList className={iconClass} />;
       case 'draft':
-        return '✏️';
+        return <PenTool className={iconClass} />;
       case 'revision':
-        return '🔄';
+        return <RotateCcw className={iconClass} />;
       case 'final':
-        return '✅';
+        return <CheckCircle className={iconClass} />;
       default:
-        return '📄';
+        return <File className={iconClass} />;
     }
   };
 
