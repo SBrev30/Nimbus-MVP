@@ -142,11 +142,11 @@ const SimpleCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeData
       
       {!data.fromPlanning && (
         <button
-          onClick={() => setShowDropdown(!showDropdown)}
-          className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1"
-        >
-          📋
-        </button>
+  onClick={() => setShowDropdown(!showDropdown)}
+  className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1"
+>
+  <Atom className="w-4 h-4" />
+</button>
       )}
 
       {showDropdown && (
