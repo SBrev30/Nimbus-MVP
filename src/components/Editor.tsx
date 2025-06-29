@@ -501,25 +501,15 @@ export const Editor: React.FC<EditorProps> = ({
         hasUnsavedChanges={hasUnsavedChanges}
       />
 
-      {/* Header with Breadcrumb and Centered Search */}
-      <div className="border-b border-[#C6C5C5] px-4 md:px-6 py-4" style={{ backgroundColor: '#f2eee2' }}>
+      {/* Header with Breadcrumb and Centered Search - Fixed width to not interfere with NotesPanel */}
+      <div className="border-b border-[#C6C5C5] px-4 md:px-6 py-4" style={{ backgroundColor: '#f2eee2', marginRight: notesPanelCollapsed ? '0' : '320px' }}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-2 text-sm text-[#889096] font-semibold">
             <span className="text-gray-900">Write</span>
             <span className="text-[#889096]">›</span>
             <span className="text-gray-900">Editor</span>
           </div>
-          
-          {/* Centered Search Bar */}
-          <div className="w-full md:flex-1 md:flex md:justify-center md:max-w-md md:mx-8">
-            <SimpleSearchFilter
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Search..."
-              className="w-full md:max-w-md"
-            />
-          </div>
-          
+                 
           <div className="hidden md:block w-24"></div>
         </div>
       </div>
@@ -529,7 +519,7 @@ export const Editor: React.FC<EditorProps> = ({
         className="fixed left-1/2 transform -translate-x-1/2 flex items-center px-2 py-1 gap-1"
         style={{
           backgroundColor: '#F6F6F1',
-          width: '200px',
+          width: '300px',
           height: '30px',
           borderRadius: '5.277px',
           bottom: '60px',
@@ -644,17 +634,6 @@ export const Editor: React.FC<EditorProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Notes Panel */}
-        <NotesPanel
-          notes={notes}
-          onAddNote={handleAddNote}
-          onEditNote={handleEditNote}
-          onDeleteNote={handleDeleteNote}
-          isCollapsed={notesPanelCollapsed}
-          onToggleCollapse={() => setNotesPanelCollapsed(!notesPanelCollapsed)}
-        />
-      </div>
 
       {/* Bottom Status Bar */}
       <div className="bg-white border-t border-[#C6C5C5] px-4 md:px-6 py-2">
