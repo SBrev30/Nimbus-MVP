@@ -257,7 +257,7 @@ export function PlotPage({ onBack }: PlotPageProps) {
   };
 
   return (
-    <div className="h-screen bg-[#F9FAFB] flex flex-col font-inter">
+    <div className="h-screen bg-[#f2eee2] flex flex-col font-inter">
       {/* Header */}
       <div className="bg-white border-b border-[#C6C5C5] p-6">
         <div className="flex items-center gap-4 mb-4">
