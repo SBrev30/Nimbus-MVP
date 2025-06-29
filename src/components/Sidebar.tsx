@@ -299,7 +299,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
                         onClick={() => handleItemClick(item.id)}
                         className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
                           isActive 
-                            ? 'bg-[#e8ddc1] text-gray-900' 
+                            ? 'bg-[#eae4d3] text-gray-900' 
                             : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
                         }`}
                       >
