@@ -119,7 +119,7 @@ export function NotesPanel({
   // Collapsed state - minimal width at right edge
   if (isCollapsed) {
     return (
-      <div className="w-[18px] bg-[#EAE9E9] border-l border-[#C6C5C5] flex items-start justify-center pt-3 transition-all duration-300 ease-in-out">
+      <div className="w-[18px] bg-[#f2eee2] border-l border-[#C6C5C5] flex items-start justify-center pt-3 transition-all duration-300 ease-in-out">
         <button
           onClick={handleToggleCollapse}
           className="p-1 rounded hover:bg-gray-200 transition-colors"
