@@ -316,7 +316,7 @@ export function ChaptersPage({
               </div>
 
               {/* Overall Progress Bar */}
-              <div className="bg-[#F9FAFB] rounded-lg p-4">
+              <div className="bg-[#e8ddc1] rounded-lg p-4">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-700 font-medium">Overall Progress</span>
                   <span className="text-gray-600">{formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words</span>
