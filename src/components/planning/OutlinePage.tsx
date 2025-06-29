@@ -68,7 +68,7 @@ export function OutlinePage({ onBack }: OutlinePageProps) {
         {/* Empty State */}
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md">
-            <div className="w-16 h-16 bg-[#A5F7AC] rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-[#e8ddc1] rounded-full flex items-center justify-center mx-auto mb-6">
               <BookOpen className="w-8 h-8 text-gray-700" />
             </div>
             <h2 className="text-2xl font-semibold text-gray-800 mb-3">Start Your Story Structure</h2>
@@ -77,7 +77,7 @@ export function OutlinePage({ onBack }: OutlinePageProps) {
             </p>
             <button
               onClick={handleAddOutlineNode}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-semibold text-gray-800"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-semibold text-gray-800"
             >
               <Plus className="w-5 h-5" />
               Create First Act
