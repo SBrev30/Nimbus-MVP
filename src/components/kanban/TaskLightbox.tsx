@@ -218,7 +218,7 @@ export function TaskLightbox({ task, onUpdate, onDelete, onClose }: TaskLightbox
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-gray rounded-lg transition-colors font-medium"
               >
                 Save Changes
               </button>
