@@ -211,7 +211,7 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="flex-1 bg-white rounded-t-[17px] overflow-hidden flex flex-col">
+    <div className="flex-1 bg-f2eee2 rounded-t-[17px] overflow-hidden flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
