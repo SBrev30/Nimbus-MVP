@@ -247,10 +247,10 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <button
           onClick={() => onNavigate?.('get-started')}
-          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1 ] hover:bg-gray-50 transition-colors text-left group"
+          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 bg-[#e8ddc1 ] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
@@ -262,10 +262,10 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
 
         <button
           onClick={() => onNavigate?.('ask-question')}
-          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1 ] hover:bg-gray-50 transition-colors text-left group"
+          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 bg-[#e8ddc1 ] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -277,10 +277,10 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
 
         <button
           onClick={() => onNavigate?.('get-feedback')}
-          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1 ] hover:bg-gray-50 transition-colors text-left group"
+          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 bg-[#e8ddc1 ] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
               </svg>
@@ -333,7 +333,7 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
 
                     {expandedTopics.has(topic.id) && (
                       <div className="px-4 pb-4">
-                        <div className="pl-4 border-l-2 border-[#e8ddc1 ]">
+                        <div className="pl-4 border-l-2 border-[#e8ddc1]">
                           <p className="text-[#889096] font-inter mb-3 leading-relaxed">{topic.answer}</p>
                           
                           {topic.relatedLinks && topic.relatedLinks.length > 0 && (
@@ -376,7 +376,7 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
           </p>
           <button
             onClick={() => onNavigate?.('ask-question')}
-            className="inline-flex items-center gap-2 bg-[#e8ddc1 ] hover:bg-[#e8ddc1 ]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+            className="inline-flex items-center gap-2 bg-[#e8ddc1] hover:bg-[#e8ddc1]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
           >
             Ask a Question Instead
             <ExternalLink className="w-4 h-4" />
