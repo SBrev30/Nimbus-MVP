@@ -392,7 +392,7 @@ function AppContent() {
       // Static pages (immediate)
       case 'planning':
         return (
-          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+          <div className="flex-1 flex items-center justify-center bg-[#f2eee2] rounded-t-[17px]">
             <div className="text-center">
               <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
