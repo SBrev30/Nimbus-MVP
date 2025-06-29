@@ -426,7 +426,7 @@ const SimplifiedMenu = ({
                 <div className="mt-4 p-3 bg-[#eae4d3]  rounded-lg">
                   <div className="text-xs text-gray-700 font-medium mb-1"> Tip</div>
                   <div className="text-xs text-gray-600">
-                    Click the "lucide lucide-atom-icon lucide-atom" button on nodes to link them to your Planning data!
+                    Click the 📋 button on nodes to link them to your Planning data!
                   </div>
                 </div>
               </div>
