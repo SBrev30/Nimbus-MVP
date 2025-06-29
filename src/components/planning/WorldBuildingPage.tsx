@@ -134,7 +134,7 @@ export function WorldBuildingPage({ onBack }: WorldBuildingPageProps) {
             
             {/* Tips */}
             <div className="bg-[#e8ddc1] rounded-lg p-4 text-left mt-8">
-              <h3 className="font-semibold text-gray-900 mb-3 text-center">💡 World Building Elements</h3>
+              <h3 className="font-semibold text-gray-900 mb-3 text-center">World Building Elements</h3>
               <ul className="space-y-2 text-sm text-gray-800">
                 <li className="flex items-start gap-2">
                   <MapPin className="w-3 h-3 mt-1 flex-shrink-0" />
