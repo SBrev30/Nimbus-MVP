@@ -415,7 +415,7 @@ export function WritePage({ onSelectChapter }: WritePageProps) {
                           <p className="text-[#889096] mb-4">Create your first writing project to get started</p>
                           <button 
                             onClick={() => window.location.hash = '#projects'}
-                            className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                            className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
                           >
                             Go to Projects
                           </button>
