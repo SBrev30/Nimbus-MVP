@@ -133,7 +133,7 @@ export function WorldBuildingPage({ onBack }: WorldBuildingPageProps) {
             </button>
             
             {/* Tips */}
-            <div className="bg-[#f2eee2] rounded-lg p-4 text-left mt-8">
+            <div className="bg-[#f2eee2] border-[#e8ddc1] rounded-lg p-4 text-left mt-8">
               <h3 className="font-semibold text-blue-900 mb-3 text-center">💡 World Building Elements</h3>
               <ul className="space-y-2 text-sm text-blue-800">
                 <li className="flex items-start gap-2">
