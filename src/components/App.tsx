@@ -410,19 +410,19 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => setActiveView('plot')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
                 >
                   Plot Development
                 </button>
                 <button
                   onClick={() => setActiveView('characters')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3]-100 hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
                 >
                   Characters
                 </button>
                 <button
                   onClick={() => setActiveView('world-building')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
                 >
                   World Building
                 </button>
@@ -452,7 +452,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => setActiveView('integrations')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
                 >
                   Integrations
                 </button>
