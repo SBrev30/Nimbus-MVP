@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Play, RotateCcw, CheckCircle } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Play, 
+  RotateCcw, 
+  CheckCircle,
+  PenTool,
+  Palette,
+  Bot,
+  FolderKanban
+} from 'lucide-react';
 import { HelpLayout } from './HelpLayout';
 
 interface OnboardingStep {
@@ -38,24 +48,42 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border border-[#C6C5C5] rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 font-inter">🖊️ Focused Writing</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <PenTool className="w-5 h-5 text-[#ff4e00]" />
+                <h4 className="font-semibold text-gray-900 font-inter">Focused Writing</h4>
+              </div>
               <p className="text-sm text-[#889096] font-inter">Distraction-free writing environment with auto-save</p>
             </div>
             <div className="p-4 border border-[#C6C5C5] rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 font-inter">🎨 Visual Canvas</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <Palette className="w-5 h-5 text-[#ff4e00]" />
+                <h4 className="font-semibold text-gray-900 font-inter">Visual Canvas</h4>
+              </div>
               <p className="text-sm text-[#889096] font-inter">Infinite canvas for story mapping and brainstorming</p>
             </div>
             <div className="p-4 border border-[#C6C5C5] rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 font-inter">🤖 AI Assistance</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <Bot className="w-5 h-5 text-[#ff4e00]" />
+                <h4 className="font-semibold text-gray-900 font-inter">AI Assistance</h4>
+              </div>
               <p className="text-sm text-[#889096] font-inter">Context-aware AI to help develop characters and plots</p>
             </div>
             <div className="p-4 border border-[#C6C5C5] rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 font-inter">📚 Project Management</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <FolderKanban className="w-5 h-5 text-[#ff4e00]" />
+                <h4 className="font-semibold text-gray-900 font-inter">Project Management</h4>
+              </div>
               <p className="text-sm text-[#889096] font-inter">Kanban boards and library views for organization</p>
             </div>
           </div>
         </div>
       ),
+      tips: [
+        'Take your time to explore each feature',
+        'You can always come back to this guide from the Help menu',
+        'Your progress is automatically saved'
+      ]
+    }
       tips: [
         'You can skip this tour at any time and return later',
         'Each step includes interactive elements to try',
@@ -70,7 +98,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
       content: (
         <div className="space-y-6">
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2 font-inter">🧭 Navigation Overview</h4>
+            <h4 className="font-semibold text-blue-900 mb-2 font-inter">Navigation Overview</h4>
             <p className="text-blue-800 font-inter">
               The sidebar on the left contains all your main navigation. You can collapse it for more writing space or expand it for full access to features.
             </p>
