@@ -8,7 +8,8 @@ import {
   PenTool,
   Palette,
   Bot,
-  FolderKanban
+  FolderKanban,
+  Lightbulb
 } from 'lucide-react';
 import { HelpLayout } from './HelpLayout';
 
@@ -39,7 +40,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
       duration: '30 seconds',
       content: (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-[#ff4e00] to-green-200 p-6 rounded-lg">
+          <div className="bg-gradient-to-r from-[#ff4e00] to-[#ff9602]/200 p-6 rounded-lg">
             <h3 className="text-xl font-bold text-gray-900 mb-3 font-inter">Welcome to Nimbus Note!</h3>
             <p className="text-gray-800 font-inter leading-relaxed">
               Nimbus Note is a visual writing platform that combines traditional writing tools with infinite canvas brainstorming and AI assistance. Whether you're writing a novel, screenplay, or game narrative, we've got you covered.
@@ -83,13 +84,8 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         'You can always come back to this guide from the Help menu',
         'Your progress is automatically saved'
       ]
-    }
-      tips: [
-        'You can skip this tour at any time and return later',
-        'Each step includes interactive elements to try',
-        'Your progress is automatically saved'
-      ]
     },
+    {
       id: 'navigation',
       title: 'Dashboard & Navigation',
       description: 'Understanding the main interface and sidebar',
@@ -142,7 +138,6 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         'Each section has subsections accessible via dropdown'
       ]
     }
-    // ... (other steps would continue here - truncated for brevity)
   ];
 
   const nextStep = () => {
@@ -274,7 +269,10 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         {/* Tips Section */}
         {currentStepData.tips && currentStepData.tips.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 mb-3 font-inter">💡 Tips</h4>
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="w-4 h-4 text-blue-600" />
+              <h4 className="font-semibold text-blue-900 font-inter">Tips</h4>
+            </div>
             <ul className="space-y-1">
               {currentStepData.tips.map((tip, index) => (
                 <li key={index} className="text-sm text-blue-800 font-inter">
