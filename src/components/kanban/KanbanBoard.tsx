@@ -129,12 +129,6 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
               </button>
               
               
-              {/* More options */}
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
 
           {/* Bottom section with view toggles */}
           <div className="flex items-center justify-between">
