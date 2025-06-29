@@ -608,7 +608,7 @@ function AppContent() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Conditionally render header - hidden for canvas */}
         {shouldShowHeader && (
-          <div className="h-[72px] flex items-end justify-between px-6 pb-3">
+          <div className="bg-[#f2eee2] h-[72px] flex items-end justify-between px-6 pb-3">
             <Breadcrumb activeView={activeView} onNavigate={handleViewChange} />
             
             <div className="bg-[#FAF9F9] rounded-[20px] h-[29px] w-[171px] flex items-center px-3 gap-2">
