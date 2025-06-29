@@ -362,7 +362,7 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
             {/* Load More Button (if needed) */}
             {filteredEntries.length >= 10 && (
               <div className="mt-6 text-center">
-                <button className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                <button className="px-4 py-2 text-gray-600 bg-[#e8ddc1] hover:bg-gray-200 rounded-lg transition-colors">
                   Load More History
                 </button>
               </div>
