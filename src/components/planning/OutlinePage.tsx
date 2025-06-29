@@ -88,7 +88,7 @@ export function OutlinePage({ onBack }: OutlinePageProps) {
               <h3 className="font-semibold text-gray-900 mb-3 text-center">💡 Story Structure Tips</h3>
               <ul className="space-y-2 text-sm text-gray-800">
                 <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></span>
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
                   Start with three acts: Setup, Confrontation, Resolution
                 </li>
                 <li className="flex items-start gap-2">
