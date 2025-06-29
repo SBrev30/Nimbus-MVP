@@ -130,7 +130,7 @@ const CollapsedDropdownMenu = ({
   onItemClick: (view: string) => void;
   activeView: string;
 }) => (
-  <div className="absolute left-16 top-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-[100] w-48">
+  <div className="absolute left-16 top-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-[100] w-50">
     <div className="px-3 py-2 text-sm font-semibold text-gray-900 border-b border-gray-100">
       {item.label}
     </div>
