@@ -314,18 +314,20 @@ export const Editor: React.FC<EditorProps> = ({
 
       {/* Floating Toolbar */}
       <div 
-        className="fixed left-1/2 transform -translate-x-1/2 flex items-center px-2 py-1 gap-1"
-        style={{
-          backgroundColor: '#e8ddc1',
-          width: '350px',
-          height: '30px',
-          borderRadius: '5.277px',
-          bottom: '60px',
-          zIndex: 50,
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-          border: '1px solid rgba(0, 0, 0, 0.1)'
-        }}
-      >
+  className="fixed left-1/2 transform -translate-x-1/2 flex items-center px-2 py-1 gap-1"
+  style={{
+    backgroundColor: '#e8ddc1',
+    width: 'auto',           // Allow natural sizing
+    maxWidth: '400px',       // Your requested max width
+    minWidth: '300px',       // Minimum to prevent too small
+    height: '30px',
+    borderRadius: '5.277px',
+    bottom: '60px',
+    zIndex: 50,
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    border: '1px solid rgba(0, 0, 0, 0.1)'
+  }}
+>
         <button
           onClick={() => formatText('bold')}
           className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors"
@@ -349,11 +351,11 @@ export const Editor: React.FC<EditorProps> = ({
         </button>
         <div className="w-px h-4 bg-gray-300"></div>
         <select
-          value={currentFontSize}
-          onChange={(e) => applyFontSize(Number(e.target.value))}
-          className="text-xs bg-transparent border-none outline-none cursor-pointer"
-          style={{ width: '30px' }}
-        >
+  value={currentFontSize}
+  onChange={(e) => applyFontSize(Number(e.target.value))}
+  className="text-xs bg-transparent border-none outline-none cursor-pointer min-w-[35px]" // Removed fixed width
+  // Remove the style={{ width: '30px' }} line
+>
           {FONT_SIZES.map(size => (
             <option key={size} value={size}>{size}</option>
           ))}
