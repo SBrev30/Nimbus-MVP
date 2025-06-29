@@ -152,7 +152,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-white rounded-lg transition-colors font-medium"
+              className="flex-1 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-gray rounded-lg transition-colors font-medium"
             >
               Create Task
             </button>
