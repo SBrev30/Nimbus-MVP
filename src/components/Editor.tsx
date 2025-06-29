@@ -130,7 +130,7 @@ const AlignmentDropdown = ({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center px-2 py-1 rounded hover:bg-gray-200 transition-colors"
+        className="flex items-center px-2 py-1 rounded hover:bg-[#e8ddc1] transition-colors"
         title="Text Alignment"
       >
         <CurrentIcon className="w-3 h-3 text-black" />
