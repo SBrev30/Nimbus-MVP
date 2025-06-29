@@ -365,7 +365,7 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
               <p className="text-gray-600 mb-6">Connect services to backup your work, enhance your writing, and streamline your workflow</p>
               <button
                 onClick={openAddModal}
-                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-white rounded-lg transition-colors"
               >
                 Add Your First Integration
               </button>
