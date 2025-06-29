@@ -10,7 +10,7 @@
   html,
   body,
   #root {
-    background-color: rgb(246, 246, 241);
+    background-color: #f2eee2;
   }
   
   /* Ensure canvas areas can maintain their own backgrounds */
