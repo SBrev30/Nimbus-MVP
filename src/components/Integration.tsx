@@ -329,9 +329,9 @@ const Integration: React.FC<IntegrationProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-blue rounded-t-[17px] overflow-hidden">
+    <div className="flex-1 flex flex-col bg-white rounded-t-[17px] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+      <div className="flex items-center bg-white justify-between p-6 border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <button
             onClick={onBack}
