@@ -87,7 +87,7 @@ const UserAvatar = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const initials = "SB"; // SBrev30 initials
   
   return (
-    <div className={`${isCollapsed ? 'w-6 h-6' : 'w-8 h-8'} bg-white-200 rounded-lg flex items-center justify-center border-2 border-gray-300 hover:border-[#ffffff] transition-colors duration-150`}>
+    <div className={`${isCollapsed ? 'w-6 h-6' : 'w-8 h-8'} bg-white-200 rounded-lg flex items-center justify-center border-2 border-gray-300 hover:border-[#e8ddc1] transition-colors duration-150`}>
       <span className={`text-gray-700 font-semibold ${isCollapsed ? 'text-xs' : 'text-sm'}`}>{initials}</span>
     </div>
   );
@@ -194,7 +194,7 @@ const menuItems: MenuItem[] = [
     id: 'canvas',
     label: 'Canvas',
     icon: Layers,
-    isNew: true
+    isNew: false
   },
   {
     id: 'planning',
