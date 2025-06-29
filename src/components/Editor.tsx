@@ -138,7 +138,7 @@ const AlignmentDropdown = ({
       </button>
       
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[120px]">
+        <div className="absolute bottom-full left-0 mb-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[120px]">
           {alignmentOptions.map((option) => {
             const Icon = option.icon;
             return (
