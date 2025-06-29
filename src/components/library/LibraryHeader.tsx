@@ -34,7 +34,7 @@ export function LibraryHeader({
   }));
 
   return (
-    <div className="bg-white border-b border-[#C6C5C5] p-6">
+    <div className="bg-[#f2eee2] border-b border-[#C6C5C5] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Title and Stats */}
         <div className="flex items-center justify-between mb-6">
