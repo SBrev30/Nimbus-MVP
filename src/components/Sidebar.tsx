@@ -109,7 +109,7 @@ const Tooltip = ({ content, children, position = 'right' }: {
   return (
     <div className="relative group">
       {children}
-      <div className={`absolute ${positionClasses[position]} px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100] whitespace-nowrap`}>
+      <div className={`absolute ${positionClasses[position]} px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[300] whitespace-nowrap shadow-lg`}>
         {content}
         {/* Arrow for tooltip */}
         {position === 'right' && (
@@ -130,7 +130,7 @@ const CollapsedDropdownMenu = ({
   onItemClick: (view: string) => void;
   activeView: string;
 }) => (
-  <div className="absolute left-16 top-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-[100] w-50">
+  <div className="absolute left-16 top-0 bg-white border border-gray-200 rounded-lg shadow-xl py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-[200] min-w-[200px]">
     <div className="px-3 py-2 text-sm font-semibold text-gray-900 border-b border-gray-100">
       {item.label}
     </div>
@@ -142,10 +142,10 @@ const CollapsedDropdownMenu = ({
             <button
               key={subItem.id}
               onClick={() => onItemClick(subItem.id)}
-              className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${
+              className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 hover:bg-[#e8ddc1] hover:text-gray-900 ${
                 isSubActive
                   ? 'bg-[#e8ddc1] text-gray-900 font-medium'
-                  : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
+                  : 'text-gray-600'
               }`}
             >
               {subItem.label}
@@ -257,6 +257,16 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
   const isExpanded = (itemId: string) => expandedItems.includes(itemId);
 
   const handleItemClick = (view: string) => {
+    // When collapsed and clicking on a main item with dropdown, don't expand the dropdown
+    // Just navigate to the main item
+    if (isCollapsed) {
+      if (onViewChange) {
+        onViewChange(view);
+      }
+      return;
+    }
+    
+    // When expanded, normal behavior
     if (onViewChange) {
       onViewChange(view);
     }
@@ -267,14 +277,14 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
         isCollapsed ? 'w-16' : 'w-64'
-      } flex flex-col flex-shrink-0`}>
+      } flex flex-col flex-shrink-0 ${isCollapsed ? 'overflow-visible' : ''}`}>
         
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-center">
             <Tooltip content="Nimbus Note" position={isCollapsed ? 'right' : 'bottom'}>
               <div>
@@ -285,7 +295,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
+        <nav className={`flex-1 py-4 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
           <ul className="space-y-1 px-3">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -339,11 +349,11 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
                           : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 min-w-0">
                         <Icon className="w-5 h-5 flex-shrink-0" />
-                        <span className="font-medium">{item.label}</span>
+                        <span className="font-medium truncate">{item.label}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-shrink-0">
                         {item.isNew && (
                           <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium">
                             New
@@ -391,7 +401,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
         </nav>
 
         {/* Bottom section */}
-        <div className="border-t border-gray-200">
+        <div className="border-t border-gray-200 flex-shrink-0">
           {/* User profile */}
           <div className="p-3">
             <div className={`flex items-center p-3 rounded-lg bg-gray-50 hover:bg-[#e8ddc1] transition-colors duration-150 ${
