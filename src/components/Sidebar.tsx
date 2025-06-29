@@ -124,13 +124,17 @@ const Tooltip = ({ content, children, position = 'right' }: {
 const CollapsedDropdownMenu = ({ 
   item, 
   onItemClick, 
-  activeView 
+  activeView,
+  isVisible 
 }: { 
   item: any; 
   onItemClick: (view: string) => void;
   activeView: string;
+  isVisible: boolean;
 }) => (
-  <div className="absolute left-16 top-0 bg-white border border-gray-200 rounded-lg shadow-xl py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-[200] min-w-[200px]">
+  <div className={`absolute left-14 top-0 bg-white border border-gray-200 rounded-lg shadow-xl py-2 transition-opacity duration-200 z-[200] min-w-[200px] ${
+    isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+  }`}>
     <div className="px-3 py-2 text-sm font-semibold text-gray-900 border-b border-gray-100">
       {item.label}
     </div>
@@ -245,6 +249,7 @@ interface SidebarProps {
 export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onViewChange }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>(['planning', 'settings']);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
@@ -272,6 +277,21 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
     }
   };
 
+  const handleCollapsedItemClick = (itemId: string) => {
+    if (activeDropdown === itemId) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(itemId);
+    }
+  };
+
+  const handleDropdownItemClick = (view: string) => {
+    setActiveDropdown(null); // Close dropdown after selection
+    if (onViewChange) {
+      onViewChange(view);
+    }
+  };
+
   const isItemActive = (itemId: string, subItems?: { id: string; label: string }[]) => {
     return activeView === itemId || (subItems?.some(sub => activeView === sub.id));
   };
@@ -286,11 +306,9 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
         {/* Header */}
         <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-center">
-            <Tooltip content="Nimbus Note" position={isCollapsed ? 'right' : 'bottom'}>
-              <div>
-                <NimbusLogo isCollapsed={isCollapsed} />
-              </div>
-            </Tooltip>
+            <div>
+              <NimbusLogo isCollapsed={isCollapsed} />
+            </div>
           </div>
         </div>
 
@@ -303,29 +321,60 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
 
               if (isCollapsed) {
                 return (
-                  <li key={item.id} className="relative group">
-                    <Tooltip content={item.label}>
-                      <button
-                        onClick={() => handleItemClick(item.id)}
-                        className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
-                          isActive 
-                            ? 'bg-[#eae4d3] text-gray-900' 
-                            : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
-                        }`}
-                      >
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                        {item.isNew && (
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
-                        )}
-                      </button>
-                    </Tooltip>
+                  <li key={item.id} className="relative">
+                    <div className="relative">
+                      {activeDropdown !== item.id ? (
+                        <Tooltip content={item.label}>
+                          <button
+                            onClick={() => {
+                              if (item.hasDropdown) {
+                                handleCollapsedItemClick(item.id);
+                              } else {
+                                handleItemClick(item.id);
+                              }
+                            }}
+                            className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
+                              isActive 
+                                ? 'bg-[#eae4d3] text-gray-900' 
+                                : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
+                            }`}
+                          >
+                            <Icon className="w-5 h-5 flex-shrink-0" />
+                            {item.isNew && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+                            )}
+                          </button>
+                        </Tooltip>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (item.hasDropdown) {
+                              handleCollapsedItemClick(item.id);
+                            } else {
+                              handleItemClick(item.id);
+                            }
+                          }}
+                          className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
+                            isActive 
+                              ? 'bg-[#eae4d3] text-gray-900' 
+                              : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
+                          }`}
+                        >
+                          <Icon className="w-5 h-5 flex-shrink-0" />
+                          {item.isNew && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+                          )}
+                        </button>
+                      )}
+                    </div>
                     
                     {/* Collapsed Dropdown Menu */}
                     {item.hasDropdown && (
                       <CollapsedDropdownMenu 
                         item={item}
-                        onItemClick={handleItemClick}
+                        onItemClick={handleDropdownItemClick}
                         activeView={activeView}
+                        isVisible={activeDropdown === item.id}
                       />
                     )}
                   </li>
