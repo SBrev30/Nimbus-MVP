@@ -327,7 +327,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
       <div className="max-w-2xl">
         {/* Introduction */}
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-8">
-          <h3 className="font-semibold text-purple-900 mb-2 font-inter">🚀 Help Shape WritersBlock</h3>
+          <h3 className="font-semibold text-purple-900 mb-2 font-inter">Help Shape WritersBlock</h3>
           <p className="text-purple-800 font-inter">
             Your feedback directly influences our product development. Share your experience, suggest new features, or let us know how we can improve.
           </p>
