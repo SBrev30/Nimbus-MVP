@@ -128,7 +128,7 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
                 Add Task
               </button>
               
-          </div>
+              }`}
 
           {/* Bottom section with view toggles */}
           <div className="flex items-center justify-between">
