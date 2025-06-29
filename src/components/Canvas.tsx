@@ -489,7 +489,7 @@ const SimplifiedMenu = ({
               </button>
               <button
                 onClick={onLoad}
-                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                className="w-full p-2 bg-[#f2eee2] border-[#e8ddc1] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm"
               >
                 Load File
               </button>
