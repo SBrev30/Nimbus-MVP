@@ -331,7 +331,7 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
       ) : (
         <>
           {/* Header */}
-          <div className="bg-white border-b border-[#f2eee2] p-6">
+          <div className="bg-[#f2eee2] border-[#f2eee2] p-6">
             <div className="max-w-7xl mx-auto">
               {/* Back button and title */}
               <div className="flex items-center gap-4 mb-6">
