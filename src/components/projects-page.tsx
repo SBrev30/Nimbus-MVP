@@ -467,10 +467,10 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
                           <span className="text-xs text-[#889096]">Progress</span>
                           <span className="text-xs font-medium text-gray-900">{project.completionPercentage}%</span>
                         </div>
-                        <div className="w-full bg-gray-500 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-[#ff4e00] h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(project.completionPercentage, 100)}%` }}
+                            style={{ width: `${Math.min(project.completionPercentage, 100)}%` }}k
                           />
                         </div>
                       </div>
