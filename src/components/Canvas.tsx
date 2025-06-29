@@ -454,7 +454,7 @@ const SimplifiedMenu = ({
 
             {activeTab === 'samples' && (
               <div className="p-4">
-               c
+               <h3 className="text-sm font-medium text-gray-700 mb-3">Samples</h3>
                 <div className="space-y-2">
                   {sampleList.map((sample) => (
                     <button
