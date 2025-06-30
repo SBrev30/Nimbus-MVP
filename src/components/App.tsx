@@ -14,6 +14,7 @@ import { useAutoSave } from '../hooks/useAutoSave';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
+import { LandingPage } from './landing-page';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -31,6 +32,9 @@ interface Note {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Add new state for showing auth page
+const [showAuthPage, setShowAuthPage] = useState(false);
 
 // Import planning components
 import { OutlinePage } from './planning/OutlinePage';
@@ -649,14 +653,22 @@ function AppContent() {
     );
   }
 
-  // Show auth page if user is not authenticated
-  if (!user) {
-    return (
-      <ThemeProvider>
-        <AuthPage />
-      </ThemeProvider>
-    );
-  }
+ // Replace the AuthPage section with:
+if (!user) {
+ if (showAuthPage) {
+   return (
+     <ThemeProvider>
+       <AuthPage />
+     </ThemeProvider>
+   );
+ }
+ 
+ return (
+   <ThemeProvider>
+     <LandingPage onAuthClick={() => setShowAuthPage(true)} />
+   </ThemeProvider>
+ );
+}
 
   // Determine if we should show header (hide for canvas view)
   const shouldShowHeader = activeView !== 'canvas';
