@@ -24,13 +24,17 @@ interface EditorContent {
 
 interface WritePageProps {
   onSelectChapter: (chapterId: string, chapterTitle: string) => void;
+  onNavigateToWrite?: (projectId: string) => void;
 }
 
 interface ProjectWithChapters extends Project {
   chapters: Chapter[];
 }
 
-export function WritePage({ onSelectChapter }: WritePageProps) {
+export function WritePage({ 
+  onSelectChapter,
+  onNavigateToWrite
+}: WritePageProps) {
   const [projects, setProjects] = useState<ProjectWithChapters[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -487,7 +491,9 @@ export function WritePage({ onSelectChapter }: WritePageProps) {
                                 project.chapters.map(chapter => (
                                   <div
                                     key={chapter.id}
-                                    onClick={() => handleSelectChapter(chapter.id, chapter.title)}
+                                    onClick={() => {
+                                      handleSelectChapter(chapter.id, chapter.title);
+                                    }}
                                     className="p-3 md:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-300 active:bg-blue-50"
                                   >
                                     <div className="flex items-start justify-between">
