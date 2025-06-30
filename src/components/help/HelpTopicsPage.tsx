@@ -227,169 +227,162 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <HelpLayout
-        activeView={activeView}
-        onNavigate={onNavigate}
-        title="Help Topics"
-        description="Find answers to common questions and learn how to make the most of WritersBlock"
-        showBackButton
-      >
-        {/* Scrollable container with proper overflow handling */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-0">
-          <div className="w-full max-w-none pb-8">
-          {/* Search Section */}
-          <div className="mb-8">
-            <HelpSearch 
-              onSearch={setSearchQuery}
-              placeholder="Search help topics..."
-              className="max-w-md"
-            />
-          </div>
+    <HelpLayout
+      activeView={activeView}
+      onNavigate={onNavigate}
+      title="Help Topics"
+      description="Find answers to common questions and learn how to make the most of WritersBlock"
+      showBackButton
+    >
+      {/* Search Section */}
+      <div className="mb-8">
+        <HelpSearch 
+          onSearch={setSearchQuery}
+          placeholder="Search help topics..."
+          className="max-w-md"
+        />
+      </div>
 
-          {/* Quick Links */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <button
-              onClick={() => onNavigate?.('get-started')}
-              className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900 font-inter">Get Started</h3>
-              </div>
-              <p className="text-sm text-[#889096] font-inter">Interactive walkthrough of all features</p>
-            </button>
-
-            <button
-              onClick={() => onNavigate?.('ask-question')}
-              className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900 font-inter">Ask a Question</h3>
-              </div>
-              <p className="text-sm text-[#889096] font-inter">Contact our support team directly</p>
-            </button>
-
-            <button
-              onClick={() => onNavigate?.('get-feedback')}
-              className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900 font-inter">Give Feedback</h3>
-              </div>
-              <p className="text-sm text-[#889096] font-inter">Help us improve WritersBlock</p>
-            </button>
-          </div>
-
-          {/* Help Categories */}
-          <div className="space-y-4">
-            {filteredCategories.map((category) => (
-              <div key={category.id} className="border border-[#C6C5C5] rounded-lg overflow-hidden">
-                <button
-                  onClick={() => toggleCategory(category.id)}
-                  className="w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-[#889096]">
-                      {category.icon}
-                    </div>
-                    <h3 className="font-semibold text-gray-900 font-inter text-left">{category.title}</h3>
-                    <span className="text-sm text-[#889096] bg-white px-2 py-1 rounded-full">
-                      {category.topics.length}
-                    </span>
-                  </div>
-                  {expandedCategories.has(category.id) ? (
-                    <ChevronDown className="w-5 h-5 text-[#889096]" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-[#889096]" />
-                  )}
-                </button>
-
-                {expandedCategories.has(category.id) && (
-                  <div className="bg-white">
-                    {category.topics.map((topic, index) => (
-                      <div key={topic.id} className={index > 0 ? "border-t border-[#C6C5C5]" : ""}>
-                        <button
-                          onClick={() => toggleTopic(topic.id)}
-                          className="w-full p-4 hover:bg-gray-50 transition-colors flex items-center justify-between text-left"
-                        >
-                          <h4 className="font-medium text-gray-900 font-inter pr-4">{topic.question}</h4>
-                          {expandedTopics.has(topic.id) ? (
-                            <ChevronDown className="w-4 h-4 text-[#889096] flex-shrink-0" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-[#889096] flex-shrink-0" />
-                          )}
-                        </button>
-
-                        {expandedTopics.has(topic.id) && (
-                          <div className="px-4 pb-4">
-                            <div className="pl-4 border-l-2 border-[#e8ddc1]">
-                              <p className="text-[#889096] font-inter mb-3 leading-relaxed">{topic.answer}</p>
-                              
-                              {topic.relatedLinks && topic.relatedLinks.length > 0 && (
-                                <div className="space-y-2">
-                                  <p className="text-sm font-medium text-gray-900 font-inter">Related:</p>
-                                  {topic.relatedLinks.map((link, linkIndex) => (
-                                    <button
-                                      key={linkIndex}
-                                      onClick={() => onNavigate?.(link.view)}
-                                      className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 transition-colors font-inter"
-                                    >
-                                      <ExternalLink className="w-3 h-3" />
-                                      {link.label}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* No Results */}
-          {filteredCategories.length === 0 && searchQuery && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-[#889096]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2 font-inter">No results found</h3>
-              <p className="text-[#889096] font-inter mb-4">
-                We couldn't find any help topics matching "{searchQuery}". Try a different search term or browse the categories above.
-              </p>
-              <button
-                onClick={() => onNavigate?.('ask-question')}
-                className="inline-flex items-center gap-2 bg-[#e8ddc1] hover:bg-[#e8ddc1]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
-              >
-                Ask a Question Instead
-                <ExternalLink className="w-4 h-4" />
-              </button>
+      {/* Quick Links */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <button
+          onClick={() => onNavigate?.('get-started')}
+          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
             </div>
-          )}
+            <h3 className="font-semibold text-gray-900 font-inter">Get Started</h3>
           </div>
+          <p className="text-sm text-[#889096] font-inter">Interactive walkthrough of all features</p>
+        </button>
+
+        <button
+          onClick={() => onNavigate?.('ask-question')}
+          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="font-semibold text-gray-900 font-inter">Ask a Question</h3>
+          </div>
+          <p className="text-sm text-[#889096] font-inter">Contact our support team directly</p>
+        </button>
+
+        <button
+          onClick={() => onNavigate?.('get-feedback')}
+          className="p-4 border border-[#C6C5C5] rounded-lg hover:border-[#e8ddc1] hover:bg-gray-50 transition-colors text-left group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 bg-[#e8ddc1] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+              </svg>
+            </div>
+            <h3 className="font-semibold text-gray-900 font-inter">Give Feedback</h3>
+          </div>
+          <p className="text-sm text-[#889096] font-inter">Help us improve WritersBlock</p>
+        </button>
+      </div>
+
+      {/* Help Categories */}
+      <div className="space-y-4">
+        {filteredCategories.map((category) => (
+          <div key={category.id} className="border border-[#C6C5C5] rounded-lg overflow-hidden">
+            <button
+              onClick={() => toggleCategory(category.id)}
+              className="w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-[#889096]">
+                  {category.icon}
+                </div>
+                <h3 className="font-semibold text-gray-900 font-inter text-left">{category.title}</h3>
+                <span className="text-sm text-[#889096] bg-white px-2 py-1 rounded-full">
+                  {category.topics.length}
+                </span>
+              </div>
+              {expandedCategories.has(category.id) ? (
+                <ChevronDown className="w-5 h-5 text-[#889096]" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-[#889096]" />
+              )}
+            </button>
+
+            {expandedCategories.has(category.id) && (
+              <div className="bg-white">
+                {category.topics.map((topic, index) => (
+                  <div key={topic.id} className={index > 0 ? "border-t border-[#C6C5C5]" : ""}>
+                    <button
+                      onClick={() => toggleTopic(topic.id)}
+                      className="w-full p-4 hover:bg-gray-50 transition-colors flex items-center justify-between text-left"
+                    >
+                      <h4 className="font-medium text-gray-900 font-inter pr-4">{topic.question}</h4>
+                      {expandedTopics.has(topic.id) ? (
+                        <ChevronDown className="w-4 h-4 text-[#889096] flex-shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-[#889096] flex-shrink-0" />
+                      )}
+                    </button>
+
+                    {expandedTopics.has(topic.id) && (
+                      <div className="px-4 pb-4">
+                        <div className="pl-4 border-l-2 border-[#e8ddc1]">
+                          <p className="text-[#889096] font-inter mb-3 leading-relaxed">{topic.answer}</p>
+                          
+                          {topic.relatedLinks && topic.relatedLinks.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium text-gray-900 font-inter">Related:</p>
+                              {topic.relatedLinks.map((link, linkIndex) => (
+                                <button
+                                  key={linkIndex}
+                                  onClick={() => onNavigate?.(link.view)}
+                                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 transition-colors font-inter"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  {link.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* No Results */}
+      {filteredCategories.length === 0 && searchQuery && (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-[#889096]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 font-inter">No results found</h3>
+          <p className="text-[#889096] font-inter mb-4">
+            We couldn't find any help topics matching "{searchQuery}". Try a different search term or browse the categories above.
+          </p>
+          <button
+            onClick={() => onNavigate?.('ask-question')}
+            className="inline-flex items-center gap-2 bg-[#e8ddc1] hover:bg-[#e8ddc1]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+          >
+            Ask a Question Instead
+            <ExternalLink className="w-4 h-4" />
+          </button>
         </div>
-      </HelpLayout>
-    </div>
+      )}
+    </HelpLayout>
   );
 }
