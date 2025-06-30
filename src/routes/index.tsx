@@ -2,5 +2,5 @@
 import LandingPage from '../components/landing-page'
 
 export default function HomePage() {
-  return <sLandingPage />
+  return <LandingPage onGetStarted={() => window.location.hash = '#login'} />
 }
