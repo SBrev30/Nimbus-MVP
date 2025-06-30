@@ -101,7 +101,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
           <div className="space-y-4">
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
               <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold">W</span>
+                <span className="text-sm font-bold text-white">W</span>
               </div>
               <div>
                 <h5 className="font-semibold text-gray-900 font-inter">Write Section</h5>
@@ -111,7 +111,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
               <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold">C</span>
+                <span className="text-sm font-bold text-white">C</span>
               </div>
               <div>
                 <h5 className="font-semibold text-gray-900 font-inter">Canvas</h5>
@@ -121,7 +121,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
               <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold">P</span>
+                <span className="text-sm font-bold text-white">P</span>
               </div>
               <div>
                 <h5 className="font-semibold text-gray-900 font-inter">Planning</h5>
@@ -233,7 +233,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             onClick={() => goToStep(index)}
             className={`px-3 py-1 text-xs rounded-full transition-colors font-inter ${
               index === currentStep
-                ? 'bg-[#ff4e00] text-gray-900'
+                ? 'bg-[#ff4e00] text-white'
                 : completedSteps.has(index)
                 ? 'bg-green-100 text-green-800'
                 : 'bg-gray-100 text-[#889096] hover:bg-gray-200'
@@ -310,7 +310,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
               markStepComplete(currentStep);
               onNavigate?.('projects');
             }}
-            className="inline-flex items-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+            className="inline-flex items-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white px-4 py-2 rounded-lg transition-colors font-inter font-medium"
           >
             Start Writing
             <ChevronRight className="w-4 h-4" />
@@ -318,7 +318,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         ) : (
           <button
             onClick={nextStep}
-            className="inline-flex items-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+            className="inline-flex items-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white px-4 py-2 rounded-lg transition-colors font-inter font-medium"
           >
             Next
             <ChevronRight className="w-4 h-4" />
