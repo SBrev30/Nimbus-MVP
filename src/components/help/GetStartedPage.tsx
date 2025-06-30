@@ -324,8 +324,9 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             Next
             <ChevronRight className="w-4 h-4" />
           </button>
-        )}
+         )}
       </div>
-    </HelpLayout>
+    </div>
+  </HelpLayout>
   );
 }
