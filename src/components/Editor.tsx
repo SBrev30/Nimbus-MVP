@@ -348,9 +348,10 @@ export const Editor: React.FC<EditorProps> = ({
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: '#f2eee2' }}>
-        <div className="text-center">
+        <div className="text-center p-8">
           <div className="w-16 h-16 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#889096]">Loading chapter...</p>
+          <p className="text-[#889096] font-inter">Loading chapter content...</p>
+          <p className="text-xs text-[#889096] mt-2 font-inter">Please wait while we retrieve your chapter from the database</p>
         </div>
       </div>
     );

@@ -145,6 +145,9 @@ function AppContent() {
   }, []);
 
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
+    // Set loading state
+    setIsLoading(true);
+
     // Save current content before switching
     if (currentChapter) {
       setChapterContents(prev => ({
@@ -153,20 +156,66 @@ function AppContent() {
       }));
     }
 
-    // Set new chapter
-    setCurrentChapter({ id: chapterId, title: chapterTitle });
-    setActiveView('editor');
-    
-    // Load existing content or create new
-    const existingContent = chapterContents[chapterId];
-    const chapterContent = existingContent || {
-      title: chapterTitle,
-      content: '<p>Start writing your chapter here...</p>',
-      wordCount: 0,
-      lastSaved: new Date(),
-    };
-    
-    setEditorContent(chapterContent);
+    // Fetch chapter content from database
+    chapterService.getChapter(chapterId)
+      .then(chapter => {
+        if (chapter) {
+          // Set new chapter
+          setCurrentChapter({ id: chapterId, title: chapterTitle });
+          setActiveView('editor');
+          
+          // Create editor content from chapter data
+          const chapterContent = {
+            title: chapter.title,
+            content: chapter.content || '<p>Start writing your chapter here...</p>',
+            wordCount: chapter.wordCount || 0,
+            lastSaved: new Date(),
+          };
+          
+          // Update editor content
+          setEditorContent(chapterContent);
+          
+          // Also update chapter contents cache
+          setChapterContents(prev => ({
+            ...prev,
+            [chapterId]: chapterContent
+          }));
+        } else {
+          // Chapter not found, use cached content or create new
+          const existingContent = chapterContents[chapterId];
+          const fallbackContent = existingContent || {
+            title: chapterTitle,
+            content: '<p>Start writing your chapter here...</p>',
+            wordCount: 0,
+            lastSaved: new Date(),
+          };
+          
+          // Set new chapter
+          setCurrentChapter({ id: chapterId, title: chapterTitle });
+          setActiveView('editor');
+          setEditorContent(fallbackContent);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching chapter:', error);
+        
+        // Fallback to cached content or create new
+        const existingContent = chapterContents[chapterId];
+        const fallbackContent = existingContent || {
+          title: chapterTitle,
+          content: '<p>Start writing your chapter here...</p>',
+          wordCount: 0,
+          lastSaved: new Date(),
+        };
+        
+        // Set new chapter
+        setCurrentChapter({ id: chapterId, title: chapterTitle });
+        setActiveView('editor');
+        setEditorContent(fallbackContent);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [currentChapter, editorContent, chapterContents, setEditorContent, setChapterContents]);
 
   // Notes handlers
