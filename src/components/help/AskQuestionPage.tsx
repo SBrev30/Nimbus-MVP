@@ -155,103 +155,103 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
   };
 
   if (isSubmitted) {
+    return (
+      <HelpLayout
+        activeView={activeView}
+        onNavigate={onNavigate}
+        title="Question Submitted"
+        description="Your support inquiry has been received"
+        showBackButton
+        showBreadcrumb={false}
+      >
+        <div className="space-y-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle className="w-8 h-8 text-green-600" />
+          </div>
+          
+          <h2 className="text-2xl font-bold text-gray-900 font-inter">
+            Thank you for contacting us!
+          </h2>
+          
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+            <h3 className="font-semibold text-green-900 mb-2 font-inter">Your inquiry has been submitted</h3>
+            <p className="text-green-800 font-inter mb-4">
+              We've received your question about "{formData.subject}" and our support team will respond within 24 hours.
+            </p>
+            <div className="text-sm text-green-700 font-inter">
+              <p><strong>Ticket ID:</strong> WB-{Date.now()}</p>
+              <p><strong>Category:</strong> {getSelectedCategoryInfo()?.label}</p>
+              <p><strong>Priority:</strong> {formData.priority.charAt(0).toUpperCase() + formData.priority.slice(1)}</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
+              <h4 className="font-semibold text-blue-900 mb-2 font-inter">What happens next?</h4>
+              <ul className="text-sm text-blue-800 space-y-1 font-inter">
+                <li>• You'll receive an email confirmation shortly</li>
+                <li>• Our support team will review your inquiry</li>
+                <li>• We'll respond with a solution or follow-up questions</li>
+                <li>• Check your email for updates on your ticket</li>
+              </ul>
+            </div>
+
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => onNavigate?.('help-topics')}
+                className="px-4 py-2 border border-[#C6C5C5] rounded-lg hover:bg-gray-50 transition-colors font-inter"
+              >
+                Browse Help Topics
+              </button>
+              <button
+                onClick={() => {
+                  setIsSubmitted(false);
+                  setFormData({
+                    email: 'user@example.com',
+                    name: 'John Doe',
+                    category: '',
+                    subject: '',
+                    description: '',
+                    priority: 'normal',
+                    attachments: []
+                  });
+                }}
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-inter font-medium"
+              >
+                Ask Another Question
+              </button>
+            </div>
+          </div>
+        </div>
+      </HelpLayout>
+    );
+  }
+
   return (
     <HelpLayout
       activeView={activeView}
       onNavigate={onNavigate}
-      title="Question Submitted"
-      description="Your support inquiry has been received"
+      title="Ask a Question"
+      description="Get help from our support team"
       showBackButton
-      showBreadcrumb={false}
     >
-      <div className="space-y-8 text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-          <CheckCircle className="w-8 h-8 text-green-600" />
-        </div>
-        
-        <h2 className="text-2xl font-bold text-gray-900 font-inter">
-          Thank you for contacting us!
-        </h2>
-        
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <h3 className="font-semibold text-green-900 mb-2 font-inter">Your inquiry has been submitted</h3>
-          <p className="text-green-800 font-inter mb-4">
-            We've received your question about "{formData.subject}" and our support team will respond within 24 hours.
+      <div className="space-y-8">
+        {/* Introduction */}
+        <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-2 font-inter">Before you ask...</h3>
+          <p className="text-gray-700 font-inter mb-3">
+            Check our Help Topics for quick answers to common questions. If you can't find what you're looking for, we're here to help!
           </p>
-          <div className="text-sm text-green-700 font-inter">
-            <p><strong>Ticket ID:</strong> WB-{Date.now()}</p>
-            <p><strong>Category:</strong> {getSelectedCategoryInfo()?.label}</p>
-            <p><strong>Priority:</strong> {formData.priority.charAt(0).toUpperCase() + formData.priority.slice(1)}</p>
-          </div>
+          <button
+            onClick={() => onNavigate?.('help-topics')}
+            className="text-sm text-gray-700 hover:text-gray-900 underline font-inter"
+          >
+            Browse Help Topics →
+          </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
-            <h4 className="font-semibold text-blue-900 mb-2 font-inter">What happens next?</h4>
-            <ul className="text-sm text-blue-800 space-y-1 font-inter">
-              <li>• You'll receive an email confirmation shortly</li>
-              <li>• Our support team will review your inquiry</li>
-              <li>• We'll respond with a solution or follow-up questions</li>
-              <li>• Check your email for updates on your ticket</li>
-            </ul>
-          </div>
-
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={() => onNavigate?.('help-topics')}
-              className="px-4 py-2 border border-[#C6C5C5] rounded-lg hover:bg-gray-50 transition-colors font-inter"
-            >
-              Browse Help Topics
-            </button>
-            <button
-              onClick={() => {
-                setIsSubmitted(false);
-                setFormData({
-                  email: 'user@example.com',
-                  name: 'John Doe',
-                  category: '',
-                  subject: '',
-                  description: '',
-                  priority: 'normal',
-                  attachments: []
-                });
-              }}
-              className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-inter font-medium"
-            >
-              Ask Another Question
-            </button>
-          </div>
-        </div>
-      </div>
-    </HelpLayout>
-  );
-}
-
-  return (
-  <HelpLayout
-    activeView={activeView}
-    onNavigate={onNavigate}
-    title="Ask a Question"
-    description="Get help from our support team"
-    showBackButton
-  >
-    <div className="space-y-8">
-      {/* Introduction */}
-      <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6">
-        <h3 className="font-semibold text-gray-900 mb-2 font-inter">Before you ask...</h3>
-        <p className="text-gray-700 font-inter mb-3">
-          Check our Help Topics for quick answers to common questions. If you can't find what you're looking for, we're here to help!
-        </p>
-        <button
-          onClick={() => onNavigate?.('help-topics')}
-          className="text-sm text-gray-700 hover:text-gray-900 underline font-inter"
-        >
-          Browse Help Topics →
-        </button>
-      </div>
-
-      {/* Support Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Support Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Contact Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -346,18 +346,6 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
           </div>
 
           {/* Subject */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
-              Subject <span className="text-red-500">*</span>
-            </label>
-          <input
-  type="text"
-  value={formData.subject}
-  onChange={(e) => handleInputChange('subject', e.target.value)}
-  placeholder="Brief description of your question"
-  className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter"
-  required
-/>
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
               Subject <span className="text-red-500">*</span>
@@ -486,7 +474,6 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                   </>
                 )}
               </button>
-            </div>
             </div>
           </div>
         </form>
