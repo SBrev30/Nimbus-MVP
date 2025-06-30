@@ -364,18 +364,20 @@ function AppContent() {
 
       // Help pages (immediate loading - lightweight)
       case 'help-topics':
-        return (
-          <ErrorBoundary>
-             <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
-            <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
-          </ErrorBoundary>
-        );
+  return (
+    <ErrorBoundary>
+      <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
+        <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
+      </div>
+    </ErrorBoundary>
+  );
 
       case 'get-started':
         return (
           <ErrorBoundary>
              <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
             <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
+               </div>
           </ErrorBoundary>
         );
 
@@ -384,6 +386,7 @@ function AppContent() {
           <ErrorBoundary>
              <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
             <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
+               </div>
           </ErrorBoundary>
         );
 
@@ -392,6 +395,7 @@ function AppContent() {
           <ErrorBoundary>
              <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
             <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
+               </div>
           </ErrorBoundary>
         );
 
