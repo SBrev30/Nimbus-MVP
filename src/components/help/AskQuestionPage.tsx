@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Send, Paperclip, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { HelpLayout } from './HelpLayout';
 
@@ -159,36 +158,36 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
       <HelpLayout
         activeView={activeView}
         onNavigate={onNavigate}
-        title="Question Submitted"
-        description="Your support inquiry has been received"
+        title=\"Question Submitted\"
+        description=\"Your support inquiry has been received\"
         showBackButton
         showBreadcrumb={false}
       >
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+        <div className=\"max-w-2xl mx-auto text-center\">
+          <div className=\"w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6\">
+            <CheckCircle className=\"w-8 h-8 text-green-600\" />
           </div>
           
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 font-inter">
+          <h2 className=\"text-2xl font-bold text-gray-900 mb-4 font-inter\">
             Thank you for contacting us!
           </h2>
           
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-            <h3 className="font-semibold text-green-900 mb-2 font-inter">Your inquiry has been submitted</h3>
-            <p className="text-green-800 font-inter mb-4">
-              We've received your question about "{formData.subject}" and our support team will respond within 24 hours.
+          <div className=\"bg-green-50 border border-green-200 rounded-lg p-6 mb-6\">
+            <h3 className=\"font-semibold text-green-900 mb-2 font-inter\">Your inquiry has been submitted</h3>
+            <p className=\"text-green-800 font-inter mb-4\">
+              We've received your question about \"{formData.subject}\" and our support team will respond within 24 hours.
             </p>
-            <div className="text-sm text-green-700 font-inter">
+            <div className=\"text-sm text-green-700 font-inter\">
               <p><strong>Ticket ID:</strong> WB-{Date.now()}</p>
               <p><strong>Category:</strong> {getSelectedCategoryInfo()?.label}</p>
               <p><strong>Priority:</strong> {formData.priority.charAt(0).toUpperCase() + formData.priority.slice(1)}</p>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
-              <h4 className="font-semibold text-blue-900 mb-2 font-inter">What happens next?</h4>
-              <ul className="text-sm text-blue-800 space-y-1 font-inter">
+          <div className=\"space-y-4\">
+            <div className=\"p-4 bg-blue-50 border border-blue-200 rounded-lg text-left\">
+              <h4 className=\"font-semibold text-blue-900 mb-2 font-inter\">What happens next?</h4>
+              <ul className=\"text-sm text-blue-800 space-y-1 font-inter\">
                 <li>• You'll receive an email confirmation shortly</li>
                 <li>• Our support team will review your inquiry</li>
                 <li>• We'll respond with a solution or follow-up questions</li>
@@ -196,10 +195,10 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
               </ul>
             </div>
 
-            <div className="flex gap-3 justify-center">
+            <div className=\"flex gap-3 justify-center\">
               <button
                 onClick={() => onNavigate?.('help-topics')}
-                className="px-4 py-2 border border-[#C6C5C5] rounded-lg hover:bg-gray-50 transition-colors font-inter"
+                className=\"px-4 py-2 border border-[#C6C5C5] rounded-lg hover:bg-gray-50 transition-colors font-inter\"
               >
                 Browse Help Topics
               </button>
@@ -216,7 +215,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                     attachments: []
                   });
                 }}
-                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-inter font-medium"
+                className=\"px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-inter font-medium\"
               >
                 Ask Another Question
               </button>
@@ -231,52 +230,52 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
     <HelpLayout
       activeView={activeView}
       onNavigate={onNavigate}
-      title="Ask a Question"
-      description="Get help from our support team"
+      title=\"Ask a Question\"
+      description=\"Get help from our support team\"
       showBackButton
     >
-      <div className="max-w-2xl">
+      <div className=\"max-w-2xl mx-auto\">
         {/* Introduction */}
-        <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6 mb-8">
-          <h3 className="font-semibold text-gray mb-2 font-inter">Before you ask...</h3>
-          <p className="text-gray font-inter mb-3">
+        <div className=\"bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6 mb-8\">
+          <h3 className=\"font-semibold text-gray-900 mb-2 font-inter\">Before you ask...</h3>
+          <p className=\"text-gray-700 font-inter mb-3\">
             Check our Help Topics for quick answers to common questions. If you can't find what you're looking for, we're here to help!
           </p>
           <button
             onClick={() => onNavigate?.('help-topics')}
-            className="text-sm text-gray hover:text-gray underline font-inter"
+            className=\"text-sm text-gray-700 hover:text-gray-900 underline font-inter\"
           >
             Browse Help Topics →
           </button>
         </div>
 
         {/* Support Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className=\"space-y-6\">
           {/* Contact Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
+              <label className=\"block text-sm font-medium text-gray-900 mb-2 font-inter\">
                 Email Address
               </label>
               <input
-                type="email"
+                type=\"email\"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter"
+                className=\"w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter\"
                 required
               />
-              <p className="text-xs text-[#889096] mt-1 font-inter">We'll use this to respond to your inquiry</p>
+              <p className=\"text-xs text-[#889096] mt-1 font-inter\">We'll use this to respond to your inquiry</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
+              <label className=\"block text-sm font-medium text-gray-900 mb-2 font-inter\">
                 Name
               </label>
               <input
-                type="text"
+                type=\"text\"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter"
+                className=\"w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter\"
                 required
               />
             </div>
@@ -284,10 +283,10 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
 
           {/* Category Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
-              Category <span className="text-red-500">*</span>
+            <label className=\"block text-sm font-medium text-gray-900 mb-2 font-inter\">
+              Category <span className=\"text-red-500\">*</span>
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className=\"grid grid-cols-1 md:grid-cols-2 gap-3\">
               {categories.map((category) => (
                 <label
                   key={category.value}
@@ -298,29 +297,29 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                   }`}
                 >
                   <input
-                    type="radio"
-                    name="category"
+                    type=\"radio\"
+                    name=\"category\"
                     value={category.value}
                     checked={formData.category === category.value}
                     onChange={(e) => handleInputChange('category', e.target.value)}
-                    className="sr-only"
+                    className=\"sr-only\"
                   />
-                  <div className="font-medium text-gray-900 font-inter">{category.label}</div>
-                  <div className="text-xs text-[#889096] font-inter">{category.description}</div>
+                  <div className=\"font-medium text-gray-900 font-inter\">{category.label}</div>
+                  <div className=\"text-xs text-[#889096] font-inter\">{category.description}</div>
                 </label>
               ))}
             </div>
             {errors.category && (
-              <p className="text-red-500 text-sm mt-1 font-inter">{errors.category}</p>
+              <p className=\"text-red-500 text-sm mt-1 font-inter\">{errors.category}</p>
             )}
           </div>
 
           {/* Priority Level */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
+            <label className=\"block text-sm font-medium text-gray-900 mb-2 font-inter\">
               Priority Level
             </label>
-            <div className="flex gap-3">
+            <div className=\"flex gap-3\">
               {priorities.map((priority) => (
                 <label
                   key={priority.value}
@@ -331,21 +330,34 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                   }`}
                 >
                   <input
-                    type="radio"
-                    name="priority"
+                    type=\"radio\"
+                    name=\"priority\"
                     value={priority.value}
                     checked={formData.priority === priority.value}
                     onChange={(e) => handleInputChange('priority', e.target.value as 'low' | 'normal' | 'high')}
-                    className="sr-only"
+                    className=\"sr-only\"
                   />
-                  <div className="font-medium text-gray-900 text-center font-inter">{priority.label}</div>
-                  <div className="text-xs text-[#889096] text-center font-inter">{priority.description}</div>
+                  <div className=\"font-medium text-gray-900 text-center font-inter\">{priority.label}</div>
+                  <div className=\"text-xs text-[#889096] text-center font-inter\">{priority.description}</div>
                 </label>
               ))}
             </div>
           </div>
 
           {/* Subject */}
+          <div>
+            <label className=\"block text-sm font-medium text-gray-900 mb-2 font-inter\">
+              Subject <span className=\"text-red-500\">*</span>
+            </label>
+            <input
+              type=\"text\"
+              value={formData.subject}
+              onChange={(e) => handleInputChange('subject', e.target.value)}
+              placeholder=\"Brief description of your question\"
+              className=\"w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter\"
+              `
+}
+            {/* Subject */}
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
               Subject <span className="text-red-500">*</span>
@@ -460,11 +472,11 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors font-inter font-medium"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Submitting...
                   </>
                 ) : (
