@@ -542,7 +542,7 @@ export function ChaptersPage({
                                     className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
                                       chapter.status === status 
                                         ? 'bg-gray-100 text-gray-900 font-medium' 
-                                    onClick={() => onSelectChapter?.(chapter.id, chapter.title)}
+                                        : 'text-gray-700 hover:bg-gray-50'
                                     }`}
                                   >
                                     <RefreshCw className="w-3 h-3" />
