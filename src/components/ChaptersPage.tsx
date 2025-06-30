@@ -30,6 +30,7 @@ export function ChaptersPage({
         <ChapterPreviewModal
           chapter={chapterToPreview}
           onClose={() => setShowPreviewModal(false)}
-+          onEditChapter={onSelectChapter}
++          onEditChap
+}ter={onSelectChapter}
         />
       )}
