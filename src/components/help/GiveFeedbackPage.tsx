@@ -581,6 +581,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
               </button>
             </div>
           </div>
+           </div>
         </form>
       </div>
     </HelpLayout>
