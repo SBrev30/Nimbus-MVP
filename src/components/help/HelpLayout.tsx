@@ -21,7 +21,7 @@ export function HelpLayout({
   showBreadcrumb = false
 }: HelpLayoutProps) {
   return (
-    <div className="flex-1 bg-white rounded-t-[17px] overflow-hidden flex flex-col h-full">
+    <div className="flex-1 bg-white rounded-t-[17px] overflow-hidden flex flex-col min-h-0">
       {/* Fixed Header Content */}
       <div className="flex-shrink-0 p-8 pb-0">
         {/* Conditionally render Breadcrumb Navigation */}
@@ -57,8 +57,8 @@ export function HelpLayout({
       </div>
       
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto px-8 pb-8">
-        <div className="max-w-4xl">
+      <div className="flex-1 overflow-y-auto px-8 pb-8 min-h-0">
+        <div className="max-w-4xl space-y-6">
           {children}
         </div>
       </div>
