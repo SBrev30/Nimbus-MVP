@@ -486,6 +486,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
                 )}
               </button>
             </div>
+            </div>
           </div>
         </form>
       </div>
