@@ -33,8 +33,6 @@ interface Note {
   updatedAt: Date;
 }
 
-// Add new state for showing auth page
-const [showAuthPage, setShowAuthPage] = useState(false);
 
 // Import planning components
 import { OutlinePage } from './planning/OutlinePage';
@@ -109,6 +107,7 @@ function AppContent() {
   const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
   const [currentChapter, setCurrentChapter] = useState<{ id: string; title: string } | null>(null);
   const [editorLoading, setEditorLoading] = useState(false);
+  const [showAuthPage, setShowAuthPage] = useState(false);
   
   // Editor content state
   const [editorContent, setEditorContent] = useLocalStorage<EditorContent>('editorContent', {
