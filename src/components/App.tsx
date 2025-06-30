@@ -619,7 +619,7 @@ function AppContent() {
         {/* Enhanced Header with responsive search bar */}
         {shouldShowHeader && (
           <div 
-            className="bg-[#f2eee2] h-[72px] flex items-end px-6 pb-3"
+            className="bg-[#f2eee2] pt-5 flex items-end px-6 pb-3"
   style={{ 
     marginRight: (activeView === 'write' || activeView === 'editor') && !notesPanelCollapsed ? '296px' : '0px'
   }}
