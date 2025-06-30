@@ -139,14 +139,8 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
   }, []);
 
   const handleProjectSelect = (project: ProjectWithChapters) => {
-    // Set selected project and navigate to editor view
     setSelectedProject(project);
     setCurrentView('chapters');
-    
-    // Call the parent component's onSelectChapter function if provided
-    if (onNavigateToWrite) {
-      onNavigateToWrite(project.id);
-    }
   };
 
   const handleBackToProjects = () => {
@@ -158,9 +152,8 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
     // First check if project has chapters
     if (project.chapterCount > 0) {
       // Navigate to the project's writing area
-      if (onNavigateToWrite) {
-        onNavigateToWrite(project.id);
-      }
+      setSelectedProject(project);
+      setCurrentView('chapters');
     } else {
       // Create a new chapter and then navigate
       handleCreateFirstChapter(project.id);
