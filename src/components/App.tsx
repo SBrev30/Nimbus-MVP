@@ -97,14 +97,14 @@ class ErrorBoundary extends React.Component<
 function AppContent() {
   // Authentication state
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // State management
   const [activeView, setActiveView] = useState('write');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
   const [currentChapter, setCurrentChapter] = useState<{ id: string; title: string } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [editorLoading, setEditorLoading] = useState(false);
   
   // Editor content state
   const [editorContent, setEditorContent] = useLocalStorage<EditorContent>('editorContent', {
@@ -147,7 +147,7 @@ function AppContent() {
 
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
     // Set loading state
-    setIsLoading(true);
+    setEditorLoading(true);
 
     // Save current content before switching
     if (currentChapter) {
@@ -215,7 +215,7 @@ function AppContent() {
         setEditorContent(fallbackContent);
       })
       .finally(() => {
-        setIsLoading(false);
+        setEditorLoading(false);
       });
   }, [currentChapter, editorContent, chapterContents, setEditorContent, setChapterContents]);
 
@@ -287,7 +287,7 @@ function AppContent() {
             <div className="flex-1 flex overflow-hidden">
               <div className="flex-1 flex flex-col">
                 <Editor
-                  isLoading={isLoading}
+                  isLoading={editorLoading}
                   content={editorContent}
                   onChange={handleEditorChange}
                   selectedChapter={currentChapter}
@@ -311,7 +311,7 @@ function AppContent() {
             <div className="flex-1 flex overflow-hidden">
               <div className="flex-1 flex flex-col">
                 <Editor
-                  isLoading={isLoading}
+                  isLoading={editorLoading}
                   content={editorContent}
                   onChange={handleEditorChange}
                   selectedChapter={currentChapter}
@@ -375,13 +375,13 @@ function AppContent() {
         );
 
       case 'plot':
-  return (
-    <ErrorBoundary>
-      <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
-        <PlotPage onBack={handleBackToPlanning} />
-      </div>
-    </ErrorBoundary>
-  );
+        return (
+          <ErrorBoundary>
+            <div className="flex-1 pr-[20px]">
+              <PlotPage onBack={handleBackToPlanning} />
+            </div>
+          </ErrorBoundary>
+        );
 
       case 'characters':
         return (
@@ -418,38 +418,38 @@ function AppContent() {
 
       // Help pages (immediate loading - lightweight)
       case 'help-topics':
-  return (
-    <ErrorBoundary>
-      <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
-        <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
-      </div>
-    </ErrorBoundary>
-  );
+        return (
+          <ErrorBoundary>
+            <div className="flex-1 pr-[20px]">
+              <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
+            </div>
+          </ErrorBoundary>
+        );
 
       case 'get-started':
         return (
           <ErrorBoundary>
-             <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
-            <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
-               </div>
+            <div className="flex-1 pr-[20px]">
+              <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
+            </div>
           </ErrorBoundary>
         );
 
       case 'ask-question':
         return (
           <ErrorBoundary>
-             <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
-            <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
-               </div>
+            <div className="flex-1 pr-[20px]">
+              <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
+            </div>
           </ErrorBoundary>
         );
 
       case 'give-feedback':
         return (
           <ErrorBoundary>
-             <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
-            <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
-               </div>
+            <div className="flex-1 pr-[20px]">
+              <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
+            </div>
           </ErrorBoundary>
         );
 
@@ -609,7 +609,8 @@ function AppContent() {
     handleViewChange,
     handleSignOut,
     IntegrationPageWithProvider,
-    HistoryPageWithProvider
+    HistoryPageWithProvider,
+    editorLoading
   ]);
 
   // Check authentication state on mount - MOVED AFTER ALL CALLBACKS
@@ -622,7 +623,7 @@ function AppContent() {
         console.error('Error checking auth:', error);
         setUser(null);
       } finally {
-        setIsLoading(false);
+        setAuthLoading(false);
       }
     };
 
@@ -640,7 +641,7 @@ function AppContent() {
   }, []);
 
   // Show loading spinner while checking authentication
-  if (isLoading) {
+  if (authLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#F9FAFB]">
         <LoadingSpinner message="Checking authentication..." />
@@ -674,9 +675,9 @@ function AppContent() {
         {shouldShowHeader && (
           <div 
             className="bg-[#f2eee2] pt-5 flex items-end px-6 pb-3"
-  style={{ 
-    marginRight: (activeView === 'write' || activeView === 'editor') && !notesPanelCollapsed ? '296px' : '0px'
-  }}
+            style={{ 
+              marginRight: (activeView === 'write' || activeView === 'editor') && !notesPanelCollapsed ? '296px' : '0px'
+            }}
           >
             <div className="flex items-center justify-between w-full">
               {/* Left side - Breadcrumb */}
