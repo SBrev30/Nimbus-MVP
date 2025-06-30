@@ -175,16 +175,17 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
   const progress = ((currentStep + 1) / onboardingSteps.length) * 100;
 
   return (
-    <HelpLayout
-      activeView={activeView}
-      onNavigate={onNavigate}
-      title="Get Started"
-      description="Interactive walkthrough of Nimbus Note features"
-      showBackButton
-      showBreadcrumb={false}
-    >
+  <HelpLayout
+    activeView={activeView}
+    onNavigate={onNavigate}
+    title="Get Started"
+    description="Interactive walkthrough of Nimbus Note features"
+    showBackButton
+    showBreadcrumb={false}
+  >
+    <div className="space-y-8">
       {/* Progress Bar */}
-      <div className="mb-8">
+      <div>
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-[#889096] font-inter">
             Step {currentStep + 1} of {onboardingSteps.length}
