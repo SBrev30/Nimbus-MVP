@@ -420,41 +420,33 @@ function AppContent() {
         );
 
       // Help pages (immediate loading - lightweight)
-      case 'help-topics':
-        return (
-          <ErrorBoundary>
-            <div className="flex-1 pr-[20px]">
-              <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
-            </div>
-          </ErrorBoundary>
-        );
+case 'help-topics':
+  return (
+    <ErrorBoundary>
+      <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
+    </ErrorBoundary>
+  );
 
-      case 'get-started':
-        return (
-          <ErrorBoundary>
-            <div className="flex-1 pr-[20px]">
-              <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
-            </div>
-          </ErrorBoundary>
-        );
+case 'get-started':
+  return (
+    <ErrorBoundary>
+      <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
+    </ErrorBoundary>
+  );
 
-      case 'ask-question':
-        return (
-          <ErrorBoundary>
-            <div className="flex-1 pr-[20px]">
-              <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
-            </div>
-          </ErrorBoundary>
-        );
+case 'ask-question':
+  return (
+    <ErrorBoundary>
+      <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
+    </ErrorBoundary>
+  );
 
-      case 'give-feedback':
-        return (
-          <ErrorBoundary>
-            <div className="flex-1 pr-[20px]">
-              <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
-            </div>
-          </ErrorBoundary>
-        );
+case 'give-feedback':
+  return (
+    <ErrorBoundary>
+      <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
+    </ErrorBoundary>
+  );
 
       // Static pages (immediate)
       case 'planning':
