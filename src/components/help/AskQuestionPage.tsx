@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Send, Paperclip, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { HelpLayout } from './HelpLayout';
 
