@@ -241,6 +241,28 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
     return Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 10) / 10;
   };
 
+  const resetForm = () => {
+    setIsSubmitted(false);
+    setFeedbackData({
+      feedbackType: 'ux',
+      overallRating: 0,
+      specificRatings: {
+        writing: 0,
+        canvas: 0,
+        ai: 0,
+        navigation: 0,
+        performance: 0
+      },
+      detailedFeedback: '',
+      contactInfo: {
+        email: 'user@example.com',
+        name: 'John Doe'
+      },
+      isAnonymous: false
+    });
+    setErrors({});
+  };
+
   if (isSubmitted) {
     return (
       <HelpLayout
@@ -292,27 +314,8 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
                 Browse Help Topics
               </button>
               <button
-                onClick={() => {
-                  setIsSubmitted(false);
-                  setFeedbackData({
-                    feedbackType: 'ux',
-                    overallRating: 0,
-                    specificRatings: {
-                      writing: 0,
-                      canvas: 0,
-                      ai: 0,
-                      navigation: 0,
-                      performance: 0
-                    },
-                    detailedFeedback: '',
-                    contactInfo: {
-                      email: 'user@example.com',
-                      name: 'John Doe'
-                    },
-                    isAnonymous: false
-                  });
-                }}
-                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-inter font-medium"
+                onClick={resetForm}
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-inter font-medium"
               >
                 Give More Feedback
               </button>
@@ -332,11 +335,11 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
       showBackButton
       showBreadcrumb={false}
     >
-      <div className="max-w-2xl">
+      <div className="max-w-2xl mx-auto">
         {/* Introduction */}
         <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6 mb-8">
-          <h3 className="font-semibold text-gray mb-2 font-inter">Help Shape WritersBlock</h3>
-          <p className="text-gray font-inter">
+          <h3 className="font-semibold text-gray-900 mb-2 font-inter">Help Shape Nimbus Note</h3>
+          <p className="text-gray-700 font-inter">
             Your feedback directly influences our product development. Share your experience, suggest new features, or let us know how we can improve.
           </p>
         </div>
@@ -367,7 +370,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
                     className="sr-only"
                   />
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">{type.icon}</span>
+                    <span className="text-[#ff4e00]">{type.icon}</span>
                     <div>
                       <div className="font-semibold text-gray-900 font-inter">{type.label}</div>
                       <div className="text-sm text-[#889096] font-inter">{type.description}</div>
@@ -381,7 +384,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
           {/* Overall Rating */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 font-inter">
-              Overall, how would you rate WritersBlock?
+              Overall, how would you rate Nimbus Note?
             </h3>
             <div className="flex items-center gap-4">
               <StarRating
@@ -411,11 +414,11 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
             <div className="space-y-4">
               {ratingCategories.map((category) => (
                 <div key={category.key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
+                  <div className="flex-1">
                     <div className="font-medium text-gray-900 font-inter">{category.label}</div>
                     <div className="text-sm text-[#889096] font-inter">{category.description}</div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <StarRating
                       rating={feedbackData.specificRatings[category.key]}
                       onRatingChange={(rating) => handleSpecificRatingChange(category.key, rating)}
@@ -472,13 +475,13 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
                     onChange={(e) => handleAnonymousToggle(e.target.checked)}
                     className="sr-only"
                   />
-                  <div className={`w-5 h-5 border-2 rounded transition-colors ${
+                  <div className={`w-5 h-5 border-2 rounded transition-colors flex items-center justify-center ${
                     feedbackData.isAnonymous
                       ? 'bg-[#ff4e00] border-[#ff4e00]'
                       : 'border-[#C6C5C5]'
                   }`}>
                     {feedbackData.isAnonymous && (
-                      <CheckCircle className="w-3 h-3 text-gray-900 mx-auto" />
+                      <CheckCircle className="w-3 h-3 text-white" />
                     )}
                   </div>
                   <span className="ml-2 text-sm font-medium text-gray-900 font-inter">
@@ -543,7 +546,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
           </div>
 
           {/* Submit Button */}
-          <div className="border-t border-[#C6C5C5] pt-6">
+          <div className="border-t border-[#C6C5C5] pt-6 pb-8">
             {errors.submit && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -562,11 +565,11 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-3 rounded-lg transition-colors font-inter font-medium"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg transition-colors font-inter font-medium"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Submitting...
                   </>
                 ) : (
