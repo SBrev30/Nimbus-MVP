@@ -66,6 +66,11 @@ export function TaskLightbox({ task, onUpdate, onDelete, onClose }: TaskLightbox
   const formatDate = (date: Date) => {
     // Check if the date is valid
     if (!date || isNaN(date.getTime())) {
+      return "Invalid date";
+    }
+    
+    // Check if the date is valid
+    if (!date || isNaN(date.getTime())) {
       return 'Invalid date';
     }
     return new Intl.DateTimeFormat('en-US', {
