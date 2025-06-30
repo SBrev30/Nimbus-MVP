@@ -418,3 +418,194 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+<span className="text-gray-700">File import (.docx, .txt)</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                  <span className="text-gray-700">Basic search & filtering</span>
+                </li>
+              </ul>
+              <button 
+                onClick={onGetStarted}
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                Get Started
+              </button>
+            </div>
+
+            <div className="bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-2xl p-8 shadow-xl text-white relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full text-sm font-semibold">
+                Most Popular
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Pro</h3>
+              <div className="text-4xl font-bold mb-6">
+                $12<span className="text-lg opacity-80 font-normal">/month</span>
+              </div>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-white mr-3" />
+                  <span>Unlimited content items</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-white mr-3" />
+                  <span>Advanced visual canvas</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-white mr-3" />
+                  <span>AI-powered organization</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-white mr-3" />
+                  <span>Advanced search & insights</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-white mr-3" />
+                  <span>Export to multiple formats</span>
+                </li>
+              </ul>
+              <button 
+                onClick={onGetStarted}
+                className="w-full bg-white text-[#ff4e00] py-3 rounded-full hover:bg-gray-50 transition-colors font-semibold"
+              >
+                Start Free Trial
+              </button>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Team</h3>
+              <div className="text-4xl font-bold text-gray-900 mb-6">
+                $29<span className="text-lg text-gray-500 font-normal">/month</span>
+              </div>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                  <span className="text-gray-700">Everything in Pro</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                  <span className="text-gray-700">Real-time collaboration</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                  <span className="text-gray-700">Shared workspaces</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                  <span className="text-gray-700">Advanced permissions</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                  <span className="text-gray-700">Priority support</span>
+                </li>
+              </ul>
+              <button 
+                onClick={onGetStarted}
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                Contact Sales
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] text-white">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+            Ready to transform your writing process?
+          </h2>
+          <p className="text-xl mb-8 opacity-90">
+            Join thousands of writers who've discovered the power of visual organization. Start your journey today.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button 
+              onClick={onGetStarted}
+              className="bg-white text-[#ff4e00] px-8 py-4 rounded-full hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center group font-semibold"
+            >
+              Try Nimbus Note
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button 
+              onClick={onGetStarted}
+              className="border-2 border-white text-white px-8 py-4 rounded-full hover:bg-white hover:text-[#ff4e00] transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-black text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-lg flex items-center justify-center">
+                  <NimbusLogo className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-xl font-bold">Nimbus Note</span>
+              </div>
+              <p className="text-gray-400 mb-6">
+                The visual writing assistant that helps you organize your creative process and bring your stories to life.
+              </p>
+              <div className="flex space-x-4">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <Twitter className="w-5 h-5" />
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <Github className="w-5 h-5" />
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Product</h3>
+              <ul className="space-y-2">
+                <li><a href="#features" className="text-gray-400 hover:text-white transition-colors">Features</a></li>
+                <li><a href="#pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Changelog</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Roadmap</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">About</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Careers</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">API Reference</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Community</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-400 text-sm">
+              © 2025 Nimbus Note. All rights reserved.
+            </p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">Privacy Policy</a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">Terms of Service</a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">Cookie Policy</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
