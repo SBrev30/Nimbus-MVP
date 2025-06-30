@@ -273,8 +273,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
         showBackButton
         showBreadcrumb={false}
       >
-      <div className="w-full max-w-none">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
@@ -296,7 +295,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
             </div>
           </div>
 
-          <div className="space-y-4 pb-12">
+          <div className="space-y-4">
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
               <h4 className="font-semibold text-blue-900 mb-2 font-inter">What's next?</h4>
               <ul className="text-sm text-blue-800 space-y-1 font-inter">
@@ -323,7 +322,6 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
             </div>
           </div>
         </div>
-      </div>
       </HelpLayout>
     );
   }
@@ -337,8 +335,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
       showBackButton
       showBreadcrumb={false}
     >
-      <div className="w-full max-w-none">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto">
         {/* Introduction */}
         <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6 mb-8">
           <h3 className="font-semibold text-gray-900 mb-2 font-inter">Help Shape Nimbus Note</h3>
@@ -549,7 +546,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
           </div>
 
           {/* Submit Button */}
-          <div className="border-t border-[#C6C5C5] pt-6 pb-12">
+          <div className="border-t border-[#C6C5C5] pt-6">
             {errors.submit && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -585,7 +582,6 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
             </div>
           </div>
         </form>
-        </div>
       </div>
     </HelpLayout>
   );
