@@ -273,7 +273,7 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
         showBackButton
         showBreadcrumb={false}
       >
-        <div className="max-w-2xl mx-auto text-center">
+        <form onSubmit={handleSubmit} className="space-y-8">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
@@ -327,22 +327,22 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
   }
 
   return (
-    <HelpLayout
-      activeView={activeView}
-      onNavigate={onNavigate}
-      title="Give Feedback"
-      description="Help us improve Nimbus Note with your insights"
-      showBackButton
-      showBreadcrumb={false}
-    >
-      <div className="max-w-2xl mx-auto">
-        {/* Introduction */}
-        <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6 mb-8">
-          <h3 className="font-semibold text-gray-900 mb-2 font-inter">Help Shape Nimbus Note</h3>
-          <p className="text-gray-700 font-inter">
-            Your feedback directly influences our product development. Share your experience, suggest new features, or let us know how we can improve.
-          </p>
-        </div>
+  <HelpLayout
+    activeView={activeView}
+    onNavigate={onNavigate}
+    title="Give Feedback"
+    description="Help us improve Nimbus Note with your insights"
+    showBackButton
+    showBreadcrumb={false}
+  >
+    <div className="space-y-8">
+      {/* Introduction */}
+      <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6">
+        <h3 className="font-semibold text-gray-900 mb-2 font-inter">Help Shape Nimbus Note</h3>
+        <p className="text-gray-700 font-inter">
+          Your feedback directly influences our product development. Share your experience, suggest new features, or let us know how we can improve.
+        </p>
+      </div>
 
         {/* Feedback Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
