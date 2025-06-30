@@ -387,6 +387,7 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
               </button>
             </div>
           )}
+          </div>
         </div>
       </HelpLayout>
     </div>
