@@ -104,6 +104,7 @@ function AppContent() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
   const [currentChapter, setCurrentChapter] = useState<{ id: string; title: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Editor content state
   const [editorContent, setEditorContent] = useLocalStorage<EditorContent>('editorContent', {
@@ -286,8 +287,10 @@ function AppContent() {
             <div className="flex-1 flex overflow-hidden">
               <div className="flex-1 flex flex-col">
                 <Editor
+                  isLoading={isLoading}
                   content={editorContent}
                   onChange={handleEditorChange}
+                  selectedChapter={currentChapter}
                 />
               </div>
               <NotesPanel
@@ -308,8 +311,10 @@ function AppContent() {
             <div className="flex-1 flex overflow-hidden">
               <div className="flex-1 flex flex-col">
                 <Editor
+                  isLoading={isLoading}
                   content={editorContent}
                   onChange={handleEditorChange}
+                  selectedChapter={currentChapter}
                 />
               </div>
               <NotesPanel
