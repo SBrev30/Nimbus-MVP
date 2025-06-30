@@ -273,16 +273,16 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
         showBackButton
         showBreadcrumb={false}
       >
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="space-y-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
           
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 font-inter">
+          <h2 className="text-2xl font-bold text-gray-900 font-inter">
             Thank you for your feedback!
           </h2>
           
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <p className="text-green-800 font-inter mb-4">
               Your feedback helps us make Nimbus Note better for everyone. We really appreciate you taking the time to share your thoughts.
             </p>
@@ -327,22 +327,22 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
   }
 
   return (
-  <HelpLayout
-    activeView={activeView}
-    onNavigate={onNavigate}
-    title="Give Feedback"
-    description="Help us improve Nimbus Note with your insights"
-    showBackButton
-    showBreadcrumb={false}
-  >
-    <div className="space-y-8">
-      {/* Introduction */}
-      <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6">
-        <h3 className="font-semibold text-gray-900 mb-2 font-inter">Help Shape Nimbus Note</h3>
-        <p className="text-gray-700 font-inter">
-          Your feedback directly influences our product development. Share your experience, suggest new features, or let us know how we can improve.
-        </p>
-      </div>
+    <HelpLayout
+      activeView={activeView}
+      onNavigate={onNavigate}
+      title="Give Feedback"
+      description="Help us improve Nimbus Note with your insights"
+      showBackButton
+      showBreadcrumb={false}
+    >
+      <div className="space-y-8">
+        {/* Introduction */}
+        <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-2 font-inter">Help Shape Nimbus Note</h3>
+          <p className="text-gray-700 font-inter">
+            Your feedback directly influences our product development. Share your experience, suggest new features, or let us know how we can improve.
+          </p>
+        </div>
 
         {/* Feedback Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -581,7 +581,6 @@ export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPagePro
               </button>
             </div>
           </div>
-           </div>
         </form>
       </div>
     </HelpLayout>
