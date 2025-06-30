@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { TaskLightbox } from './TaskLightbox';
 import { CreateTaskModal } from './CreateTaskModal';
@@ -13,12 +14,29 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: KanbanBoardProps) {
-  const [columns, setColumns] = useLocalStorage<KanbanColumnType[]>(`kanban-${projectId}`, [
+  const [rawColumns, setRawColumns] = useLocalStorage<KanbanColumnType[]>(`kanban-${projectId}`, [
     { id: 'todo', title: 'TO DO', tasks: [] },
     { id: 'active', title: 'Active', tasks: [] },
     { id: 'in_progress', title: 'In Progress', tasks: [] },
     { id: 'completed', title: 'Completed', tasks: [] },
   ]);
+
+  // Convert date strings back to Date objects when retrieving from localStorage
+  const columns = useMemo(() => {
+    return rawColumns.map(column => ({
+      ...column,
+      tasks: column.tasks.map(task => ({
+        ...task,
+        createdAt: typeof task.createdAt === 'string' ? new Date(task.createdAt) : task.createdAt,
+        updatedAt: typeof task.updatedAt === 'string' ? new Date(task.updatedAt) : task.updatedAt,
+        dueDate: task.dueDate && typeof task.dueDate === 'string' ? new Date(task.dueDate) : task.dueDate,
+      }))
+    }));
+  }, [rawColumns]);
+
+  const setColumns = useCallback((updater: React.SetStateAction<KanbanColumnType[]>) => {
+    setRawColumns(updater);
+  }, [setRawColumns]);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
