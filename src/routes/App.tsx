@@ -292,7 +292,14 @@ function AppContent() {
       case 'write':
         return (
           <ErrorBoundary>
-            <div className="flex-1 flex overflow-hidden">
+            <WritePage 
+              onSelectChapter={handleSelectChapter}
+              onNavigateToWrite={(projectId) => {
+                // Navigate to the write page first
+                setActiveView('write');
+                // Then let the WritePage component handle chapter selection
+              }}
+            />
               <div className="flex-1 flex flex-col">
                 <Editor
                   isLoading={editorLoading}

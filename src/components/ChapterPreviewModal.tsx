@@ -63,6 +63,9 @@ export function ChapterPreviewModal({ chapter, onClose }: ChapterPreviewModalPro
             onClick={() => {
               onClose();
               // You would typically call a function here to open the chapter in the editor
+              if (onEditChapter) {
+                onEditChapter(chapter.id, chapter.title);
+              }
             }}
             className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors font-medium"
           >
