@@ -227,16 +227,17 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
   };
 
   return (
-    <HelpLayout
-      activeView={activeView}
-      onNavigate={onNavigate}
-      title="Help Topics"
-      description="Find answers to common questions and learn how to make the most of WritersBlock"
-      showBackButton
-    >
-      {/* Scrollable container with proper overflow handling */}
-      <div className="h-full overflow-y-auto overflow-x-hidden">
-        <div className="min-h-full pb-8">
+    <div className="flex flex-col h-screen overflow-hidden">
+      <HelpLayout
+        activeView={activeView}
+        onNavigate={onNavigate}
+        title="Help Topics"
+        description="Find answers to common questions and learn how to make the most of WritersBlock"
+        showBackButton
+      >
+        {/* Scrollable container with proper overflow handling */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-0">
+          <div className="w-full max-w-none pb-8">
           {/* Search Section */}
           <div className="mb-8">
             <HelpSearch 
@@ -387,7 +388,7 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
             </div>
           )}
         </div>
-      </div>
-    </HelpLayout>
+      </HelpLayout>
+    </div>
   );
 }
