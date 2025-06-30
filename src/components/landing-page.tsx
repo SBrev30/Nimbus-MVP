@@ -6,8 +6,6 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
-
-export const LandingPage: React.FC<LandingPageProps> = ({ onAuthClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
 
@@ -42,19 +40,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthClick }) => {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center space-x-4">
-  <button 
-    onClick={onGetStarted}
-    className="text-gray-600 hover:text-gray-900 transition-colors"
-  >
-    Sign In
-  </button>
-  <button 
-    onClick={onGetStarted}
-    className="bg-[#ff4e00] text-white px-6 py-2 rounded-full hover:bg-[#ff4e00]/90 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-  >
-    Try Nimbus Note
-  </button>
-</div>
+              <button 
+                onClick={onGetStarted}
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={onGetStarted}
+                className="bg-[#ff4e00] text-white px-6 py-2 rounded-full hover:bg-[#ff4e00]/90 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Try Nimbus Note
+              </button>
+            </div>
 
             {/* Mobile Menu Button */}
             <button 
@@ -74,19 +72,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthClick }) => {
                 <a href="#testimonials" className="text-gray-600 hover:text-gray-900 transition-colors">Reviews</a>
                 <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
                 <div className="flex flex-col space-y-2 pt-4 border-t">
-  <button 
-    onClick={onGetStarted}
-    className="text-left text-gray-600 hover:text-gray-900 transition-colors"
-  >
-    Sign In
-  </button>
-  <button 
-    onClick={onGetStarted}
-    className="bg-[#ff4e00] text-white px-6 py-2 rounded-full hover:bg-[#ff4e00]/90 transition-colors"
-  >
-    Try Nimbus Note
-  </button>
-</div>
+                  <button 
+                    onClick={onGetStarted}
+                    className="text-left text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button 
+                    onClick={onGetStarted}
+                    className="bg-[#ff4e00] text-white px-6 py-2 rounded-full hover:bg-[#ff4e00]/90 transition-colors"
+                  >
+                    Try Nimbus Note
+                  </button>
+                </div>
               </nav>
             </div>
           )}
@@ -109,14 +107,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthClick }) => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button 
-                  onClick={onAuthClick}
+                  onClick={onGetStarted}
                   className="bg-[#ff4e00] text-white px-8 py-4 rounded-full hover:bg-[#ff4e00]/90 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center group"
                 >
                   Try Nimbus Note
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button 
-                  onClick={onAuthClick}
+                  onClick={onGetStarted}
                   className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-full hover:border-gray-400 transition-colors"
                 >
                   Sign In
@@ -385,11 +383,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthClick }) => {
                 </li>
               </ul>
               <button 
-  onClick={onGetStarted}
-  className="w-full bg-gray-100 text-gray-700 py-3 rounded-full hover:bg-gray-200 transition-colors"
->
-  Get Started
-</button>
+                onClick={onGetStarted}
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                Get Started
+              </button>
             </div>
 
             <div className="bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-2xl p-8 shadow-xl text-white relative">
@@ -423,11 +421,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthClick }) => {
                 </li>
               </ul>
               <button 
-  onClick={onGetStarted}
-  className="w-full bg-white text-[#ff4e00] py-3 rounded-full hover:bg-gray-50 transition-colors font-semibold"
->
-  Start Free Trial
-</button>
+                onClick={onGetStarted}
+                className="w-full bg-white text-[#ff4e00] py-3 rounded-full hover:bg-gray-50 transition-colors font-semibold"
+              >
+                Start Free Trial
+              </button>
             </div>
 
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
@@ -458,11 +456,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthClick }) => {
                 </li>
               </ul>
               <button 
-  onClick={onGetStarted}
-  className="w-full bg-gray-100 text-gray-700 py-3 rounded-full hover:bg-gray-200 transition-colors"
->
-  Contact Sales
-</button>
+                onClick={onGetStarted}
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                Contact Sales
+              </button>
             </div>
           </div>
         </div>
@@ -477,21 +475,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuthClick }) => {
           <p className="text-xl mb-8 opacity-90">
             Join thousands of writers who've discovered the power of visual organization. Start your journey today.
           </p>
-         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-  <button 
-    onClick={onGetStarted}
-    className="bg-[#ff4e00] text-white px-8 py-4 rounded-full hover:bg-[#ff4e00]/90 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center group"
-  >
-    Try Nimbus Note
-    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-  </button>
-  <button 
-    onClick={onGetStarted}
-    className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-full hover:border-gray-400 transition-colors"
-  >
-    Sign In
-  </button>
-</div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button 
+              onClick={onGetStarted}
+              className="bg-white text-[#ff4e00] px-8 py-4 rounded-full hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center group font-semibold"
+            >
+              Try Nimbus Note
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button 
+              onClick={onGetStarted}
+              className="border-2 border-white text-white px-8 py-4 rounded-full hover:bg-white hover:text-[#ff4e00] transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
         </div>
       </section>
 
