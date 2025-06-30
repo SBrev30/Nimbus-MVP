@@ -235,7 +235,7 @@ export function HelpTopicsPage({ activeView, onNavigate }: HelpTopicsPageProps) 
       showBackButton
     >
       {/* Main Content Container - Full width with proper scrolling */}
-      <div className="w-full h-full overflow-y-auto">
+      <div className="w-full max-h-screen overflow-y-auto">
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8">
           {/* Search Section */}
           <div className="mb-6 sm:mb-8">
