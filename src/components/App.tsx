@@ -321,11 +321,13 @@ function AppContent() {
         );
 
       case 'plot':
-        return (
-          <ErrorBoundary>
-            <PlotPage onBack={handleBackToPlanning} />
-          </ErrorBoundary>
-        );
+  return (
+    <ErrorBoundary>
+      <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
+        <PlotPage onBack={handleBackToPlanning} />
+      </div>
+    </ErrorBoundary>
+  );
 
       case 'characters':
         return (
@@ -364,6 +366,7 @@ function AppContent() {
       case 'help-topics':
         return (
           <ErrorBoundary>
+             <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
             <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );
@@ -371,6 +374,7 @@ function AppContent() {
       case 'get-started':
         return (
           <ErrorBoundary>
+             <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
             <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );
@@ -378,6 +382,7 @@ function AppContent() {
       case 'ask-question':
         return (
           <ErrorBoundary>
+             <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
             <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );
@@ -385,6 +390,7 @@ function AppContent() {
       case 'give-feedback':
         return (
           <ErrorBoundary>
+             <div className="flex-1 pr-[20px]"> {/* Added wrapper with padding */}
             <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );
