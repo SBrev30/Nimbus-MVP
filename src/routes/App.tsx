@@ -664,7 +664,7 @@ if (!user) {
  
  return (
    <ThemeProvider>
-     <LandingPage onAuthClick={() => setShowAuthPage(true)} />
+     <LandingPage onGetStarted={() => setShowAuthPage(true)} />
    </ThemeProvider>
  );
 }
