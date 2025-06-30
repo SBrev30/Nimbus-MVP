@@ -355,7 +355,6 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
               onChange={(e) => handleInputChange('subject', e.target.value)}
               placeholder="Brief description of your question"
               className="w-full px-3 py-2 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter"
-              `
 }
             {/* Subject */}
           <div>
