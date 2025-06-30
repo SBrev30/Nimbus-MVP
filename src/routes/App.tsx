@@ -151,6 +151,10 @@ function AppContent() {
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
     // Set loading state
     setEditorLoading(true);
+    
+    // Set current chapter immediately to ensure navigation works
+    setCurrentChapter({ id: chapterId, title: chapterTitle });
+    setActiveView('editor');
 
     // Save current content before switching
     if (currentChapter) {
@@ -167,7 +171,7 @@ function AppContent() {
           // Set new chapter
           setCurrentChapter({ id: chapterId, title: chapterTitle });
           setActiveView('editor');
-          
+
           // Create editor content from chapter data
           const chapterContent = {
             title: chapter.title,
@@ -197,6 +201,7 @@ function AppContent() {
           // Set new chapter
           setCurrentChapter({ id: chapterId, title: chapterTitle });
           setActiveView('editor');
+          
           setEditorContent(fallbackContent);
         }
       })
