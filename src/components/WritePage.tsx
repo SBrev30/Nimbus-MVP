@@ -147,7 +147,7 @@ export function WritePage({ onSelectChapter }: WritePageProps) {
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
     // Call the parent component's onSelectChapter function
     if (onSelectChapter) {
-      onSelectChapter(chapterId, chapterTitle);
+      onSelectChapter(chapterId, chapterTitle); 
     }
     setCurrentView('editor');
   }, [onSelectChapter]);
