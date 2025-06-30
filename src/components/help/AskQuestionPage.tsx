@@ -164,7 +164,7 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
         showBackButton
         showBreadcrumb={false}
       >
-        <div className="max-w-2xl mx-auto text-center">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
@@ -228,27 +228,27 @@ export function AskQuestionPage({ activeView, onNavigate }: AskQuestionPageProps
   }
 
   return (
-    <HelpLayout
-  activeView={activeView}
-  onNavigate={onNavigate}
-  title="Ask a Question"
-  description="Get help from our support team"
-  showBackButton
->
-      <div className="max-w-2xl mx-auto">
-        {/* Introduction */}
-        <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6 mb-8">
-          <h3 className="font-semibold text-gray-900 mb-2 font-inter">Before you ask...</h3>
-          <p className="text-gray-700 font-inter mb-3">
-            Check our Help Topics for quick answers to common questions. If you can't find what you're looking for, we're here to help!
-          </p>
-          <button
-            onClick={() => onNavigate?.('help-topics')}
-            className="text-sm text-gray-700 hover:text-gray-900 underline font-inter"
-          >
-            Browse Help Topics →
-          </button>
-        </div>
+  <HelpLayout
+    activeView={activeView}
+    onNavigate={onNavigate}
+    title="Ask a Question"
+    description="Get help from our support team"
+    showBackButton
+  >
+    <div className="space-y-8">
+      {/* Introduction */}
+      <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6">
+        <h3 className="font-semibold text-gray-900 mb-2 font-inter">Before you ask...</h3>
+        <p className="text-gray-700 font-inter mb-3">
+          Check our Help Topics for quick answers to common questions. If you can't find what you're looking for, we're here to help!
+        </p>
+        <button
+          onClick={() => onNavigate?.('help-topics')}
+          className="text-sm text-gray-700 hover:text-gray-900 underline font-inter"
+        >
+          Browse Help Topics →
+        </button>
+      </div>
 
         {/* Support Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
