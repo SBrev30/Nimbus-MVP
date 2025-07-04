@@ -1163,5 +1163,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </footer>
     </div>
+     </div>
   );
 };
