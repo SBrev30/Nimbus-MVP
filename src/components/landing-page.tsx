@@ -395,12 +395,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
                   <span className="text-gray-700">File import (.docx, .txt)</span>
                 </li>
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">Basic search & filtering</span>
-                </li
-                  {/* Footer */}
-      <footer className="bg-black text-white py-16">
+<li className="flex items-center">
+  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+  <span className="text-gray-700">Basic search & filtering</span>
+</li>
+{/* Footer */}
+<footer className="bg-black text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
