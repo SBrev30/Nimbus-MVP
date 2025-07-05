@@ -13,7 +13,8 @@ const BoltLogo = () => (
         src="https://raw.githubusercontent.com/kickiniteasy/bolt-hackathon-badge/refs/heads/main/src/public/bolt-badge/black_circle_360x360/black_circle_360x360.webp"
         alt="Powered by Bolt"
         className="w-full h-full object-contain"
-    />
+      />
+    </a>
   </div>
 );
 
