@@ -212,101 +212,348 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 bg-white">
+     {/* Features with Visual Examples Section */}
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Everything you need to organize your writing
+              Your organized writing is just a few clicks away
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Nimbus Note combines traditional writing tools with visual organization to help you see the big picture of your creative projects.
+              Unlock your creative potential with our easy-to-use visual organization system.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                <FileText className="w-8 h-8 text-white" />
+          {/* Import & Categorize Feature */}
+          <div className="mb-20">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                  Smart import to organize your content
+                </h3>
+                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                  Upload your existing documents and watch as Nimbus Note extracts content and helps you categorize it into Characters, Plots, Research, and Chapters. Our intelligent system recognizes content types and suggests the best organization structure.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <span>Automatic content extraction from .docx and .txt files</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <span>Intelligent categorization suggestions</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <span>Smart tagging system for easy retrieval</span>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Smart Import</h3>
-              <p className="text-gray-600">
-                Upload .docx and .txt files with automatic content extraction and intelligent categorization.
-              </p>
-            </div>
+              <div className="relative group">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="ml-4 text-sm text-gray-600">Planning - Plot</span>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      {/* Plot Thread Card - Based on actual PlotPage component */}
+                      <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-100 hover:scale-102 hover:shadow-md">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🎯</span>
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 transition-colors duration-200 hover:bg-blue-200">
+                              Main Plot
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600">65%</div>
+                        </div>
+                        
+                        <h3 className="font-semibold text-gray-900 mb-2">Dimensional War & Alliance</h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">Primary story arc driving the narrative through demon invasion</p>
+                        
+                        {/* Tension Curve Preview */}
+                        <div className="mb-3 overflow-hidden rounded">
+                          <svg className="w-full h-8 transition-all duration-300 group-hover:h-10" viewBox="0 0 100 20" preserveAspectRatio="none">
+                            <polyline
+                              fill="none"
+                              stroke="#3B82F6"
+                              strokeWidth="1.5"
+                              points="0,15 10,10 20,8 30,5 40,12 50,6 60,3 70,2 80,8 90,12 100,15"
+                              className="transition-all duration-300 group-hover:stroke-2"
+                            />
+                          </svg>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div className="mb-3">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full transition-all duration-500 bg-blue-500"
+                              style={{ width: '65%' }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">war</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">alliance</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">magic</span>
+                        </div>
+                      </div>
 
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                <Layers className="w-8 h-8 text-white" />
+                      {/* Character Arc Card */}
+                      <div className="p-4 rounded-lg border border-green-200 bg-green-50 cursor-pointer transition-all duration-200 hover:border-green-300 hover:bg-green-100 hover:scale-102 hover:shadow-md">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">👤</span>
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                              Character Arc
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600">45%</div>
+                        </div>
+                        
+                        <h3 className="font-semibold text-gray-900 mb-2">Mana Awakening Journey</h3>
+                        <p className="text-sm text-gray-600 mb-3">Individual character development from ordinary to mana master</p>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">character-growth</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">training</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Visual Canvas</h3>
-              <p className="text-gray-600">
-                Organize your content on an infinite canvas. Create connections between characters, plots, and chapters.
-              </p>
-            </div>
-
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                <Search className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Smart Library</h3>
-              <p className="text-gray-600">
-                Powerful search and filtering across all content. Find any character, plot point, or research note instantly.
-              </p>
-            </div>
-
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                <Palette className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Content Types</h3>
-              <p className="text-gray-600">
-                Organize with 4 content types: Characters, Plot Outlines, Research, and Chapters with smart tagging.
-              </p>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* How it Works Section */}
-      <section id="how-it-works" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple workflow, powerful results</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Transform your scattered notes and documents into a visual masterpiece in three simple steps.
-            </p>
+          {/* Organize Visually Feature */}
+          <div className="mb-20">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="lg:order-2">
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                  Visualize connections in your story
+                </h3>
+                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                  Transform your linear notes into a visual masterpiece. Our infinite canvas lets you see relationships between characters, plot points, and themes. Create connections that make sense to your creative process and discover new story possibilities.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <span>Infinite canvas for unlimited creativity</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <span>Drag-and-drop organization system</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <span>Visual connections between story elements</span>
+                  </div>
+                </div>
+              </div>
+              <div className="lg:order-1 relative group">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="ml-4 text-sm text-gray-600">Visual Canvas</span>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-6 h-80 relative overflow-hidden">
+                    {/* Canvas nodes based on actual Canvas.tsx component */}
+                    <div className="absolute top-8 left-8 min-w-[150px] bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce">
+                      <div className="font-semibold text-green-800 text-sm">Sarah</div>
+                      <div className="text-xs text-green-600 mt-1">Protagonist</div>
+                      <div className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1 transition-colors duration-200">📋</div>
+                    </div>
+                    
+                    <div className="absolute top-8 right-8 min-w-[150px] bg-blue-100 border-2 border-blue-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:-rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce" style={{animationDelay: '0.1s'}}>
+                      <div className="font-semibold text-blue-800 text-sm">Opening Scene</div>
+                      <div className="text-xs text-blue-600 mt-1">Setup</div>
+                      <div className="absolute top-1 right-1 text-xs bg-blue-200 hover:bg-blue-300 rounded px-1 transition-colors duration-200">📋</div>
+                    </div>
+                    
+                    <div className="absolute bottom-8 left-8 min-w-[150px] bg-purple-100 border-2 border-purple-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce" style={{animationDelay: '0.2s'}}>
+                      <div className="font-semibold text-purple-800 text-sm">Coastal Town</div>
+                      <div className="text-xs text-purple-600 mt-1">Setting</div>
+                      <div className="absolute top-1 right-1 text-xs bg-purple-200 hover:bg-purple-300 rounded px-1 transition-colors duration-200">📋</div>
+                    </div>
+                    
+                    <div className="absolute bottom-8 right-8 min-w-[150px] bg-yellow-100 border-2 border-yellow-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:-rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce" style={{animationDelay: '0.3s'}}>
+                      <div className="font-semibold text-yellow-800 text-sm">Peace vs Chaos</div>
+                      <div className="text-xs text-yellow-600 mt-1">Theme</div>
+                    </div>
+
+                    {/* Connection lines with React Flow style */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none transition-all duration-300 group-hover:opacity-80">
+                      <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                          <polygon points="0 0, 10 3.5, 0 7" fill="#6366F1" />
+                        </marker>
+                      </defs>
+                      <path 
+                        d="M 170 50 Q 250 30 330 50" 
+                        fill="none" 
+                        stroke="#6366F1" 
+                        strokeWidth="2" 
+                        strokeDasharray="4,4"
+                        markerEnd="url(#arrowhead)"
+                        className="animate-pulse transition-all duration-500" 
+                      />
+                      <path 
+                        d="M 170 90 Q 250 150 330 210" 
+                        fill="none" 
+                        stroke="#8B5CF6" 
+                        strokeWidth="2" 
+                        strokeDasharray="4,4"
+                        markerEnd="url(#arrowhead)"
+                        className="animate-pulse transition-all duration-500" 
+                        style={{animationDelay: '0.5s'}}
+                      />
+                      <path 
+                        d="M 330 90 Q 250 150 170 210" 
+                        fill="none" 
+                        stroke="#F59E0B" 
+                        strokeWidth="2" 
+                        strokeDasharray="4,4"
+                        markerEnd="url(#arrowhead)"
+                        className="animate-pulse transition-all duration-500" 
+                        style={{animationDelay: '1s'}}
+                      />
+                    </svg>
+
+                    {/* Handle indicators based on React Flow */}
+                    <div className="absolute top-12 left-12 w-2 h-2 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-12 right-12 w-2 h-2 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute bottom-12 left-12 w-2 h-2 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute bottom-12 right-12 w-2 h-2 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">1</span>
+          {/* Write & Refine Feature */}
+          <div className="mb-20">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                  Write with your entire world at your fingertips
+                </h3>
+                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                  Never lose track of your story details again. Our integrated editor keeps your visual map and research notes right beside your writing. Access character details, plot points, and research instantly without breaking your creative flow.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span>Integrated editor with side-by-side notes</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span>Real-time sync with your visual canvas</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span>Quick access to all related content</span>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Import & Categorize</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Upload your existing documents and watch as Nimbus Note extracts content and helps you categorize it into Characters, Plots, Research, and Chapters.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">2</span>
+              <div className="relative group">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="ml-4 text-sm text-gray-600">Editor - Chapter 1</span>
+                    </div>
+                  </div>
+                  <div className="flex">
+                    {/* Editor area - Based on actual Editor.tsx */}
+                    <div className="flex-1 p-6">
+                      <div className="space-y-4">
+                        {/* Title area */}
+                        <div className="text-center mb-6">
+                          <div className="text-2xl font-semibold text-black font-inter transition-all duration-300 group-hover:text-blue-900">
+                            The Golden Sunset
+                          </div>
+                        </div>
+                        
+                        {/* Content editor with realistic text and hover effects */}
+                        <div className="space-y-3 text-gray-700 text-sm leading-relaxed">
+                          <p className="transition-all duration-300 group-hover:text-gray-900">
+                            The golden sunset cast a tranquil spell over the ocean.
+                          </p>
+                          <p className="transition-all duration-300 group-hover:text-gray-900">
+                            As the sun began to set, <span className="bg-purple-100 px-1 rounded transition-all duration-300 hover:bg-purple-200 cursor-pointer">Sarah</span> felt a sense of peace wash over her. The <span className="bg-orange-100 px-1 rounded transition-all duration-300 hover:bg-orange-200 cursor-pointer">coastal town</span> had always been her sanctuary, a place where she could escape the chaos of her everyday life.
+                          </p>
+                          <div className="w-2 h-4 bg-blue-400 animate-pulse inline-block transition-all duration-300 group-hover:bg-blue-600"></div>
+                        </div>
+                        
+                        {/* Auto-save indicator */}
+                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 mt-4">
+                          <div className="flex items-center space-x-2 text-xs text-gray-400">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span>Auto-saving...</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Notes panel - Based on the side panel concept */}
+                    <div className="w-64 bg-gray-50 border-l border-gray-200 p-4 transition-all duration-300 group-hover:bg-gray-100">
+                      <div className="text-sm font-semibold text-gray-900 mb-3 transition-all duration-300 group-hover:text-blue-900">Quick Notes</div>
+                      <div className="space-y-3">
+                        {/* Character note */}
+                        <div className="bg-purple-50 p-3 rounded border border-purple-200 transform transition-all duration-300 hover:scale-105 hover:bg-purple-100 hover:shadow-md cursor-pointer">
+                          <div className="text-xs font-semibold text-purple-800 mb-1">Sarah - Protagonist</div>
+                          <div className="text-xs text-purple-600">Age 28, Marine biologist, seeking peace after divorce</div>
+                        </div>
+                        
+                        {/* Setting note */}
+                        <div className="bg-orange-50 p-3 rounded border border-orange-200 transform transition-all duration-300 hover:scale-105 hover:bg-orange-100 hover:shadow-md cursor-pointer">
+                          <div className="text-xs font-semibold text-orange-800 mb-1">Coastal Town Setting</div>
+                          <div className="text-xs text-orange-600">Population 3,000, lighthouse on cliff, fishing village</div>
+                        </div>
+                        
+                        {/* Plot note */}
+                        <div className="bg-blue-50 p-3 rounded border border-blue-200 transform transition-all duration-300 hover:scale-105 hover:bg-blue-100 hover:shadow-md cursor-pointer">
+                          <div className="text-xs font-semibold text-blue-800 mb-1">Plot Point</div>
+                          <div className="text-xs text-blue-600">Establish peaceful setting before conflict introduction</div>
+                        </div>
+                      </div>
+                      
+                      {/* Word count stats - Based on Editor.tsx status bar */}
+                      <div className="mt-4 pt-3 border-t border-gray-200 transition-all duration-300 group-hover:border-gray-300">
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div className="flex justify-between">
+                            <span>Words:</span>
+                            <span className="font-medium transition-all duration-300 group-hover:text-blue-600">347</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Characters:</span>
+                            <span className="font-medium">1,823</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Reading time:</span>
+                            <span className="font-medium">2 min</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Organize Visually</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Drag your content onto the visual canvas to see relationships between elements. Create connections that make sense to your creative process.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">3</span>
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Write & Refine</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Use the integrated editor to write new content while keeping your visual map as reference. Everything syncs in real-time.
-              </p>
             </div>
           </div>
         </div>
