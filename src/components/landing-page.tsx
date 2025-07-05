@@ -714,7 +714,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <span className="text-xl font-bold">Nimbus Note</span>
               </div>
               <p className="text-gray-400 mb-6">
-                The visual writing assistant that helps you organize your creative process and bring your stories to life.
+                Craft better story ideas using a visual map of your plots and characters.
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
