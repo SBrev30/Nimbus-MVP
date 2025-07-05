@@ -585,27 +585,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            Tools for organizing your creative inspiration
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            <strong>Organize your writing visually</strong> with tools to help you import, categorize, and connect your content. 
-            With WritersBlock2, your imported documents become an interactive visual workspace.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-[#ff4e00] to-[#ff6b35] text-white px-8 py-3 rounded-full font-semibold hover:from-[#ff4e00]/90 hover:to-[#ff6b35]/90 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5">
-              Try for free
-            </button>
-            <button className="border border-gray-300 text-gray-700 px-8 py-3 rounded-full font-semibold hover:bg-gray-50 transition-all duration-200">
-              Learn more about our features
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -710,33 +689,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] text-white">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-            Ready to transform your writing process?
+            {/* Call to Action */}
+      <section className="py-16 bg-[#e8ddc1]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            Tools for organizing your creative inspiration
           </h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of writers who've discovered the power of visual organization. Start your journey today.
+          <p className="text-xl text-gray-600 mb-8">
+            <strong>Organize your writing visually</strong> with tools to help you import, categorize, and connect your content. 
+            With Nimbus Note, your imported documents become an interactive visual workspace.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button 
-              onClick={onGetStarted}
-              className="bg-white text-[#ff4e00] px-8 py-4 rounded-full hover:bg-gray-50 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center group font-semibold"
-            >
-              Try Nimbus Note
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <button className="bg-gradient-to-r from-[#ff4e00] to-[#ff6b35] text-white px-8 py-3 rounded-full font-semibold hover:from-[#ff4e00]/90 hover:to-[#ff6b35]/90 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5">
+              Try for free
             </button>
-            <button 
-              onClick={onGetStarted}
-              className="border-2 border-white text-white px-8 py-4 rounded-full hover:bg-white hover:text-[#ff4e00] transition-colors"
-            >
-              Sign In
+            <button className="border border-gray-300 text-gray-700 px-8 py-3 rounded-full font-semibold hover:bg-gray-50 transition-all duration-200">
+              Learn more about our features
             </button>
           </div>
         </div>
       </section>
 
+     
       {/* Footer */}
       <footer className="bg-black text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
