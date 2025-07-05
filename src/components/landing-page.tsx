@@ -3,10 +3,16 @@ import { FileText, Layers, Search, Palette, ArrowRight, Users, Star, CheckCircle
 
 const BoltLogo = () => (
   <div className="fixed bottom-6 right-6 z-[100] w-16 h-16 md:w-20 md:h-20">
-    <img 
-      src="https://raw.githubusercontent.com/kickiniteasy/bolt-hackathon-badge/refs/heads/main/src/public/bolt-badge/black_circle_360x360/black_circle_360x360.webp"
-      alt="Powered by Bolt"
-      className="w-full h-full object-contain"
+    <a 
+      href="https://bolt.new/" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="block w-full h-full hover:scale-110 transition-transform duration-200"
+    >
+      <img 
+        src="https://raw.githubusercontent.com/kickiniteasy/bolt-hackathon-badge/refs/heads/main/src/public/bolt-badge/black_circle_360x360/black_circle_360x360.webp"
+        alt="Powered by Bolt"
+        className="w-full h-full object-contain"
     />
   </div>
 );
