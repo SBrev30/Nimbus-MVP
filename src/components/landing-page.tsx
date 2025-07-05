@@ -714,7 +714,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <span className="text-xl font-bold">Nimbus Note</span>
               </div>
               <p className="text-gray-400 mb-6">
-                Craft better story ideas using a visual map of your plots and characters.
+                Craft better story ideas using a visual map.
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
