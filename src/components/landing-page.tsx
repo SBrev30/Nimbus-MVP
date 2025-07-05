@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Layers, Search, Palette, ArrowRight, Users, Star, CheckCircle, Menu, X, Github, Twitter, Linkedin } from 'lucide-react';
 
+const BoltLogo = () => (
+  <div className="fixed bottom-6 right-6 z-[100] w-16 h-16 md:w-20 md:h-20">
+    <img 
+      src="https://raw.githubusercontent.com/kickiniteasy/bolt-hackathon-badge/refs/heads/main/src/public/bolt-badge/black_circle_360x360/black_circle_360x360.webp"
+      alt="Powered by Bolt"
+      className="w-full h-full object-contain"
+    />
+  </div>
+);
+
 // Nimbus Note Logo Component 
 const NimbusLogo = ({ className = "w-8 h-8", collapsed = false }) => {
   if (collapsed) {
@@ -46,7 +56,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <NimbusLogo className="w-8 h-8 text-gray-900" />
               <span className="text-xl font-bold text-gray-900">Nimbus Note</span>
             </div>
-
+          
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
@@ -566,6 +576,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
         </div>
       </footer>
+      {/* Add the Bolt Logo here */}
+      <BoltLogo />
     </div>
   );
 };
