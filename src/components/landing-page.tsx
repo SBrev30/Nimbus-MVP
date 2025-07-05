@@ -212,18 +212,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-     {/* Hero Quote Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            "Nimbus Note makes my writing organized."
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Learn how Nimbus Note has helped writers transform their scattered notes into visual masterpieces with our intuitive organization tools.
-          </p>
-        </div>
-      </section>
-
       {/* Features with Visual Examples Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
