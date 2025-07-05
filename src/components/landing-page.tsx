@@ -481,7 +481,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 </div>
               </div>
               <div className="relative group">
-                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl flex">
                   <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-red-400 rounded-full"></div>
@@ -490,7 +490,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                       <span className="ml-4 text-sm text-gray-600">Library - Content Management</span>
                     </div>
                   </div>
-                  <div className="p-6">
+                  <div className="flex-1 p-6">
                     {/* Library interface mockup */}
                     <div className="space-y-4">
                       {/* Import content header */}
@@ -558,7 +558,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                             <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">coastal-setting</span>
                           </div>
                         </div>
-                  </div>
+                      </div>
                     </div>
                   </div>
                   
@@ -594,10 +594,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Call to Action */}
-        <section className="py-16 bg-white">
+      {/* Call to Action */}
+      <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
             Tools for organizing your creative inspiration
