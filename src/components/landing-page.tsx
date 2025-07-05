@@ -558,34 +558,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                             <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">coastal-setting</span>
                           </div>
                         </div>
+                  </div>
                     </div>
                   </div>
-                </div>
-                
-                {/* Notes panel - Content type info */}
-                <div className="w-64 bg-gray-50 border-l border-gray-200 p-4 transition-all duration-300 group-hover:bg-gray-100">
-                  <div className="text-sm font-semibold text-gray-900 mb-3 transition-all duration-300 group-hover:text-blue-900">Content Stats</div>
-                  <div className="space-y-3">
-                    {/* Total items */}
-                    <div className="bg-blue-50 p-3 rounded border border-blue-200 transform transition-all duration-300 hover:scale-105 hover:bg-blue-100 hover:shadow-md">
-                      <div className="text-xs font-semibold text-blue-800 mb-1">Total Items</div>
-                      <div className="text-lg font-bold text-blue-900">47</div>
-                    </div>
-                    
-                    {/* Content breakdown */}
-                    <div className="bg-green-50 p-3 rounded border border-green-200 transform transition-all duration-300 hover:scale-105 hover:bg-green-100 hover:shadow-md">
-                      <div className="text-xs font-semibold text-green-800 mb-1">Characters: 12</div>
-                      <div className="text-xs font-semibold text-blue-800 mb-1">Plots: 8</div>
-                      <div className="text-xs font-semibold text-purple-800 mb-1">Research: 15</div>
-                      <div className="text-xs font-semibold text-orange-800">Chapters: 12</div>
-                    </div>
-                    
-                    {/* Storage info */}
-                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                      <div className="text-xs font-semibold text-gray-800 mb-1">Storage Used</div>
-                      <div className="text-xs text-gray-600">2.3MB / 500MB</div>
-                      <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
-                        <div className="bg-green-500 h-1 rounded-full" style={{width: '0.5%'}}></div>
+                  
+                  {/* Notes panel - Content type info */}
+                  <div className="w-64 bg-gray-50 border-l border-gray-200 p-4 transition-all duration-300 group-hover:bg-gray-100">
+                    <div className="text-sm font-semibold text-gray-900 mb-3 transition-all duration-300 group-hover:text-blue-900">Content Stats</div>
+                    <div className="space-y-3">
+                      {/* Total items */}
+                      <div className="bg-blue-50 p-3 rounded border border-blue-200 transform transition-all duration-300 hover:scale-105 hover:bg-blue-100 hover:shadow-md">
+                        <div className="text-xs font-semibold text-blue-800 mb-1">Total Items</div>
+                        <div className="text-lg font-bold text-blue-900">47</div>
+                      </div>
+                      
+                      {/* Content breakdown */}
+                      <div className="bg-green-50 p-3 rounded border border-green-200 transform transition-all duration-300 hover:scale-105 hover:bg-green-100 hover:shadow-md">
+                        <div className="text-xs font-semibold text-green-800 mb-1">Characters: 12</div>
+                        <div className="text-xs font-semibold text-blue-800 mb-1">Plots: 8</div>
+                        <div className="text-xs font-semibold text-purple-800 mb-1">Research: 15</div>
+                        <div className="text-xs font-semibold text-orange-800">Chapters: 12</div>
+                      </div>
+                      
+                      {/* Storage info */}
+                      <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                        <div className="text-xs font-semibold text-gray-800 mb-1">Storage Used</div>
+                        <div className="text-xs text-gray-600">2.3MB / 500MB</div>
+                        <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                          <div className="bg-green-500 h-1 rounded-full" style={{width: '0.5%'}}></div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -595,8 +596,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
         </section>
 
-      {/* Call to Action */}
-      <section className="py-16 bg-white">
+        {/* Call to Action */}
+        <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
             Tools for organizing your creative inspiration
