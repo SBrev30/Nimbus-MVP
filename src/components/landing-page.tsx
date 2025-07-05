@@ -699,14 +699,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <strong>Organize your writing visually</strong> with tools to help you import, categorize, and connect your content. 
             With Nimbus Note, your imported documents become an interactive visual workspace.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-[#ff4e00] to-[#ff6b35] text-white px-8 py-3 rounded-full font-semibold hover:from-[#ff4e00]/90 hover:to-[#ff6b35]/90 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5">
-              Try for free
-            </button>
-            <button className="border border-gray-300 text-gray-700 px-8 py-3 rounded-full font-semibold hover:bg-gray-50 transition-all duration-200">
-              Learn more about our features
-            </button>
-          </div>
+          
         </div>
       </section>
 
