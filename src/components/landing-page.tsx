@@ -224,6 +224,296 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </p>
           </div>
 
+          {/* Visual Canvas Feature */}
+<div className="mb-20">
+  <div className="grid lg:grid-cols-2 gap-12 items-center">
+    <div>
+      <h3 className="text-3xl font-bold text-gray-900 mb-6">
+        Interactive story canvas with drag-and-drop visualization
+      </h3>
+      <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+        Build your story visually on an infinite canvas. Create character nodes, plot points, and locations, then connect them to see relationships and story flow. Sync with Planning Pages and use templates to get started quickly.
+      </p>
+      <div className="space-y-3">
+        <div className="flex items-center text-gray-700">
+          <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+          <span>Drag-and-drop story elements and connections</span>
+        </div>
+        <div className="flex items-center text-gray-700">
+          <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+          <span>Templates for Hero's Journey, Three-Act Structure, and more</span>
+        </div>
+        <div className="flex items-center text-gray-700">
+          <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+          <span>Real-time sync with Planning Pages for consistency</span>
+        </div>
+      </div>
+    </div>
+    
+    <div className="relative group">
+      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
+        <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+            <span className="ml-4 text-sm text-gray-600">Story Canvas - Interactive View</span>
+          </div>
+        </div>
+        
+        <div className="flex h-96">
+          {/* Collapsed Sidebar */}
+          <div className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-4 space-y-3">
+            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+              <span className="text-xs">📊</span>
+            </div>
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <span className="text-xs">✏️</span>
+            </div>
+            <div className="w-8 h-8 bg-[#e8ddc1] rounded-lg flex items-center justify-center">
+              <span className="text-xs">🎨</span>
+            </div>
+            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+              <span className="text-xs">📋</span>
+            </div>
+            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+              <span className="text-xs">📁</span>
+            </div>
+          </div>
+          
+          {/* Main Canvas Area */}
+          <div className="flex-1 bg-gray-50 relative overflow-hidden">
+            {/* Canvas Grid Background */}
+            <svg className="absolute inset-0 w-full h-full">
+              <defs>
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <circle cx="1" cy="1" r="1" fill="#d1d5db" opacity="0.3"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)"/>
+            </svg>
+            
+            {/* Story Nodes */}
+            {/* Character Node - Sarah */}
+            <div className="absolute top-12 left-16 min-w-[120px] bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce">
+              <div className="font-semibold text-green-800 text-xs">Sarah Chen</div>
+              <div className="text-xs text-green-600 mt-1">Protagonist</div>
+              <div className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1 transition-colors duration-200">⚛️</div>
+              {/* Connection handles */}
+              <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            {/* Plot Node - Demon Discovery */}
+            <div className="absolute top-12 right-16 min-w-[120px] bg-blue-100 border-2 border-blue-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:-rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce" style={{animationDelay: '0.1s'}}>
+              <div className="font-semibold text-blue-800 text-xs">Demon Discovery</div>
+              <div className="text-xs text-blue-600 mt-1">Inciting Event</div>
+              <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            {/* Character Node - Sylandria */}
+            <div className="absolute top-32 left-32 min-w-[120px] bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce" style={{animationDelay: '0.2s'}}>
+              <div className="font-semibold text-green-800 text-xs">Sylandria</div>
+              <div className="text-xs text-green-600 mt-1">Dark Elf Ally</div>
+              <div className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1 transition-colors duration-200">⚛️</div>
+              <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            {/* Location Node - Portal Site */}
+            <div className="absolute bottom-12 left-16 min-w-[120px] bg-purple-100 border-2 border-purple-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce" style={{animationDelay: '0.3s'}}>
+              <div className="font-semibold text-purple-800 text-xs">Portal Site</div>
+              <div className="text-xs text-purple-600 mt-1">Demon Gateway</div>
+              <div className="absolute top-1 right-1 text-xs bg-purple-200 hover:bg-purple-300 rounded px-1 transition-colors duration-200">⚛️</div>
+              <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            {/* Plot Node - Alliance Formation */}
+            <div className="absolute bottom-12 right-16 min-w-[120px] bg-blue-100 border-2 border-blue-300 rounded-lg p-3 shadow-sm transform transition-all duration-300 hover:scale-110 hover:-rotate-1 hover:shadow-lg cursor-pointer group-hover:animate-bounce" style={{animationDelay: '0.4s'}}>
+              <div className="font-semibold text-blue-800 text-xs">Alliance Pact</div>
+              <div className="text-xs text-blue-600 mt-1">Climax</div>
+              <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            {/* Research Node - Mana System */}
+            <div className="absolute top-24 left-1/2 transform -translate-x-1/2 min-w-[120px] bg-indigo-100 border-2 border-indigo-300 rounded-lg p-3 shadow-sm transition-all duration-300 hover:scale-110 hover:shadow-lg cursor-pointer group-hover:animate-bounce" style={{animationDelay: '0.5s'}}>
+              <div className="font-semibold text-indigo-800 text-xs">Mana System</div>
+              <div className="text-xs text-indigo-600 mt-1">Research</div>
+              <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full transform -translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            
+            {/* Connection Lines */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none transition-all duration-300 group-hover:opacity-90">
+              <defs>
+                <marker id="canvasarrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#6366F1" />
+                </marker>
+              </defs>
+              {/* Sarah to Demon Discovery */}
+              <path 
+                d="M 150 40 Q 200 30 270 40" 
+                fill="none" 
+                stroke="#6366F1" 
+                strokeWidth="2" 
+                strokeDasharray="4,4"
+                markerEnd="url(#canvasarrow)"
+                className="animate-pulse transition-all duration-500" 
+              />
+              {/* Sarah to Sylandria */}
+              <path 
+                d="M 120 60 Q 140 80 160 100" 
+                fill="none" 
+                stroke="#10B981" 
+                strokeWidth="2" 
+                strokeDasharray="4,4"
+                markerEnd="url(#canvasarrow)"
+                className="animate-pulse transition-all duration-500" 
+                style={{animationDelay: '0.5s'}}
+              />
+              {/* Demon Discovery to Alliance Pact */}
+              <path 
+                d="M 300 70 Q 320 150 300 220" 
+                fill="none" 
+                stroke="#3B82F6" 
+                strokeWidth="2" 
+                strokeDasharray="4,4"
+                markerEnd="url(#canvasarrow)"
+                className="animate-pulse transition-all duration-500" 
+                style={{animationDelay: '1s'}}
+              />
+              {/* Portal Site to Alliance Pact */}
+              <path 
+                d="M 150 240 Q 200 250 270 240" 
+                fill="none" 
+                stroke="#8B5CF6" 
+                strokeWidth="2" 
+                strokeDasharray="4,4"
+                markerEnd="url(#canvasarrow)"
+                className="animate-pulse transition-all duration-500" 
+                style={{animationDelay: '1.5s'}}
+              />
+              {/* Sarah to Mana System */}
+              <path 
+                d="M 120 50 Q 140 70 160 80" 
+                fill="none" 
+                stroke="#6366F1" 
+                strokeWidth="2" 
+                strokeDasharray="4,4"
+                markerEnd="url(#canvasarrow)"
+                className="animate-pulse transition-all duration-500" 
+                style={{animationDelay: '2s'}}
+              />
+            </svg>
+            
+            {/* Mini Map Preview */}
+            <div className="absolute bottom-4 right-4 w-16 h-12 bg-white border border-gray-300 rounded opacity-80 transition-opacity group-hover:opacity-100">
+              <div className="w-full h-full bg-gray-100 rounded relative overflow-hidden">
+                <div className="absolute top-1 left-1 w-1 h-1 bg-green-400 rounded-full"></div>
+                <div className="absolute top-1 right-1 w-1 h-1 bg-blue-400 rounded-full"></div>
+                <div className="absolute bottom-1 left-1 w-1 h-1 bg-purple-400 rounded-full"></div>
+                <div className="absolute bottom-1 right-1 w-1 h-1 bg-blue-400 rounded-full"></div>
+                <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-indigo-400 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+            </div>
+            
+            {/* Canvas Controls */}
+            <div className="absolute bottom-4 left-4 flex flex-col space-y-1 opacity-80 transition-opacity group-hover:opacity-100">
+              <button className="w-8 h-8 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-xs">+</button>
+              <button className="w-8 h-8 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-xs">-</button>
+              <button className="w-8 h-8 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-xs">⚏</button>
+              <button className="w-8 h-8 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-xs">⊡</button>
+            </div>
+          </div>
+          
+          {/* Right Sidebar Menu */}
+          <div className="w-72 bg-white border-l border-gray-200 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900">Story Canvas</h3>
+                  <p className="text-sm text-gray-600">Plan your story visually</p>
+                </div>
+              </div>
+              
+              {/* Tab Navigation */}
+              <div className="flex bg-[#e8ddc1] rounded-lg p-1">
+                <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium bg-white text-gray-900 shadow-sm">
+                  Elements
+                </button>
+                <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-200 hover:bg-white hover:shadow-sm">
+                  Templates
+                </button>
+                <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-200 hover:bg-white hover:shadow-sm">
+                  Samples
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Add Elements</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <button className="p-3 text-xs rounded-lg border-2 border-green-300 bg-green-100 hover:bg-green-200 transition-colors flex items-center justify-center font-medium text-green-800">
+                  Character
+                </button>
+                <button className="p-3 text-xs rounded-lg border-2 border-blue-300 bg-blue-100 hover:bg-blue-200 transition-colors flex items-center justify-center font-medium text-blue-800">
+                  Plot
+                </button>
+                <button className="p-3 text-xs rounded-lg border-2 border-purple-300 bg-purple-100 hover:bg-purple-200 transition-colors flex items-center justify-center font-medium text-purple-800">
+                  Location
+                </button>
+                <button className="p-3 text-xs rounded-lg border-2 border-yellow-300 bg-yellow-100 hover:bg-yellow-200 transition-colors flex items-center justify-center font-medium text-yellow-800">
+                  Theme
+                </button>
+                <button className="p-3 text-xs rounded-lg border-2 border-red-300 bg-red-100 hover:bg-red-200 transition-colors flex items-center justify-center font-medium text-red-800">
+                  Conflict
+                </button>
+                <button className="p-3 text-xs rounded-lg border-2 border-indigo-300 bg-indigo-100 hover:bg-indigo-200 transition-colors flex items-center justify-center font-medium text-indigo-800">
+                  Research
+                </button>
+              </div>
+              
+              <div className="mt-4 p-3 bg-[#eae4d3] rounded-lg">
+                <div className="text-xs text-gray-700 font-medium mb-1">💡 Tip</div>
+                <div className="text-xs text-gray-600">
+                  Click the ⚛️ button on nodes to link them to your Planning data!
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-gray-200">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Actions</h4>
+              <div className="space-y-2">
+                <button className="w-full p-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium">
+                  Sync Planning
+                </button>
+                <button className="w-full p-2 bg-[#f2eee2] border-[#e8ddc1] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm">
+                  Load File
+                </button>
+                <button className="w-full p-2 bg-[#f2eee2] border-[#e8ddc1] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm">
+                  Clear All
+                </button>
+              </div>
+              
+              <div className="text-xs text-gray-500 mt-3 space-y-1">
+                <div>Last synced: 2:34 PM</div>
+                <div className="text-green-600 font-medium">
+                  All changes saved
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+          
+
           {/* Import & Categorize Feature */}
           <div className="mb-20">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
