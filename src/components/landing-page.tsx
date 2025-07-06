@@ -584,6 +584,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     </div>
   </div>
 </div>
+        </div>
+      </section>
 
      {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
