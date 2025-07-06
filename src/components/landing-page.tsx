@@ -213,7 +213,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </section>
 
       {/* Features with Visual Examples Section */}
-      <section className="py-20 bg-[#e8ddc1]">
+      <section className="py-20 bg-[]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -443,7 +443,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </div>
           </div>
 
-        {/* Write & Refine Feature */}
+       {/* Write & Refine Feature */}
 <div className="mb-20">
   <div className="grid lg:grid-cols-2 gap-12 items-center">
     <div>
