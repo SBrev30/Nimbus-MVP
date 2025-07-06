@@ -411,77 +411,77 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </div>
 
       {/* Feature Description Below */}
-      <div className="grid lg:grid-cols-2 gap-12 items-center">
-        <div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-6">
-            Interactive story canvas with drag-and-drop visualization
-          </h3>
-          <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-            Build your story visually on an infinite canvas. Create character nodes, plot points, and locations, then connect them to see relationships and story flow. Sync with Planning Pages and use templates to get started quickly.
-          </p>
-          <div className="space-y-3">
-            <div className="flex items-center text-gray-700">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Drag-and-drop story elements and connections</span>
-            </div>
-            <div className="flex items-center text-gray-700">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Templates for Hero's Journey, Three-Act Structure, and more</span>
-            </div>
-            <div className="flex items-center text-gray-700">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Real-time sync with Planning Pages for consistency</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="relative">
-          <div className="bg-gradient-to-br from-[#f2eee2] to-white rounded-2xl p-8 shadow-2xl">
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">👥</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">8 Characters</div>
-                    <div className="text-sm text-gray-500">Connected in story web</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">📖</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">12 Plot Points</div>
-                    <div className="text-sm text-gray-500">Linked in sequence</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">🗺️</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">6 Locations</div>
-                    <div className="text-sm text-gray-500">Mapped relationships</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-full opacity-20 animate-pulse"></div>
-          <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
+<div className="grid lg:grid-cols-2 gap-12 items-center">
+  <div>
+    <h3 className="text-3xl font-bold text-gray-900 mb-6">
+      Interactive story canvas with drag-and-drop visualization
+    </h3>
+    <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+      Build your story visually on an infinite canvas. Create character nodes, plot points, and locations, then connect them to see relationships and story flow. Sync with Planning Pages and use templates to get started quickly.
+    </p>
+    <div className="space-y-3">
+      <div className="flex items-center text-gray-700">
+        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+        <span>Drag-and-drop story elements and connections</span>
+      </div>
+      <div className="flex items-center text-gray-700">
+        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+        <span>Templates for Hero's Journey, Three-Act Structure, and more</span>
+      </div>
+      <div className="flex items-center text-gray-700">
+        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+        <span>Real-time sync with Planning Pages for consistency</span>
       </div>
     </div>
   </div>
-</section>
-
-          
+  
+  <div className="relative">
+    <div className="bg-gradient-to-br from-[#f2eee2] to-white rounded-2xl p-8 shadow-2xl">
+      <div className="space-y-4">
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <span className="text-sm">👥</span>
+            </div>
+            <div>
+              <div className="font-medium text-gray-900">8 Characters</div>
+              <div className="text-sm text-gray-500">Connected in story web</div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <span className="text-sm">📖</span>
+            </div>
+            <div>
+              <div className="font-medium text-gray-900">12 Plot Points</div>
+              <div className="text-sm text-gray-500">Linked in sequence</div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+              <span className="text-sm">🗺️</span>
+            </div>
+            <div>
+              <div className="font-medium text-gray-900">6 Locations</div>
+              <div className="text-sm text-gray-500">Mapped relationships</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-full opacity-20 animate-pulse"></div>
+    <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+  </div>
+</div>
+{/* Close Visual Canvas Feature - mb-20 div */}
+</div>
+{/* Close Features section container - max-w-7xl div */}
+</div>
+</section>         
 
           {/* Import & Categorize Feature */}
           <div className="mb-20">
