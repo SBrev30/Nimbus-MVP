@@ -212,276 +212,272 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-    {/* Features with Visual Examples Section */}
-<section className="py-20 bg-[#e8ddc1]">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="text-center mb-16">
-      <h2 className="text-4xl font-bold text-gray-900 mb-4">
-        Your organized writing is just a few clicks away
-      </h2>
-      <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-        Unlock your creative potential with our easy-to-use visual organization system.
-      </p>
-    </div>
+      {/* Features with Visual Examples Section */}
+      <section className="py-20 bg-[#e8ddc1]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Your organized writing is just a few clicks away
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Unlock your creative potential with our easy-to-use visual organization system.
+            </p>
+          </div>
 
-    {/* Visual Canvas Feature */}
-    <div className="mb-20">
-      {/* Centered Canvas Graphic - 70% width */}
-<div className="w-full flex justify-center mb-16">
-  <div className="w-full lg:w-[85%] xl:w-[90%] 2xl:w-[95%] relative group">
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:shadow-3xl">
-            <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                <span className="ml-4 text-sm text-gray-600">Story Canvas - Interactive Visualization</span>
-              </div>
-            </div>
-            
-            <div className="flex h-[500px]">
-              {/* Collapsed Sidebar */}
-              <div className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-4 space-y-3">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <span className="text-xs">📊</span>
-                </div>
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center hover:bg-blue-200 transition-colors">
-                  <span className="text-xs">✏️</span>
-                </div>
-                <div className="w-8 h-8 bg-[#e8ddc1] rounded-lg flex items-center justify-center hover:bg-[#d4c7a8] transition-colors">
-                  <span className="text-xs">🎨</span>
-                </div>
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <span className="text-xs">📋</span>
-                </div>
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <span className="text-xs">📁</span>
-                </div>
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <span className="text-xs">⚙️</span>
-                </div>
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <span className="text-xs">❓</span>
-                </div>
-              </div>
-              
-              {/* Main Canvas Area */}
-              <div className="flex-1 bg-gray-50 relative overflow-hidden">
-                {/* Canvas Grid Background */}
-                <svg className="absolute inset-0 w-full h-full">
-                  <defs>
-                    <pattern id="canvasgrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                      <circle cx="1" cy="1" r="1" fill="#d1d5db" opacity="0.3"/>
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#canvasgrid)"/>
-                </svg>
-                
-                {/* Story Nodes */}
-                {/* Sylandria Character Node */}
-                <div className="absolute top-16 left-20 min-w-[140px] bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-green-500 hover:border-4">
-                  <div className="font-semibold text-green-800 text-sm">Sylandria Moonwhisper</div>
-                  <div className="text-xs text-green-600 mt-1">Dark Elf Princess</div>
-                  <div className="text-xs text-green-500 mt-1">Mage/Noble</div>
-                  <div className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1 transition-colors duration-200">⚛️</div>
-                </div>
-                
-                {/* Theron Character Node */}
-                <div className="absolute top-16 right-20 min-w-[140px] bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-green-500 hover:border-4">
-                  <div className="font-semibold text-green-800 text-sm">Theron Brightblade</div>
-                  <div className="text-xs text-green-600 mt-1">Human Knight</div>
-                  <div className="text-xs text-green-500 mt-1">Knight/Guardian</div>
-                  <div className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1 transition-colors duration-200">⚛️</div>
-                </div>
-                
-                {/* Magic System Research Node */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-[140px] bg-indigo-100 border-2 border-indigo-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-indigo-500 hover:border-4">
-                  <div className="font-semibold text-indigo-800 text-sm">Magic System</div>
-                  <div className="text-xs text-indigo-600 mt-1">Research Notes</div>
-                  <div className="text-xs text-indigo-500 mt-1">World Building</div>
-                </div>
-                
-                {/* Connection Lines */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                  <defs>
-                    <marker id="canvasarrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                      <polygon points="0 0, 8 3, 0 6" fill="#6366F1" />
-                    </marker>
-                  </defs>
-                  {/* Sylandria to Theron */}
-                  <path 
-                    d="M 220 50 Q 300 30 380 50" 
-                    fill="none" 
-                    stroke="#10B981" 
-                    strokeWidth="2" 
-                    strokeDasharray="4,4"
-                    markerEnd="url(#canvasarrowhead)"
-                    className="animate-pulse" 
-                    style={{animationDuration: '3s'}}
-                  />
-                </svg>
-                
-                {/* Canvas Controls */}
-                <div className="absolute bottom-4 left-4 flex flex-col space-y-1 opacity-80 transition-opacity group-hover:opacity-100">
-                  <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm font-medium">+</button>
-                  <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm font-medium">-</button>
-                  <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm">⚏</button>
-                  <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm">⊡</button>
-                </div>
-              </div>
-              
-              {/* Right Sidebar Menu */}
-              <div className="w-72 bg-white border-l border-gray-200 flex flex-col">
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">Story Canvas</h3>
-                      <p className="text-sm text-gray-600">Plan your story visually</p>
+          {/* Visual Canvas Feature */}
+          <div className="mb-20">
+            {/* Centered Canvas Graphic - 70% width */}
+            <div className="w-full flex justify-center mb-16">
+              <div className="w-full lg:w-[85%] xl:w-[90%] 2xl:w-[95%] relative group">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:shadow-3xl">
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="ml-4 text-sm text-gray-600">Story Canvas - Interactive Visualization</span>
                     </div>
-                    <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-                      <span className="text-xs">←</span>
-                    </button>
                   </div>
                   
-                  {/* Tab Navigation */}
-                  <div className="flex bg-[#e8ddc1] rounded-lg p-1">
-                    <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium bg-white text-gray-900 shadow-sm">
-                      Elements
-                    </button>
-                    <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                      Templates
-                    </button>
-                    <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                      Samples
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Tab Content */}
-                <div className="flex-1 overflow-y-auto">
-                  <div className="p-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Add Elements</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button className="p-3 text-xs rounded-lg border-2 border-green-300 bg-green-100 hover:bg-green-200 transition-colors flex items-center justify-center font-medium text-green-800">
-                        Character
-                      </button>
-                      <button className="p-3 text-xs rounded-lg border-2 border-blue-300 bg-blue-100 hover:bg-blue-200 transition-colors flex items-center justify-center font-medium text-blue-800">
-                        Plot
-                      </button>
-                      <button className="p-3 text-xs rounded-lg border-2 border-purple-300 bg-purple-100 hover:bg-purple-200 transition-colors flex items-center justify-center font-medium text-purple-800">
-                        Location
-                      </button>
-                      <button className="p-3 text-xs rounded-lg border-2 border-yellow-300 bg-yellow-100 hover:bg-yellow-200 transition-colors flex items-center justify-center font-medium text-yellow-800">
-                        Theme
-                      </button>
+                  <div className="flex h-[500px]">
+                    {/* Collapsed Sidebar */}
+                    <div className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-4 space-y-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+                        <span className="text-xs">📊</span>
+                      </div>
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center hover:bg-blue-200 transition-colors">
+                        <span className="text-xs">✏️</span>
+                      </div>
+                      <div className="w-8 h-8 bg-[#e8ddc1] rounded-lg flex items-center justify-center hover:bg-[#d4c7a8] transition-colors">
+                        <span className="text-xs">🎨</span>
+                      </div>
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+                        <span className="text-xs">📋</span>
+                      </div>
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+                        <span className="text-xs">📁</span>
+                      </div>
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+                        <span className="text-xs">⚙️</span>
+                      </div>
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+                        <span className="text-xs">❓</span>
+                      </div>
                     </div>
                     
-                    <div className="mt-4 p-3 bg-[#eae4d3] rounded-lg">
-                      <div className="text-xs text-gray-700 font-medium mb-1">💡 Tip</div>
-                      <div className="text-xs text-gray-600">
-                        Click the ⚛️ button on nodes to link them to your Planning data!
+                    {/* Main Canvas Area */}
+                    <div className="flex-1 bg-gray-50 relative overflow-hidden">
+                      {/* Canvas Grid Background */}
+                      <svg className="absolute inset-0 w-full h-full">
+                        <defs>
+                          <pattern id="canvasgrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <circle cx="1" cy="1" r="1" fill="#d1d5db" opacity="0.3"/>
+                          </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#canvasgrid)"/>
+                      </svg>
+                      
+                      {/* Story Nodes */}
+                      {/* Sylandria Character Node */}
+                      <div className="absolute top-16 left-20 min-w-[140px] bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-green-500 hover:border-4">
+                        <div className="font-semibold text-green-800 text-sm">Sylandria Moonwhisper</div>
+                        <div className="text-xs text-green-600 mt-1">Dark Elf Princess</div>
+                        <div className="text-xs text-green-500 mt-1">Mage/Noble</div>
+                        <div className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1 transition-colors duration-200">⚛️</div>
+                      </div>
+                      
+                      {/* Theron Character Node */}
+                      <div className="absolute top-16 right-20 min-w-[140px] bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-green-500 hover:border-4">
+                        <div className="font-semibold text-green-800 text-sm">Theron Brightblade</div>
+                        <div className="text-xs text-green-600 mt-1">Human Knight</div>
+                        <div className="text-xs text-green-500 mt-1">Knight/Guardian</div>
+                        <div className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1 transition-colors duration-200">⚛️</div>
+                      </div>
+                      
+                      {/* Magic System Research Node */}
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-[140px] bg-indigo-100 border-2 border-indigo-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-indigo-500 hover:border-4">
+                        <div className="font-semibold text-indigo-800 text-sm">Magic System</div>
+                        <div className="text-xs text-indigo-600 mt-1">Research Notes</div>
+                        <div className="text-xs text-indigo-500 mt-1">World Building</div>
+                      </div>
+                      
+                      {/* Connection Lines */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                        <defs>
+                          <marker id="canvasarrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                            <polygon points="0 0, 8 3, 0 6" fill="#6366F1" />
+                          </marker>
+                        </defs>
+                        {/* Sylandria to Theron */}
+                        <path 
+                          d="M 220 50 Q 300 30 380 50" 
+                          fill="none" 
+                          stroke="#10B981" 
+                          strokeWidth="2" 
+                          strokeDasharray="4,4"
+                          markerEnd="url(#canvasarrowhead)"
+                          className="animate-pulse" 
+                          style={{animationDuration: '3s'}}
+                        />
+                      </svg>
+                      
+                      {/* Canvas Controls */}
+                      <div className="absolute bottom-4 left-4 flex flex-col space-y-1 opacity-80 transition-opacity group-hover:opacity-100">
+                        <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm font-medium">+</button>
+                        <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm font-medium">-</button>
+                        <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm">⚏</button>
+                        <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm">⊡</button>
+                      </div>
+                    </div>
+                    
+                    {/* Right Sidebar Menu */}
+                    <div className="w-72 bg-white border-l border-gray-200 flex flex-col">
+                      <div className="p-4 border-b border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900">Story Canvas</h3>
+                            <p className="text-sm text-gray-600">Plan your story visually</p>
+                          </div>
+                          <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+                            <span className="text-xs">←</span>
+                          </button>
+                        </div>
+                        
+                        {/* Tab Navigation */}
+                        <div className="flex bg-[#e8ddc1] rounded-lg p-1">
+                          <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium bg-white text-gray-900 shadow-sm">
+                            Elements
+                          </button>
+                          <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                            Templates
+                          </button>
+                          <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                            Samples
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Tab Content */}
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="p-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">Add Elements</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button className="p-3 text-xs rounded-lg border-2 border-green-300 bg-green-100 hover:bg-green-200 transition-colors flex items-center justify-center font-medium text-green-800">
+                              Character
+                            </button>
+                            <button className="p-3 text-xs rounded-lg border-2 border-blue-300 bg-blue-100 hover:bg-blue-200 transition-colors flex items-center justify-center font-medium text-blue-800">
+                              Plot
+                            </button>
+                            <button className="p-3 text-xs rounded-lg border-2 border-purple-300 bg-purple-100 hover:bg-purple-200 transition-colors flex items-center justify-center font-medium text-purple-800">
+                              Location
+                            </button>
+                            <button className="p-3 text-xs rounded-lg border-2 border-yellow-300 bg-yellow-100 hover:bg-yellow-200 transition-colors flex items-center justify-center font-medium text-yellow-800">
+                              Theme
+                            </button>
+                          </div>
+                          
+                          <div className="mt-4 p-3 bg-[#eae4d3] rounded-lg">
+                            <div className="text-xs text-gray-700 font-medium mb-1">💡 Tip</div>
+                            <div className="text-xs text-gray-600">
+                              Click the ⚛️ button on nodes to link them to your Planning data!
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Actions Section */}
+                      <div className="p-4 border-t border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Actions</h4>
+                        <div className="space-y-2">
+                          <button className="w-full p-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium">
+                            Sync Planning
+                          </button>
+                          <button className="w-full p-2 bg-[#f2eee2] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm">
+                            Load File
+                          </button>
+                        </div>
+                        
+                        <div className="text-xs text-gray-500 mt-3 space-y-1">
+                          <div>Last synced: 2:34 PM</div>
+                          <div className="text-green-600 font-medium">
+                            All changes saved
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                {/* Actions Section */}
-                <div className="p-4 border-t border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Actions</h4>
-                  <div className="space-y-2">
-                    <button className="w-full p-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium">
-                      Sync Planning
-                    </button>
-                    <button className="w-full p-2 bg-[#f2eee2] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm">
-                      Load File
-                    </button>
+              </div>
+            </div>
+
+            {/* Feature Description Below */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                  Interactive story canvas with drag-and-drop visualization
+                </h3>
+                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                  Build your story visually on an infinite canvas. Create character nodes, plot points, and locations, then connect them to see relationships and story flow. Sync with Planning Pages and use templates to get started quickly.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <span>Drag-and-drop story elements and connections</span>
                   </div>
-                  
-                  <div className="text-xs text-gray-500 mt-3 space-y-1">
-                    <div>Last synced: 2:34 PM</div>
-                    <div className="text-green-600 font-medium">
-                      All changes saved
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <span>Templates for Hero's Journey, Three-Act Structure, and more</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <span>Real-time sync with Planning Pages for consistency</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <div className="bg-gradient-to-br from-[#f2eee2] to-white rounded-2xl p-8 shadow-2xl">
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                          <span className="text-sm">👥</span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">8 Characters</div>
+                          <div className="text-sm text-gray-500">Connected in story web</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <span className="text-sm">📖</span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">12 Plot Points</div>
+                          <div className="text-sm text-gray-500">Linked in sequence</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <span className="text-sm">🗺️</span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">6 Locations</div>
+                          <div className="text-sm text-gray-500">Mapped relationships</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-full opacity-20 animate-pulse"></div>
+                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Feature Description Below */}
-      <div className="grid lg:grid-cols-2 gap-12 items-center">
-        <div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-6">
-            Interactive story canvas with drag-and-drop visualization
-          </h3>
-          <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-            Build your story visually on an infinite canvas. Create character nodes, plot points, and locations, then connect them to see relationships and story flow. Sync with Planning Pages and use templates to get started quickly.
-          </p>
-          <div className="space-y-3">
-            <div className="flex items-center text-gray-700">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Drag-and-drop story elements and connections</span>
-            </div>
-            <div className="flex items-center text-gray-700">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Templates for Hero's Journey, Three-Act Structure, and more</span>
-            </div>
-            <div className="flex items-center text-gray-700">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Real-time sync with Planning Pages for consistency</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="relative">
-          <div className="bg-gradient-to-br from-[#f2eee2] to-white rounded-2xl p-8 shadow-2xl">
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">👥</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">8 Characters</div>
-                    <div className="text-sm text-gray-500">Connected in story web</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">📖</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">12 Plot Points</div>
-                    <div className="text-sm text-gray-500">Linked in sequence</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">🗺️</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">6 Locations</div>
-                    <div className="text-sm text-gray-500">Mapped relationships</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-full opacity-20 animate-pulse"></div>
-          <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-          
 
           {/* Import & Categorize Feature */}
           <div className="mb-20">
@@ -702,138 +698,140 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </div>
           </div>
 
-    {/* Write & Refine Feature */}
-<div className="mb-20">
-  <div className="grid lg:grid-cols-2 gap-12 items-center">
-    <div>
-      <h3 className="text-3xl font-bold text-gray-900 mb-6">
-        Library management with search and filtering
-      </h3>
-      <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-        Manage all your imported content in one organized library. Search by title, content, or tags. Filter by content type and easily add items to your visual canvas. Everything syncs with Supabase for reliable storage.
-      </p>
-      <div className="space-y-3">
-        <div className="flex items-center text-gray-700">
-          <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-          <span>Search by title, content, or custom tags</span>
-        </div>
-        <div className="flex items-center text-gray-700">
-          <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-          <span>Filter by content type (Character, Plot, Research, Chapter)</span>
-        </div>
-        <div className="flex items-center text-gray-700">
-          <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-          <span>One-click "Add to Canvas" functionality</span>
-        </div>
-      </div>
-    </div>
-    <div className="relative group">
-      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
-        <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-            <span className="ml-4 text-sm text-gray-600">Planning - Plot</span>
+          {/* Write & Refine Feature */}
+          <div className="mb-20">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                  Library management with search and filtering
+                </h3>
+                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                  Manage all your imported content in one organized library. Search by title, content, or tags. Filter by content type and easily add items to your visual canvas. Everything syncs with Supabase for reliable storage.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span>Search by title, content, or custom tags</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span>Filter by content type (Character, Plot, Research, Chapter)</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span>One-click "Add to Canvas" functionality</span>
+                  </div>
+                </div>
+              </div>
+              <div className="relative group">
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="ml-4 text-sm text-gray-600">Planning - Plot</span>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      {/* Plot Thread Card - Based on actual PlotPage component */}
+                      <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-100 hover:scale-102 hover:shadow-md">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🎯</span>
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 transition-colors duration-200 hover:bg-blue-200">
+                              Main Plot
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600">65%</div>
+                        </div>
+                        
+                        <h3 className="font-semibold text-gray-900 mb-2">Dimensional War & Alliance</h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">Primary story arc driving the narrative through demon invasion</p>
+                        
+                        {/* Tension Curve Preview */}
+                        <div className="mb-3 overflow-hidden rounded">
+                          <svg className="w-full h-8 transition-all duration-300 group-hover:h-10" viewBox="0 0 100 20" preserveAspectRatio="none">
+                            <polyline
+                              fill="none"
+                              stroke="#3B82F6"
+                              strokeWidth="1.5"
+                              points="0,15 10,10 20,8 30,5 40,12 50,6 60,3 70,2 80,8 90,12 100,15"
+                              className="transition-all duration-300 group-hover:stroke-2"
+                            />
+                          </svg>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div className="mb-3">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full transition-all duration-500 bg-blue-500"
+                              style={{ width: '65%' }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">war</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">alliance</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">magic</span>
+                        </div>
+                      </div>
+
+                      {/* Character Arc Card */}
+                      <div className="p-4 rounded-lg border border-green-200 bg-green-50 cursor-pointer transition-all duration-200 hover:border-green-300 hover:bg-green-100 hover:scale-102 hover:shadow-md">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">👤</span>
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                              Character Arc
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600">45%</div>
+                        </div>
+                        
+                        <h3 className="font-semibold text-gray-900 mb-2">Mana Awakening Journey</h3>
+                        <p className="text-sm text-gray-600 mb-3">Individual character development from ordinary to mana master</p>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">character-growth</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">training</span>
+                        </div>
+                      </div>
+
+                      {/* Subplot Card */}
+                      <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 cursor-pointer transition-all duration-200 hover:border-purple-300 hover:bg-purple-100 hover:scale-102 hover:shadow-md">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">📚</span>
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                              Subplot
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600">30%</div>
+                        </div>
+                        
+                        <h3 className="font-semibold text-gray-900 mb-2">Political Intrigue</h3>
+                        <p className="text-sm text-gray-600 mb-3">Dark Elf noble house politics affecting alliance</p>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">politics</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">betrayal</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="p-6">
-          <div className="space-y-4">
-            {/* Plot Thread Card - Based on actual PlotPage component */}
-            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-100 hover:scale-102 hover:shadow-md">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">🎯</span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 transition-colors duration-200 hover:bg-blue-200">
-                    Main Plot
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600">65%</div>
-              </div>
-              
-              <h3 className="font-semibold text-gray-900 mb-2">Dimensional War & Alliance</h3>
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">Primary story arc driving the narrative through demon invasion</p>
-              
-              {/* Tension Curve Preview */}
-              <div className="mb-3 overflow-hidden rounded">
-                <svg className="w-full h-8 transition-all duration-300 group-hover:h-10" viewBox="0 0 100 20" preserveAspectRatio="none">
-                  <polyline
-                    fill="none"
-                    stroke="#3B82F6"
-                    strokeWidth="1.5"
-                    points="0,15 10,10 20,8 30,5 40,12 50,6 60,3 70,2 80,8 90,12 100,15"
-                    className="transition-all duration-300 group-hover:stroke-2"
-                  />
-                </svg>
-              </div>
-              
-              {/* Progress Bar */}
-              <div className="mb-3">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="h-2 rounded-full transition-all duration-500 bg-blue-500"
-                    style={{ width: '65%' }}
-                  />
-                </div>
-              </div>
-              
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1">
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">war</span>
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">alliance</span>
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">magic</span>
-              </div>
-            </div>
+      </section>
 
-            {/* Character Arc Card */}
-            <div className="p-4 rounded-lg border border-green-200 bg-green-50 cursor-pointer transition-all duration-200 hover:border-green-300 hover:bg-green-100 hover:scale-102 hover:shadow-md">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">👤</span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                    Character Arc
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600">45%</div>
-              </div>
-              
-              <h3 className="font-semibold text-gray-900 mb-2">Mana Awakening Journey</h3>
-              <p className="text-sm text-gray-600 mb-3">Individual character development from ordinary to mana master</p>
-              
-              <div className="flex flex-wrap gap-1">
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">character-growth</span>
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">training</span>
-              </div>
-            </div>
-
-            {/* Subplot Card */}
-            <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 cursor-pointer transition-all duration-200 hover:border-purple-300 hover:bg-purple-100 hover:scale-102 hover:shadow-md">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📚</span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                    Subplot
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600">30%</div>
-              </div>
-              
-              <h3 className="font-semibold text-gray-900 mb-2">Political Intrigue</h3>
-              <p className="text-sm text-gray-600 mb-3">Dark Elf noble house politics affecting alliance</p>
-              
-              <div className="flex flex-wrap gap-1">
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">politics</span>
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">betrayal</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-     {/* Pricing Section */}
+      {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -937,7 +935,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-            {/* Call to Action */}
+      {/* Call to Action */}
       <section className="py-16 bg-[#e8ddc1]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
@@ -947,11 +945,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <strong>Organize your writing visually</strong> with tools to help you import, categorize, and connect your content. 
             Your documents become an interactive visual workspace.
           </p>
-          
         </div>
       </section>
 
-     
       {/* Footer */}
       <footer className="bg-black text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1020,6 +1016,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
         </div>
       </footer>
+      
       {/* Add the Bolt Logo here */}
       <BoltLogo />
     </div>
