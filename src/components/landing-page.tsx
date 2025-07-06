@@ -224,6 +224,236 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </p>
           </div>
 
+{/* Story Canvas Section */}
+<section className="py-20 bg-gray-50">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center mb-16">
+      <h2 className="text-4xl font-bold text-gray-900 mb-4">
+        Interactive Story Canvas
+      </h2>
+      <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+        Visualize your story elements and connections on an infinite canvas designed for creative thinking.
+      </p>
+    </div>
+
+    {/* Canvas Graphic - Properly contained */}
+    <div className="max-w-6xl mx-auto mb-16">
+      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 hover:shadow-3xl">
+        <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+            <span className="ml-4 text-sm text-gray-600">Story Canvas - Interactive Visualization</span>
+          </div>
+        </div>
+        
+        <div className="flex h-[500px]">
+          {/* Collapsed Sidebar */}
+          <div className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-4 space-y-3">
+            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <span className="text-xs">📊</span>
+            </div>
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center hover:bg-blue-200 transition-colors">
+              <span className="text-xs">✏️</span>
+            </div>
+            <div className="w-8 h-8 bg-[#e8ddc1] rounded-lg flex items-center justify-center hover:bg-[#d4c7a8] transition-colors">
+              <span className="text-xs">🎨</span>
+            </div>
+            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <span className="text-xs">📋</span>
+            </div>
+            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <span className="text-xs">📁</span>
+            </div>
+            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <span className="text-xs">⚙️</span>
+            </div>
+            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <span className="text-xs">❓</span>
+            </div>
+          </div>
+          
+          {/* Main Canvas Area */}
+          <div className="flex-1 bg-gray-50 relative overflow-hidden">
+            {/* Canvas Grid Background */}
+            <svg className="absolute inset-0 w-full h-full">
+              <defs>
+                <pattern id="canvasgrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <circle cx="1" cy="1" r="1" fill="#d1d5db" opacity="0.3"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#canvasgrid)"/>
+            </svg>
+            
+            {/* Story Nodes */}
+            <div className="absolute top-16 left-20 min-w-[140px] bg-green-100 border-2 border-green-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-green-500 hover:border-4">
+              <div className="font-semibold text-green-800 text-sm">Sarah Chen</div>
+              <div className="text-xs text-green-600 mt-1">Protagonist</div>
+              <div className="text-xs text-green-500 mt-1">Journalist</div>
+              <div className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1 transition-colors duration-200">⚛️</div>
+            </div>
+            
+            <div className="absolute top-16 right-20 min-w-[140px] bg-blue-100 border-2 border-blue-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-blue-500 hover:border-4">
+              <div className="font-semibold text-blue-800 text-sm">The Library</div>
+              <div className="text-xs text-blue-600 mt-1">Main Setting</div>
+              <div className="text-xs text-blue-500 mt-1">Ancient/Mysterious</div>
+              <div className="absolute top-1 right-1 text-xs bg-blue-200 hover:bg-blue-300 rounded px-1 transition-colors duration-200">⚛️</div>
+            </div>
+            
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-[140px] bg-purple-100 border-2 border-purple-300 rounded-lg p-3 shadow-sm cursor-pointer transition-all duration-300 hover:border-purple-500 hover:border-4">
+              <div className="font-semibold text-purple-800 text-sm">Mystery Journal</div>
+              <div className="text-xs text-purple-600 mt-1">Plot Device</div>
+              <div className="text-xs text-purple-500 mt-1">Supernatural</div>
+            </div>
+            
+            {/* Connection Lines */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              <defs>
+                <marker id="canvasarrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#6366F1" />
+                </marker>
+              </defs>
+              <path 
+                d="M 220 50 Q 300 30 380 50" 
+                fill="none" 
+                stroke="#10B981" 
+                strokeWidth="2" 
+                strokeDasharray="4,4"
+                markerEnd="url(#canvasarrowhead)"
+                className="animate-pulse" 
+                style={{animationDuration: '3s'}}
+              />
+            </svg>
+            
+            {/* Canvas Controls */}
+            <div className="absolute bottom-4 left-4 flex flex-col space-y-1 opacity-80 transition-opacity hover:opacity-100">
+              <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm font-medium">+</button>
+              <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm font-medium">-</button>
+              <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm">⚏</button>
+              <button className="w-10 h-10 bg-white border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 text-sm">⊡</button>
+            </div>
+          </div>
+          
+          {/* Right Sidebar */}
+          <div className="w-72 bg-white border-l border-gray-200 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900">Story Canvas</h3>
+                  <p className="text-sm text-gray-600">Plan your story visually</p>
+                </div>
+              </div>
+              
+              <div className="flex bg-[#e8ddc1] rounded-lg p-1">
+                <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium bg-white text-gray-900 shadow-sm">
+                  Elements
+                </button>
+                <button className="flex-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                  Templates
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Add Elements</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <button className="p-3 text-xs rounded-lg border-2 border-green-300 bg-green-100 hover:bg-green-200 transition-colors flex items-center justify-center font-medium text-green-800">
+                  Character
+                </button>
+                <button className="p-3 text-xs rounded-lg border-2 border-blue-300 bg-blue-100 hover:bg-blue-200 transition-colors flex items-center justify-center font-medium text-blue-800">
+                  Plot
+                </button>
+                <button className="p-3 text-xs rounded-lg border-2 border-purple-300 bg-purple-100 hover:bg-purple-200 transition-colors flex items-center justify-center font-medium text-purple-800">
+                  Location
+                </button>
+                <button className="p-3 text-xs rounded-lg border-2 border-yellow-300 bg-yellow-100 hover:bg-yellow-200 transition-colors flex items-center justify-center font-medium text-yellow-800">
+                  Theme
+                </button>
+              </div>
+              
+              <div className="mt-4 p-3 bg-[#eae4d3] rounded-lg">
+                <div className="text-xs text-gray-700 font-medium mb-1">💡 Tip</div>
+                <div className="text-xs text-gray-600">
+                  Click the ⚛️ button on nodes to link them to your Planning data!
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Feature Description */}
+    <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+      <div>
+        <h3 className="text-3xl font-bold text-gray-900 mb-6">
+          Interactive story canvas with drag-and-drop visualization
+        </h3>
+        <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+          Build your story visually on an infinite canvas. Create character nodes, plot points, and locations, then connect them to see relationships and story flow. Sync with Planning Pages and use templates to get started quickly.
+        </p>
+        <div className="space-y-3">
+          <div className="flex items-center text-gray-700">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+            <span>Drag-and-drop story elements and connections</span>
+          </div>
+          <div className="flex items-center text-gray-700">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+            <span>Templates for Hero's Journey, Three-Act Structure, and more</span>
+          </div>
+          <div className="flex items-center text-gray-700">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+            <span>Real-time sync with Planning Pages for consistency</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="relative">
+        <div className="bg-gradient-to-br from-[#f2eee2] to-white rounded-2xl p-8 shadow-2xl">
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <span className="text-sm">👥</span>
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">8 Characters</div>
+                  <div className="text-sm text-gray-500">Connected in story web</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-sm">📖</span>
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">12 Plot Points</div>
+                  <div className="text-sm text-gray-500">Linked in sequence</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <span className="text-sm">🗺️</span>
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">6 Locations</div>
+                  <div className="text-sm text-gray-500">Mapped relationships</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+    </div>
+  </div>
+</section>
+          
           {/* Visual Canvas Feature */}
           <div className="mb-20">
             {/* Centered Canvas Graphic - 70% width */}
