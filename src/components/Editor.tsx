@@ -17,6 +17,7 @@ import {
 import { EditorContent } from '../types';
 import { useWordCount, useUndo, useKeyboard } from '../hooks/useUtilities';
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
+import { chapterService } from '../services/chapterService';
 
 interface EditorProps {
   content: EditorContent;
@@ -196,15 +197,25 @@ export const Editor: React.FC<EditorProps> = ({
     content: editorContent
   });
 
-  // Enhanced auto-save with 3-minute delay
+  // Enhanced auto-save with database integration
   const { lastSaved, isSaving, saveError, cloudSyncStatus } = useUnifiedAutoSave(
     { title, content: editorContent, wordCount: words, lastSaved: new Date() },
-    'current-user',
+    selectedChapter?.id || 'default', // Use chapter ID as key
     {
       localKey: `chapter-${selectedChapter?.id || 'default'}`,
       enableCloud: true,
-      delay: 180000,
+      delay: 180000, // 3 minutes
       onSaveSuccess: (data) => {
+        // Save to database when auto-save triggers
+        if (selectedChapter?.id) {
+          chapterService.updateChapter(selectedChapter.id, {
+            title: data.title,
+            content: data.content,
+            wordCount: data.wordCount
+          }).catch(error => {
+            console.error('Failed to save chapter to database:', error);
+          });
+        }
         onChange(data);
         setHasUnsavedChanges(false);
       },
@@ -273,16 +284,32 @@ export const Editor: React.FC<EditorProps> = ({
     });
   }, [editorContent, words, onChange, setUndoState]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     const currentContent = {
       title,
       content: editorContent,
       wordCount: words,
       lastSaved: new Date()
     };
+    
+    // Save to local state
     onChange(currentContent);
     setHasUnsavedChanges(false);
-  }, [title, editorContent, words, onChange]);
+    
+    // Save to database if we have a chapter selected
+    if (selectedChapter?.id) {
+      try {
+        await chapterService.updateChapter(selectedChapter.id, {
+          title,
+          content: editorContent,
+          wordCount: words
+        });
+      } catch (error) {
+        console.error('Failed to save chapter to database:', error);
+        // Could show a user notification here
+      }
+    }
+  }, [title, editorContent, words, onChange, selectedChapter?.id]);
 
   const formatText = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
