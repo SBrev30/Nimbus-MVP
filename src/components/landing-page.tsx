@@ -806,33 +806,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </div>
             </div>
 
-            {/* Subplot Card */}
-            <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 cursor-pointer transition-all duration-200 hover:border-purple-300 hover:bg-purple-100 hover:scale-102 hover:shadow-md">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📚</span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                    Subplot
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600">30%</div>
-              </div>
-              
-              <h3 className="font-semibold text-gray-900 mb-2">Political Intrigue</h3>
-              <p className="text-sm text-gray-600 mb-3">Dark Elf noble house politics affecting alliance</p>
-              
-              <div className="flex flex-wrap gap-1">
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">politics</span>
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">betrayal</span>
-              </div>
-            </div>
+           {/* Subplot Card */}
+<div className="p-4 rounded-lg border border-purple-200 bg-purple-50 cursor-pointer transition-all duration-200 hover:border-purple-300 hover:bg-purple-100 hover:scale-102 hover:shadow-md">
+  <div className="flex items-start justify-between mb-3">
+    <div className="flex items-center gap-2">
+      <span className="text-lg">📚</span>
+      <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+        Subplot
+      </span>
+    </div>
+    <div className="text-sm text-gray-600">30%</div>
+  </div>
+  
+  <h3 className="font-semibold text-gray-900 mb-2">Political Intrigue</h3>
+  <p className="text-sm text-gray-600 mb-3">Dark Elf noble house politics affecting alliance</p>
+  
+  <div className="flex flex-wrap gap-1">
+    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">politics</span>
+    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">betrayal</span>
+  </div>
+</div>
           </div>
         </div>
       </div>
     </div>
   </div>
- </div>
-      </section>
+</section>
 
       {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
