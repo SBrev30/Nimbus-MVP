@@ -913,7 +913,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </ul>
               <button 
                 onClick={onGetStarted}
-                className="w-full bg-gray-100 text-gray-700 py-3 rounded-full hover:bg-gray-200 transition-colors"
+                className="w-full bg-[#ff4e00] text-gray-700 py-3 rounded-full hover:bg-gray-200 transition-colors"
               >
                 Get Started Free
               </button>
@@ -925,7 +925,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </div>
               <h3 className="text-2xl font-bold mb-2">Pro</h3>
               <div className="text-4xl font-bold mb-6">
-                $12<span className="text-lg opacity-80 font-normal">/month</span>
+                $15<span className="text-lg opacity-80 font-normal">/month</span>
               </div>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center">
