@@ -268,8 +268,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           {/* Main Canvas Area */}
           <div className="flex-1 bg-gray-50 relative overflow-hidden">
             {/* Canvas Grid Background */}
-            <svg className="absolute inset-0 w-full h-full">
-              <defs>
+           <svg className="absolute inset-0 w-full h-full">
+  <defs>
+    <pattern id="canvasgrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#d1d5db" opacity="0.3"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#canvasgrid)"/>
+</svg>
                 <p className="text-lg text-gray-600 mb-6 leading-relaxed">
         Build your story visually on an infinite canvas. Create character nodes, plot points, and locations, then connect them to see relationships and story flow. Sync with Planning Pages and use templates to get started quickly.
       </p>
@@ -1567,8 +1573,6 @@ function showTab(tabName) {
     </div>
   </div>
 </div>
-          </div>
-         </section>
 
      {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
