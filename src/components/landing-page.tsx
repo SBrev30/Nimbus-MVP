@@ -227,8 +227,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     {/* Visual Canvas Feature */}
     <div className="mb-20">
       {/* Centered Canvas Graphic - 70% width */}
-      <div className="w-full flex justify-center mb-16">
-        <div className="w-[70%] relative group">
+<div className="w-full flex justify-center mb-16">
+  <div className="w-full lg:w-[85%] xl:w-[90%] 2xl:w-[95%] relative group">
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:shadow-3xl">
             <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
               <div className="flex items-center space-x-2">
