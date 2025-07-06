@@ -443,7 +443,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </div>
           </div>
 
-       {/* Write & Refine Feature */}
+    {/* Write & Refine Feature */}
 <div className="mb-20">
   <div className="grid lg:grid-cols-2 gap-12 items-center">
     <div>
@@ -475,107 +475,96 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <div className="w-3 h-3 bg-red-400 rounded-full"></div>
             <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
             <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-            <span className="ml-4 text-sm text-gray-600">Library - Content Management</span>
+            <span className="ml-4 text-sm text-gray-600">Planning - Plot</span>
           </div>
         </div>
-        <div className="flex">
-          <div className="flex-1 p-6">
-            {/* Library interface mockup */}
-            <div className="space-y-4">
-              {/* Import content header */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Library</h3>
-                <button className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs transition-colors duration-200">
-                  Import Content
-                </button>
+        <div className="p-6">
+          <div className="space-y-4">
+            {/* Plot Thread Card - Based on actual PlotPage component */}
+            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-100 hover:scale-102 hover:shadow-md">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🎯</span>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 transition-colors duration-200 hover:bg-blue-200">
+                    Main Plot
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">65%</div>
               </div>
               
-              {/* Search and filter */}
-              <div className="flex gap-2 mb-4">
-                <div className="flex-1 relative">
-                  <input 
-                    type="text" 
-                    placeholder="Search by title, content, or tags..." 
-                    className="w-full px-3 py-2 border border-gray-200 rounded text-xs"
-                    readOnly
+              <h3 className="font-semibold text-gray-900 mb-2">Dimensional War & Alliance</h3>
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">Primary story arc driving the narrative through demon invasion</p>
+              
+              {/* Tension Curve Preview */}
+              <div className="mb-3 overflow-hidden rounded">
+                <svg className="w-full h-8 transition-all duration-300 group-hover:h-10" viewBox="0 0 100 20" preserveAspectRatio="none">
+                  <polyline
+                    fill="none"
+                    stroke="#3B82F6"
+                    strokeWidth="1.5"
+                    points="0,15 10,10 20,8 30,5 40,12 50,6 60,3 70,2 80,8 90,12 100,15"
+                    className="transition-all duration-300 group-hover:stroke-2"
                   />
-                  <Search className="absolute right-2 top-2 w-4 h-4 text-gray-400" />
-                </div>
-                <select className="px-2 py-2 border border-gray-200 rounded text-xs">
-                  <option>All Types</option>
-                  <option>Character</option>
-                  <option>Plot</option>
-                  <option>Research</option>
-                  <option>Chapter</option>
-                </select>
+                </svg>
               </div>
               
-              {/* Library items */}
-              <div className="space-y-3">
-                <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center text-xs">📄</span>
-                      <span className="font-medium text-sm">Main Character Profile</span>
-                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Character</span>
-                    </div>
-                    <button className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded transition-colors duration-200">
-                      Add to Canvas
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-600 mb-2">Sarah Chen - Marine biologist protagonist with complex backstory...</p>
-                  <div className="flex gap-1">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">protagonist</span>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">marine-biology</span>
-                  </div>
+              {/* Progress Bar */}
+              <div className="mb-3">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full transition-all duration-500 bg-blue-500"
+                    style={{ width: '65%' }}
+                  />
                 </div>
-                
-                <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 bg-purple-100 rounded flex items-center justify-center text-xs">📖</span>
-                      <span className="font-medium text-sm">Opening Chapter Draft</span>
-                      <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Chapter</span>
-                    </div>
-                    <button className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded transition-colors duration-200">
-                      Add to Canvas
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-600 mb-2">The golden sunset cast a tranquil spell over the ocean...</p>
-                  <div className="flex gap-1">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">opening</span>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">coastal-setting</span>
-                  </div>
-                </div>
+              </div>
+              
+              {/* Tags */}
+              <div className="flex flex-wrap gap-1">
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">war</span>
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">alliance</span>
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors duration-200 hover:bg-gray-200">magic</span>
               </div>
             </div>
-          </div>
-          
-          {/* Notes panel - Content type info */}
-          <div className="w-64 bg-gray-50 border-l border-gray-200 p-4 transition-all duration-300 group-hover:bg-gray-100">
-            <div className="text-sm font-semibold text-gray-900 mb-3 transition-all duration-300 group-hover:text-blue-900">Content Stats</div>
-            <div className="space-y-3">
-              {/* Total items */}
-              <div className="bg-blue-50 p-3 rounded border border-blue-200 transform transition-all duration-300 hover:scale-105 hover:bg-blue-100 hover:shadow-md">
-                <div className="text-xs font-semibold text-blue-800 mb-1">Total Items</div>
-                <div className="text-lg font-bold text-blue-900">47</div>
-              </div>
-              
-              {/* Content breakdown */}
-              <div className="bg-green-50 p-3 rounded border border-green-200 transform transition-all duration-300 hover:scale-105 hover:bg-green-100 hover:shadow-md">
-                <div className="text-xs font-semibold text-green-800 mb-1">Characters: 12</div>
-                <div className="text-xs font-semibold text-blue-800 mb-1">Plots: 8</div>
-                <div className="text-xs font-semibold text-purple-800 mb-1">Research: 15</div>
-                <div className="text-xs font-semibold text-orange-800">Chapters: 12</div>
-              </div>
-              
-              {/* Storage info */}
-              <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                <div className="text-xs font-semibold text-gray-800 mb-1">Storage Used</div>
-                <div className="text-xs text-gray-600">2.3MB / 500MB</div>
-                <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
-                  <div className="bg-green-500 h-1 rounded-full" style={{width: '0.5%'}}></div>
+
+            {/* Character Arc Card */}
+            <div className="p-4 rounded-lg border border-green-200 bg-green-50 cursor-pointer transition-all duration-200 hover:border-green-300 hover:bg-green-100 hover:scale-102 hover:shadow-md">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">👤</span>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                    Character Arc
+                  </span>
                 </div>
+                <div className="text-sm text-gray-600">45%</div>
+              </div>
+              
+              <h3 className="font-semibold text-gray-900 mb-2">Mana Awakening Journey</h3>
+              <p className="text-sm text-gray-600 mb-3">Individual character development from ordinary to mana master</p>
+              
+              <div className="flex flex-wrap gap-1">
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">character-growth</span>
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">training</span>
+              </div>
+            </div>
+
+            {/* Subplot Card */}
+            <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 cursor-pointer transition-all duration-200 hover:border-purple-300 hover:bg-purple-100 hover:scale-102 hover:shadow-md">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📚</span>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                    Subplot
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">30%</div>
+              </div>
+              
+              <h3 className="font-semibold text-gray-900 mb-2">Political Intrigue</h3>
+              <p className="text-sm text-gray-600 mb-3">Dark Elf noble house politics affecting alliance</p>
+              
+              <div className="flex flex-wrap gap-1">
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">politics</span>
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">betrayal</span>
               </div>
             </div>
           </div>
@@ -584,8 +573,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     </div>
   </div>
 </div>
-        </div>
-      </section>
 
      {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
