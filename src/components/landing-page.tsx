@@ -126,7 +126,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </header>
 
     {/* Hero Section */}
-      <section className="pt-20 pb-16 bg-gradient-to-br from-gray-50 to-white">
+      <section className="pt-40 pb-16 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
