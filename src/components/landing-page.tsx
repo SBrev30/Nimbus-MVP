@@ -883,7 +883,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Basic</h3>
               <div className="text-4xl font-bold text-gray-900 mb-6">
-                $0<span className="text-lg text-gray-500 font-normal">/7-Day Trial</span>
+                $0<span className="text-lg text-gray-500 font-normal">/10-Day Trial</span>
               </div>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center">
