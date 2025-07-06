@@ -31,9 +31,9 @@ interface ChaptersPageProps {
   projectId: string;
   projectTitle: string;
   onBack: () => void;
-  onSelectChapter?: (chapterId: string) => void;
+  onSelectChapter?: (chapterId: string, chapterTitle: string) => void; // Add this line
   onCreateChapter?: () => void;
-  onEditChapter?: (chapterId: string) => void;
+  onEditChapter?: (chapterId: string, chapterTitle: string) => void; // Add this line
 }
 
 export function ChaptersPage({ 
