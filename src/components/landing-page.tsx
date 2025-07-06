@@ -443,147 +443,147 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </div>
           </div>
 
-          {/* Write & Refine Feature */}
-          <div className="mb-20">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-6">
-                  Library management with search and filtering
-                </h3>
-                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                  Manage all your imported content in one organized library. Search by title, content, or tags. Filter by content type and easily add items to your visual canvas. Everything syncs with Supabase for reliable storage.
-                </p>
-                <div className="space-y-3">
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                    <span>Search by title, content, or custom tags</span>
+        {/* Write & Refine Feature */}
+<div className="mb-20">
+  <div className="grid lg:grid-cols-2 gap-12 items-center">
+    <div>
+      <h3 className="text-3xl font-bold text-gray-900 mb-6">
+        Library management with search and filtering
+      </h3>
+      <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+        Manage all your imported content in one organized library. Search by title, content, or tags. Filter by content type and easily add items to your visual canvas. Everything syncs with Supabase for reliable storage.
+      </p>
+      <div className="space-y-3">
+        <div className="flex items-center text-gray-700">
+          <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+          <span>Search by title, content, or custom tags</span>
+        </div>
+        <div className="flex items-center text-gray-700">
+          <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+          <span>Filter by content type (Character, Plot, Research, Chapter)</span>
+        </div>
+        <div className="flex items-center text-gray-700">
+          <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+          <span>One-click "Add to Canvas" functionality</span>
+        </div>
+      </div>
+    </div>
+    <div className="relative group">
+      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl">
+        <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+            <span className="ml-4 text-sm text-gray-600">Library - Content Management</span>
+          </div>
+        </div>
+        <div className="flex">
+          <div className="flex-1 p-6">
+            {/* Library interface mockup */}
+            <div className="space-y-4">
+              {/* Import content header */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900">Library</h3>
+                <button className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs transition-colors duration-200">
+                  Import Content
+                </button>
+              </div>
+              
+              {/* Search and filter */}
+              <div className="flex gap-2 mb-4">
+                <div className="flex-1 relative">
+                  <input 
+                    type="text" 
+                    placeholder="Search by title, content, or tags..." 
+                    className="w-full px-3 py-2 border border-gray-200 rounded text-xs"
+                    readOnly
+                  />
+                  <Search className="absolute right-2 top-2 w-4 h-4 text-gray-400" />
+                </div>
+                <select className="px-2 py-2 border border-gray-200 rounded text-xs">
+                  <option>All Types</option>
+                  <option>Character</option>
+                  <option>Plot</option>
+                  <option>Research</option>
+                  <option>Chapter</option>
+                </select>
+              </div>
+              
+              {/* Library items */}
+              <div className="space-y-3">
+                <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center text-xs">📄</span>
+                      <span className="font-medium text-sm">Main Character Profile</span>
+                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Character</span>
+                    </div>
+                    <button className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded transition-colors duration-200">
+                      Add to Canvas
+                    </button>
                   </div>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                    <span>Filter by content type (Character, Plot, Research, Chapter)</span>
-                  </div>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                    <span>One-click "Add to Canvas" functionality</span>
+                  <p className="text-xs text-gray-600 mb-2">Sarah Chen - Marine biologist protagonist with complex backstory...</p>
+                  <div className="flex gap-1">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">protagonist</span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">marine-biology</span>
                   </div>
                 </div>
-              </div>
-              <div className="relative group">
-                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-3xl flex">
-                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      <span className="ml-4 text-sm text-gray-600">Library - Content Management</span>
+                
+                <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 bg-purple-100 rounded flex items-center justify-center text-xs">📖</span>
+                      <span className="font-medium text-sm">Opening Chapter Draft</span>
+                      <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Chapter</span>
                     </div>
+                    <button className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded transition-colors duration-200">
+                      Add to Canvas
+                    </button>
                   </div>
-                  <div className="flex-1 p-6">
-                    {/* Library interface mockup */}
-                    <div className="space-y-4">
-                      {/* Import content header */}
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900">Library</h3>
-                        <button className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs transition-colors duration-200">
-                          Import Content
-                        </button>
-                      </div>
-                      
-                      {/* Search and filter */}
-                      <div className="flex gap-2 mb-4">
-                        <div className="flex-1 relative">
-                          <input 
-                            type="text" 
-                            placeholder="Search by title, content, or tags..." 
-                            className="w-full px-3 py-2 border border-gray-200 rounded text-xs"
-                            readOnly
-                          />
-                          <Search className="absolute right-2 top-2 w-4 h-4 text-gray-400" />
-                        </div>
-                        <select className="px-2 py-2 border border-gray-200 rounded text-xs">
-                          <option>All Types</option>
-                          <option>Character</option>
-                          <option>Plot</option>
-                          <option>Research</option>
-                          <option>Chapter</option>
-                        </select>
-                      </div>
-                      
-                      {/* Library items */}
-                      <div className="space-y-3">
-                        <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center text-xs">📄</span>
-                              <span className="font-medium text-sm">Main Character Profile</span>
-                              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Character</span>
-                            </div>
-                            <button className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded transition-colors duration-200">
-                              Add to Canvas
-                            </button>
-                          </div>
-                          <p className="text-xs text-gray-600 mb-2">Sarah Chen - Marine biologist protagonist with complex backstory...</p>
-                          <div className="flex gap-1">
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">protagonist</span>
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">marine-biology</span>
-                          </div>
-                        </div>
-                        
-                        <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 bg-purple-100 rounded flex items-center justify-center text-xs">📖</span>
-                              <span className="font-medium text-sm">Opening Chapter Draft</span>
-                              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">Chapter</span>
-                            </div>
-                            <button className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded transition-colors duration-200">
-                              Add to Canvas
-                            </button>
-                          </div>
-                          <p className="text-xs text-gray-600 mb-2">The golden sunset cast a tranquil spell over the ocean...</p>
-                          <div className="flex gap-1">
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">opening</span>
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">coastal-setting</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Notes panel - Content type info */}
-                  <div className="w-64 bg-gray-50 border-l border-gray-200 p-4 transition-all duration-300 group-hover:bg-gray-100">
-                    <div className="text-sm font-semibold text-gray-900 mb-3 transition-all duration-300 group-hover:text-blue-900">Content Stats</div>
-                    <div className="space-y-3">
-                      {/* Total items */}
-                      <div className="bg-blue-50 p-3 rounded border border-blue-200 transform transition-all duration-300 hover:scale-105 hover:bg-blue-100 hover:shadow-md">
-                        <div className="text-xs font-semibold text-blue-800 mb-1">Total Items</div>
-                        <div className="text-lg font-bold text-blue-900">47</div>
-                      </div>
-                      
-                      {/* Content breakdown */}
-                      <div className="bg-green-50 p-3 rounded border border-green-200 transform transition-all duration-300 hover:scale-105 hover:bg-green-100 hover:shadow-md">
-                        <div className="text-xs font-semibold text-green-800 mb-1">Characters: 12</div>
-                        <div className="text-xs font-semibold text-blue-800 mb-1">Plots: 8</div>
-                        <div className="text-xs font-semibold text-purple-800 mb-1">Research: 15</div>
-                        <div className="text-xs font-semibold text-orange-800">Chapters: 12</div>
-                      </div>
-                      
-                      {/* Storage info */}
-                      <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                        <div className="text-xs font-semibold text-gray-800 mb-1">Storage Used</div>
-                        <div className="text-xs text-gray-600">2.3MB / 500MB</div>
-                        <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
-                          <div className="bg-green-500 h-1 rounded-full" style={{width: '0.5%'}}></div>
-                        </div>
-                      </div>
-                    </div>
+                  <p className="text-xs text-gray-600 mb-2">The golden sunset cast a tranquil spell over the ocean...</p>
+                  <div className="flex gap-1">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">opening</span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">coastal-setting</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          
+          {/* Notes panel - Content type info */}
+          <div className="w-64 bg-gray-50 border-l border-gray-200 p-4 transition-all duration-300 group-hover:bg-gray-100">
+            <div className="text-sm font-semibold text-gray-900 mb-3 transition-all duration-300 group-hover:text-blue-900">Content Stats</div>
+            <div className="space-y-3">
+              {/* Total items */}
+              <div className="bg-blue-50 p-3 rounded border border-blue-200 transform transition-all duration-300 hover:scale-105 hover:bg-blue-100 hover:shadow-md">
+                <div className="text-xs font-semibold text-blue-800 mb-1">Total Items</div>
+                <div className="text-lg font-bold text-blue-900">47</div>
+              </div>
+              
+              {/* Content breakdown */}
+              <div className="bg-green-50 p-3 rounded border border-green-200 transform transition-all duration-300 hover:scale-105 hover:bg-green-100 hover:shadow-md">
+                <div className="text-xs font-semibold text-green-800 mb-1">Characters: 12</div>
+                <div className="text-xs font-semibold text-blue-800 mb-1">Plots: 8</div>
+                <div className="text-xs font-semibold text-purple-800 mb-1">Research: 15</div>
+                <div className="text-xs font-semibold text-orange-800">Chapters: 12</div>
+              </div>
+              
+              {/* Storage info */}
+              <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                <div className="text-xs font-semibold text-gray-800 mb-1">Storage Used</div>
+                <div className="text-xs text-gray-600">2.3MB / 500MB</div>
+                <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                  <div className="bg-green-500 h-1 rounded-full" style={{width: '0.5%'}}></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</div>
 
      {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gray-50">
