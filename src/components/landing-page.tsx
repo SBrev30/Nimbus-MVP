@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Layers, Search, Palette, ArrowRight, Users, Star, CheckCircle, Menu, X, Github, Twitter, Linkedin } from 'lucide-react';
+import { FileText, Layers, Search, Palette, ArrowRight, Users, Star, CheckCircle, Menu, X, Github, Twitter, Linkedin, Plus } from 'lucide-react';
 
 const BoltLogo = () => (
   <div className="fixed bottom-6 right-6 z-[100] w-16 h-16 md:w-20 md:h-20">
