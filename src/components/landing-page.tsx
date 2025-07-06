@@ -435,51 +435,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 </div>
               </div>
               
-              <div className="relative">
-                <div className="bg-gradient-to-br from-[#f2eee2] to-white rounded-2xl p-8 shadow-2xl">
-                  <div className="space-y-4">
-                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                          <span className="text-sm">👥</span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">8 Characters</div>
-                          <div className="text-sm text-gray-500">Connected in story web</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <span className="text-sm">📖</span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">12 Plot Points</div>
-                          <div className="text-sm text-gray-500">Linked in sequence</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <span className="text-sm">🗺️</span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">6 Locations</div>
-                          <div className="text-sm text-gray-500">Mapped relationships</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-[#ff4e00] to-[#ff6b35] rounded-full opacity-20 animate-pulse"></div>
-                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Import & Categorize Feature */}
+              {/* Import & Categorize Feature */}
           <div className="mb-20">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
