@@ -20,7 +20,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ProjectsPageProps {
   onBack?: () => void;
-  onNavigateToWrite?: (projectId: string) => void;
+  onNavigateToWrite?: (projectId: string, chapterId?: string) => void; // Update this line
 }
 
 interface ProjectWithChapters extends Project {
@@ -171,6 +171,13 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
         orderIndex: 1,
         status: 'draft'
       });
+
+      // Add this new handler function after handleCreateFirstChapter:
+const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
+  if (onNavigateToWrite && selectedProject) {
+    onNavigateToWrite(selectedProject.id, chapterId);
+  }
+}, [onNavigateToWrite, selectedProject]);
       
       if (newChapter && onNavigateToWrite) {
         // Update project with new chapter
@@ -310,14 +317,15 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
   };
 
   if (currentView === 'chapters' && selectedProject) {
-    return (
-      <ChaptersPage
-        projectId={selectedProject.id}
-        projectTitle={selectedProject.title}
-        onBack={handleBackToProjects}
-      />
-    );
-  }
+  return (
+    <ChaptersPage
+      projectId={selectedProject.id}
+      projectTitle={selectedProject.title}
+      onBack={handleBackToProjects}
+      onSelectChapter={handleSelectChapter} // Add this line
+    />
+  );
+}
 
   return (
     <div className="h-screen bg-[#F9FAFB] flex flex-col font-inter">
