@@ -15,6 +15,7 @@ import { ThemeProvider } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { LandingPage } from '../components/landing-page';
+import { chapterService } from '../services/chapterService'; // Add this import
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -129,6 +130,17 @@ function AppContent() {
   // ALL CALLBACK HANDLERS - MOVED TO TOP BEFORE ANY CONDITIONAL LOGIC
   const handleEditorChange = useCallback((content: EditorContent) => {
     setEditorContent(content);
+
+    // Add this new handler function:
+const handleNavigateToWriteFromProject = useCallback((projectId: string, chapterId?: string) => {
+  if (chapterId) {
+    // Navigate directly to editor with specific chapter
+    handleSelectChapter(chapterId, 'Loading...');
+  } else {
+    // Navigate to write view for project
+    setActiveView('write');
+  }
+}, [handleSelectChapter]);
     
     // Save current chapter if we're editing a specific chapter
     if (currentChapter) {
@@ -149,66 +161,43 @@ function AppContent() {
   }, []);
 
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
-    // Set loading state
-    setEditorLoading(true);
-    
-    // Set current chapter immediately to ensure navigation works
-    setCurrentChapter({ id: chapterId, title: chapterTitle });
-    setActiveView('editor');
+  // Set loading state
+  setEditorLoading(true);
+  
+  // Set current chapter immediately to ensure navigation works
+  setCurrentChapter({ id: chapterId, title: chapterTitle });
+  setActiveView('editor');
 
-    // Save current content before switching
-    if (currentChapter) {
-      setChapterContents(prev => ({
-        ...prev,
-        [currentChapter.id]: editorContent
-      }));
-    }
+  // Save current content before switching
+  if (currentChapter) {
+    setChapterContents(prev => ({
+      ...prev,
+      [currentChapter.id]: editorContent
+    }));
+  }
 
-    // Fetch chapter content from database
-    chapterService.getChapter(chapterId)
-      .then(chapter => {
-        if (chapter) {
-          // Set new chapter
-          setCurrentChapter({ id: chapterId, title: chapterTitle });
-          setActiveView('editor');
-
-          // Create editor content from chapter data
-          const chapterContent = {
-            title: chapter.title,
-            content: chapter.content || '<p>Start writing your chapter here...</p>',
-            wordCount: chapter.wordCount || 0,
-            lastSaved: new Date(),
-          };
-          
-          // Update editor content
-          setEditorContent(chapterContent);
-          
-          // Also update chapter contents cache
-          setChapterContents(prev => ({
-            ...prev,
-            [chapterId]: chapterContent
-          }));
-        } else {
-          // Chapter not found, use cached content or create new
-          const existingContent = chapterContents[chapterId];
-          const fallbackContent = existingContent || {
-            title: chapterTitle,
-            content: '<p>Start writing your chapter here...</p>',
-            wordCount: 0,
-            lastSaved: new Date(),
-          };
-          
-          // Set new chapter
-          setCurrentChapter({ id: chapterId, title: chapterTitle });
-          setActiveView('editor');
-          
-          setEditorContent(fallbackContent);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching chapter:', error);
+  // Fetch chapter content from database
+  chapterService.getChapter(chapterId)
+    .then(chapter => {
+      if (chapter) {
+        // Create editor content from chapter data
+        const chapterContent = {
+          title: chapter.title,
+          content: chapter.content || '<p>Start writing your chapter here...</p>',
+          wordCount: chapter.wordCount || 0,
+          lastSaved: new Date(),
+        };
         
-        // Fallback to cached content or create new
+        // Update editor content
+        setEditorContent(chapterContent);
+        
+        // Also update chapter contents cache
+        setChapterContents(prev => ({
+          ...prev,
+          [chapterId]: chapterContent
+        }));
+      } else {
+        // Chapter not found, use cached content or create new
         const existingContent = chapterContents[chapterId];
         const fallbackContent = existingContent || {
           title: chapterTitle,
@@ -217,15 +206,27 @@ function AppContent() {
           lastSaved: new Date(),
         };
         
-        // Set new chapter
-        setCurrentChapter({ id: chapterId, title: chapterTitle });
-        setActiveView('editor');
         setEditorContent(fallbackContent);
-      })
-      .finally(() => {
-        setEditorLoading(false);
-      });
-  }, [currentChapter, editorContent, chapterContents, setEditorContent, setChapterContents]);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching chapter:', error);
+      
+      // Fallback to cached content or create new
+      const existingContent = chapterContents[chapterId];
+      const fallbackContent = existingContent || {
+        title: chapterTitle,
+        content: '<p>Start writing your chapter here...</p>',
+        wordCount: 0,
+        lastSaved: new Date(),
+      };
+      
+      setEditorContent(fallbackContent);
+    })
+    .finally(() => {
+      setEditorLoading(false);
+    });
+}, [currentChapter, editorContent, chapterContents, setEditorContent, setChapterContents]);
 
   // Notes handlers
   const handleAddNote = useCallback((note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -348,13 +349,16 @@ function AppContent() {
         );
 
       case 'projects':
-        return (
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading Projects..." />}>
-              <ProjectsPage onBack={handleBackToWrite} />
-            </Suspense>
-          </ErrorBoundary>
-        );
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingSpinner message="Loading Projects..." />}>
+        <ProjectsPage 
+          onBack={handleBackToWrite} 
+          onNavigateToWrite={handleNavigateToWriteFromProject} // Add this line
+        />
+      </Suspense>
+    </ErrorBoundary>
+  );
       
       case 'dashboard':
         return (
