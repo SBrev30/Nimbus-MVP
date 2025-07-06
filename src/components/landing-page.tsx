@@ -832,7 +832,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     </div>
   </div>
  </div>
-        </div>
       </section>
 
       {/* Pricing Section */}
