@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, Filter, SortAsc } from 'lucide-react';
+import { SortAsc } from 'lucide-react';
+import { SimpleSearchFilter } from '../shared/simple-search-filter';
 
 interface LibraryHeaderProps {
   searchTerm: string;
@@ -10,6 +11,8 @@ interface LibraryHeaderProps {
   onFilterChange: (genre: string) => void;
   genres: string[];
   projectCount: number;
+  onClearFilters?: () => void;
+  hasActiveFilters?: boolean;
 }
 
 export function LibraryHeader({
@@ -21,9 +24,17 @@ export function LibraryHeader({
   onFilterChange,
   genres,
   projectCount,
+  onClearFilters,
+  hasActiveFilters = false
 }: LibraryHeaderProps) {
+  // Convert genres to filter options
+  const genreFilterOptions = genres.map(genre => ({
+    value: genre,
+    label: genre === 'all' ? 'All Genres' : genre
+  }));
+
   return (
-    <div className="bg-white border-b border-[#C6C5C5] p-6">
+    <div className="bg-[#f2eee2] border-b border-[#C6C5C5] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Title and Stats */}
         <div className="flex items-center justify-between mb-6">
@@ -37,35 +48,19 @@ export function LibraryHeader({
           </div>
         </div>
 
-        {/* Search and Filters */}
+        {/* Simplified Search and Filters */}
         <div className="flex items-center gap-4">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#889096]" />
-            <input
-              type="text"
-              placeholder="Search projects..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Genre Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-[#889096]" />
-            <select
-              value={filterGenre}
-              onChange={(e) => onFilterChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {genres.map(genre => (
-                <option key={genre} value={genre}>
-                  {genre === 'all' ? 'All Genres' : genre}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SimpleSearchFilter
+            searchValue={searchTerm}
+            onSearchChange={onSearchChange}
+            searchPlaceholder="Search projects..."
+            filterValue={filterGenre}
+            onFilterChange={onFilterChange}
+            filterOptions={genreFilterOptions}
+            onClear={onClearFilters}
+            showClearAll={hasActiveFilters}
+            className="flex-1"
+          />
 
           {/* Sort */}
           <div className="flex items-center gap-2">
@@ -73,7 +68,7 @@ export function LibraryHeader({
             <select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value as any)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
             >
               <option value="lastModified">Last Modified</option>
               <option value="title">Title</option>

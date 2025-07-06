@@ -58,20 +58,35 @@ const sampleNotesByCategory = {
   ],
 };
 
-export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isCollapsed, onToggleCollapse }: NotesPanelProps) {
+export function NotesPanel({ 
+  notes = [], // Default to empty array to prevent undefined errors
+  onAddNote, 
+  onEditNote, 
+  onDeleteNote, 
+  isCollapsed, 
+  onToggleCollapse 
+}: NotesPanelProps) {
   const [activeCategory, setActiveCategory] = useState<NoteCategory>('Person');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', category: 'Person' as const });
   const [displayedNotes, setDisplayedNotes] = useState(sampleNotesByCategory.Person);
   const [scrollPercentage, setScrollPercentage] = useState(0);
 
-  const filteredNotes = activeCategory === 'All' 
-    ? notes 
-    : notes.filter(note => note.category === activeCategory);
+  // Safely filter notes with null check
+  const filteredNotes = React.useMemo(() => {
+    if (!notes || !Array.isArray(notes)) {
+      return [];
+    }
+    
+    return activeCategory === 'All' 
+      ? notes 
+      : notes.filter(note => note.category === activeCategory);
+  }, [notes, activeCategory]);
 
   // Update displayed notes when category changes
   useEffect(() => {
-    setDisplayedNotes(sampleNotesByCategory[activeCategory] || []);
+    const categoryNotes = sampleNotesByCategory[activeCategory];
+    setDisplayedNotes(categoryNotes || []);
   }, [activeCategory]);
 
   const handleCategoryChange = (category: NoteCategory) => {
@@ -81,7 +96,7 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
   };
 
   const handleAddNote = () => {
-    if (newNote.title.trim()) {
+    if (newNote.title.trim() && onAddNote) {
       onAddNote(newNote);
       setNewNote({ title: '', content: '', category: activeCategory });
       setIsAddingNote(false);
@@ -104,7 +119,7 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
   // Collapsed state - minimal width at right edge
   if (isCollapsed) {
     return (
-      <div className="w-[18px] bg-[#EAE9E9] border-l border-[#C6C5C5] flex items-start justify-center pt-3 transition-all duration-300 ease-in-out">
+      <div className="fixed right-0 top-0 w-[18px] h-full bg-[#f2eee2] border-l border-[#C6C5C5] flex items-start justify-center pt-3 transition-all duration-300 ease-in-out z-40">
         <button
           onClick={handleToggleCollapse}
           className="p-1 rounded hover:bg-gray-200 transition-colors"
@@ -117,11 +132,11 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
   }
 
   const maxNotes = 25;
-  const currentNoteCount = displayedNotes.length;
+  const currentNoteCount = displayedNotes?.length || 0;
   const hasMaxNotes = currentNoteCount >= maxNotes;
 
   return (
-    <div className="w-[296px] bg-[#EAE9E9] border-l border-[#C6C5C5] flex flex-col h-screen relative ml-5 transition-all duration-300 ease-in-out">
+    <div className="fixed right-0 top-0 w-[320px] h-full bg-[#f2eee2] border-l border-[#C6C5C5] flex flex-col transition-all duration-300 ease-in-out z-40">
       {/* Header */}
       <div className="h-[94px] border-b border-[#C6C5C5] p-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
@@ -152,7 +167,7 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
               onClick={() => handleCategoryChange(category.label)}
               className={`px-2 py-1.5 text-xs font-medium transition-all font-roboto flex-1 ${
                 activeCategory === category.label
-                  ? 'bg-[#A5F7AC] text-[#18181B]'
+                  ? 'bg-[#e8ddc1] text-[#18181B]'
                   : 'bg-transparent text-[#889096] hover:bg-gray-100'
               }`}
             >
@@ -188,7 +203,7 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
             <div className="flex gap-2 mt-2">
               <button
                 onClick={handleAddNote}
-                className="text-xs bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 px-3 py-1 rounded transition-colors font-inter"
+                className="text-xs bg-[#e8ddc1] hover:bg-[#e8ddc1]/80 px-3 py-1 rounded transition-colors font-inter"
               >
                 Save
               </button>
@@ -203,25 +218,39 @@ export function NotesPanel({ notes, onAddNote, onEditNote, onDeleteNote, isColla
         )}
 
         {/* Display notes based on active category */}
-        {displayedNotes.map((note, index) => (
-          <div 
-            key={note.id} 
-            className={`p-4 rounded ${
-              note.highlighted ? 'bg-[#A5F7AC]' : 'bg-[#FAF9F9]'
-            }`}
-          >
-            <p className={`text-sm mb-2 font-inter leading-relaxed ${
-              note.highlighted ? 'text-black' : 'text-[#898989]'
-            }`}>
-              {note.content}
+        {displayedNotes && displayedNotes.length > 0 ? (
+          displayedNotes.map((note, index) => (
+            <div 
+              key={note.id} 
+              className={`p-4 rounded ${
+                note.highlighted ? 'bg-[#e8ddc1]' : 'bg-[#FAF9F9]'
+              }`}
+            >
+              <p className={`text-sm mb-2 font-inter leading-relaxed ${
+                note.highlighted ? 'text-black' : 'text-[#898989]'
+              }`}>
+                {note.content}
+              </p>
+              <p className={`text-xs font-inter ${
+                note.highlighted ? 'text-[#090808]' : 'text-[#898989]'
+              }`}>
+                {note.date}
+              </p>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-[#889096] font-inter">
+              No notes in this category yet.
             </p>
-            <p className={`text-xs font-inter ${
-              note.highlighted ? 'text-[#090808]' : 'text-[#898989]'
-            }`}>
-              {note.date}
-            </p>
+            <button
+              onClick={() => setIsAddingNote(true)}
+              className="mt-2 text-xs text-[#e8ddc1] hover:underline font-inter"
+            >
+              Add your first note
+            </button>
           </div>
-        ))}
+        )}
 
         {/* Show message when max notes reached */}
         {hasMaxNotes && (

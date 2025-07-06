@@ -39,7 +39,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
 
     const newTask = {
       ...formData,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+      dueDate: formData.dueDate && formData.dueDate.trim() !== '' ? new Date(formData.dueDate) : undefined,
     };
 
     onCreateTask(newTask);
@@ -70,7 +70,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff9602] focus:border-transparent"
               placeholder="Enter task title..."
               required
               autoFocus
@@ -86,7 +86,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
               <select
                 value={formData.taskType}
                 onChange={(e) => setFormData({ ...formData, taskType: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff9602] focus:border-transparent"
               >
                 {taskTypeOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -103,7 +103,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff9602]  focus:border-transparent"
               >
                 {priorityOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -123,7 +123,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
               type="date"
               value={formData.dueDate}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff9602] focus:border-transparent"
             />
           </div>
 
@@ -136,7 +136,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring-[#ff9602]  focus:border-transparent resize-none"
               placeholder="Add task details..."
             />
           </div>
@@ -152,7 +152,7 @@ export function CreateTaskModal({ onCreateTask, onClose }: CreateTaskModalProps)
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+              className="flex-1 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-gray rounded-lg transition-colors font-medium"
             >
               Create Task
             </button>

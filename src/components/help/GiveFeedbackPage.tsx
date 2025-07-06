@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Star, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  Star, 
+  Send, 
+  CheckCircle, 
+  AlertCircle,
+  Lightbulb,
+  Palette,
+  Zap,
+  BookOpen
+} from 'lucide-react';
 import { HelpLayout } from './HelpLayout';
 
 interface FeedbackData {
@@ -20,12 +29,12 @@ interface FeedbackData {
   isAnonymous: boolean;
 }
 
-interface GetFeedbackPageProps {
+interface GiveFeedbackPageProps {
   activeView: string;
   onNavigate?: (view: string) => void;
 }
 
-export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps) {
+export function GiveFeedbackPage({ activeView, onNavigate }: GiveFeedbackPageProps) {
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({
     feedbackType: 'ux',
     overallRating: 0,
@@ -43,35 +52,34 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
     },
     isAnonymous: false
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const feedbackTypes = [
+  const Types = [
     {
       value: 'feature',
       label: 'Feature Requests',
       description: 'New features or enhancements you\'d like to see',
-      icon: '💡'
+      icon: <Lightbulb className="w-5 h-5" />
     },
     {
       value: 'ux',
       label: 'User Experience',
       description: 'Interface design, workflow improvements, usability',
-      icon: '🎨'
+      icon: <Palette className="w-5 h-5" />
     },
     {
       value: 'performance',
       label: 'Performance',
       description: 'Speed, responsiveness, technical issues',
-      icon: '⚡'
+      icon: <Zap className="w-5 h-5" />
     },
     {
       value: 'content',
       label: 'Content & Resources',
       description: 'Help docs, tutorials, onboarding experience',
-      icon: '📚'
+      icon: <BookOpen className="w-5 h-5" />
     }
   ];
 
@@ -233,30 +241,53 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
     return Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 10) / 10;
   };
 
+  const resetForm = () => {
+    setIsSubmitted(false);
+    setFeedbackData({
+      feedbackType: 'ux',
+      overallRating: 0,
+      specificRatings: {
+        writing: 0,
+        canvas: 0,
+        ai: 0,
+        navigation: 0,
+        performance: 0
+      },
+      detailedFeedback: '',
+      contactInfo: {
+        email: 'user@example.com',
+        name: 'John Doe'
+      },
+      isAnonymous: false
+    });
+    setErrors({});
+  };
+
   if (isSubmitted) {
     return (
       <HelpLayout
         activeView={activeView}
         onNavigate={onNavigate}
         title="Feedback Submitted"
-        description="Thank you for helping us improve WritersBlock"
+        description="Thank you for helping us improve Nimbus Note"
         showBackButton
+        showBreadcrumb={false}
       >
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="space-y-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
           
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 font-inter">
+          <h2 className="text-2xl font-bold text-gray-900 font-inter">
             Thank you for your feedback!
           </h2>
           
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <p className="text-green-800 font-inter mb-4">
-              Your feedback helps us make WritersBlock better for everyone. We really appreciate you taking the time to share your thoughts.
+              Your feedback helps us make Nimbus Note better for everyone. We really appreciate you taking the time to share your thoughts.
             </p>
             <div className="text-sm text-green-700 font-inter">
-              <p><strong>Feedback Type:</strong> {feedbackTypes.find(t => t.value === feedbackData.feedbackType)?.label}</p>
+              <p><strong>Feedback Type:</strong> {Types.find(t => t.value === feedbackData.feedbackType)?.label}</p>
               <p><strong>Overall Rating:</strong> {feedbackData.overallRating}/5 stars</p>
               {getAverageRating() > 0 && (
                 <p><strong>Average Feature Rating:</strong> {getAverageRating()}/5 stars</p>
@@ -283,27 +314,8 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
                 Browse Help Topics
               </button>
               <button
-                onClick={() => {
-                  setIsSubmitted(false);
-                  setFeedbackData({
-                    feedbackType: 'ux',
-                    overallRating: 0,
-                    specificRatings: {
-                      writing: 0,
-                      canvas: 0,
-                      ai: 0,
-                      navigation: 0,
-                      performance: 0
-                    },
-                    detailedFeedback: '',
-                    contactInfo: {
-                      email: 'user@example.com',
-                      name: 'John Doe'
-                    },
-                    isAnonymous: false
-                  });
-                }}
-                className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-inter font-medium"
+                onClick={resetForm}
+                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-inter font-medium"
               >
                 Give More Feedback
               </button>
@@ -319,14 +331,15 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
       activeView={activeView}
       onNavigate={onNavigate}
       title="Give Feedback"
-      description="Help us improve WritersBlock with your insights"
+      description="Help us improve Nimbus Note with your insights"
       showBackButton
+      showBreadcrumb={false}
     >
-      <div className="max-w-2xl">
+      <div className="space-y-8">
         {/* Introduction */}
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-8">
-          <h3 className="font-semibold text-purple-900 mb-2 font-inter">🚀 Help Shape WritersBlock</h3>
-          <p className="text-purple-800 font-inter">
+        <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-2 font-inter">Help Shape Nimbus Note</h3>
+          <p className="text-gray-700 font-inter">
             Your feedback directly influences our product development. Share your experience, suggest new features, or let us know how we can improve.
           </p>
         </div>
@@ -339,12 +352,12 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
               What type of feedback do you have?
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {feedbackTypes.map((type) => (
+              {Types.map((type) => (
                 <label
                   key={type.value}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                     feedbackData.feedbackType === type.value
-                      ? 'border-[#A5F7AC] bg-[#A5F7AC]/10'
+                      ? 'border-[#ff4e00] bg-[#ff4e00]/10'
                       : 'border-[#C6C5C5] hover:border-gray-400'
                   }`}
                 >
@@ -357,7 +370,7 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
                     className="sr-only"
                   />
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">{type.icon}</span>
+                    <span className="text-[#ff4e00]">{type.icon}</span>
                     <div>
                       <div className="font-semibold text-gray-900 font-inter">{type.label}</div>
                       <div className="text-sm text-[#889096] font-inter">{type.description}</div>
@@ -371,7 +384,7 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
           {/* Overall Rating */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 font-inter">
-              Overall, how would you rate WritersBlock?
+              Overall, how would you rate Nimbus Note?
             </h3>
             <div className="flex items-center gap-4">
               <StarRating
@@ -401,11 +414,11 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
             <div className="space-y-4">
               {ratingCategories.map((category) => (
                 <div key={category.key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
+                  <div className="flex-1">
                     <div className="font-medium text-gray-900 font-inter">{category.label}</div>
                     <div className="text-sm text-[#889096] font-inter">{category.description}</div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <StarRating
                       rating={feedbackData.specificRatings[category.key]}
                       onRatingChange={(rating) => handleSpecificRatingChange(category.key, rating)}
@@ -432,9 +445,9 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
                   setErrors(prev => ({ ...prev, detailedFeedback: '' }));
                 }
               }}
-              placeholder="What do you love about WritersBlock? What could be improved? Any specific features you'd like to see?"
+              placeholder="What do you love about Nimbus Note? What could be improved? Any specific features you'd like to see?"
               rows={6}
-              className="w-full px-4 py-3 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-[#A5F7AC] transition-colors font-inter resize-none"
+              className="w-full px-4 py-3 border border-[#C6C5C5] rounded-lg focus:ring-2 focus:ring-[#ff4e00] focus:border-[#ff4e00] transition-colors font-inter resize-none"
             />
             <div className="flex justify-between items-center mt-2">
               {errors.detailedFeedback && (
@@ -462,13 +475,13 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
                     onChange={(e) => handleAnonymousToggle(e.target.checked)}
                     className="sr-only"
                   />
-                  <div className={`w-5 h-5 border-2 rounded transition-colors ${
+                  <div className={`w-5 h-5 border-2 rounded transition-colors flex items-center justify-center ${
                     feedbackData.isAnonymous
-                      ? 'bg-[#A5F7AC] border-[#A5F7AC]'
+                      ? 'bg-[#ff4e00] border-[#ff4e00]'
                       : 'border-[#C6C5C5]'
                   }`}>
                     {feedbackData.isAnonymous && (
-                      <CheckCircle className="w-3 h-3 text-gray-900 mx-auto" />
+                      <CheckCircle className="w-3 h-3 text-white" />
                     )}
                   </div>
                   <span className="ml-2 text-sm font-medium text-gray-900 font-inter">
@@ -552,11 +565,11 @@ export function GetFeedbackPage({ activeView, onNavigate }: GetFeedbackPageProps
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-3 rounded-lg transition-colors font-inter font-medium"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg transition-colors font-inter font-medium"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Submitting...
                   </>
                 ) : (

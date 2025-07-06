@@ -34,17 +34,45 @@ CREATE INDEX IF NOT EXISTS projects_status_idx ON projects(status);
 -- Enable Row Level Security
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies
-CREATE POLICY "Users can view own projects" ON projects
-  FOR SELECT USING (auth.uid() = user_id);
+-- Create RLS policies (FIXED: Now checks if policies exist)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'projects' 
+    AND policyname = 'Users can view own projects'
+  ) THEN
+    CREATE POLICY "Users can view own projects" ON projects
+      FOR SELECT USING (auth.uid() = user_id);
+  END IF;
 
-CREATE POLICY "Users can insert own projects" ON projects
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'projects' 
+    AND policyname = 'Users can insert own projects'
+  ) THEN
+    CREATE POLICY "Users can insert own projects" ON projects
+      FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
 
-CREATE POLICY "Users can update own projects" ON projects
-  FOR UPDATE USING (auth.uid() = user_id);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'projects' 
+    AND policyname = 'Users can update own projects'
+  ) THEN
+    CREATE POLICY "Users can update own projects" ON projects
+      FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
 
-CREATE POLICY "Users can delete own projects" ON projects
-  FOR DELETE USING (auth.uid() = user_id);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'projects' 
+    AND policyname = 'Users can delete own projects'
+  ) THEN
+    CREATE POLICY "Users can delete own projects" ON projects
+      FOR DELETE USING (auth.uid() = user_id);
+  END IF;
+END
+$$;
 
--- Note: The trigger "update_projects_updated_at" already exists, so we're not creating it again
+-- Note: The trigger "update_projects_updated_at" is handled by other migrations

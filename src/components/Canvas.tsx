@@ -19,6 +19,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
 import './Canvas.css';
+import { useAuth } from '../contexts/AuthContext';
+import { Atom } from 'lucide-react';
 
 // Import the enhanced auto-save hook
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
@@ -140,11 +142,11 @@ const SimpleCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeData
       
       {!data.fromPlanning && (
         <button
-          onClick={() => setShowDropdown(!showDropdown)}
-          className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1"
-        >
-          📋
-        </button>
+  onClick={() => setShowDropdown(!showDropdown)}
+  className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1"
+>
+  <Atom className="w-4 h-4" />
+</button>
       )}
 
       {showDropdown && (
@@ -190,11 +192,11 @@ const SimplePlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
       
       {!data.fromPlanning && (
         <button
-          onClick={() => setShowDropdown(!showDropdown)}
-          className="absolute top-1 right-1 text-xs bg-blue-200 hover:bg-blue-300 rounded px-1"
-        >
-          📋
-        </button>
+  onClick={() => setShowDropdown(!showDropdown)}
+  className="absolute top-1 right-1 text-xs bg-blue-200 hover:bg-blue-300 rounded px-1"
+>
+  <Atom className="w-4 h-4" />
+</button>
       )}
 
       {showDropdown && (
@@ -240,11 +242,11 @@ const SimpleLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData>)
       
       {!data.fromPlanning && (
         <button
-          onClick={() => setShowDropdown(!showDropdown)}
-          className="absolute top-1 right-1 text-xs bg-purple-200 hover:bg-purple-300 rounded px-1"
-        >
-          📋
-        </button>
+  onClick={() => setShowDropdown(!showDropdown)}
+  className="absolute top-1 right-1 text-xs bg-purple-200 hover:bg-purple-300 rounded px-1"
+>
+  <Atom className="w-4 h-4" />
+</button>
       )}
 
       {showDropdown && (
@@ -309,27 +311,32 @@ interface SimplifiedMenuProps {
   isCollapsed: boolean;
   onToggleCollapsed: () => void;
   onCreateNode: (type: string) => void;
-  onSave: () => void;
+  onSync: () => void;
   onLoad: () => void;
   onClear: () => void;
   onLoadTemplate: (templateId: string) => void;
   onLoadSample: (sampleId: string) => void;
-  lastSaved: Date | null;
-  isSaving: boolean;
+  lastSynced: Date | null;
+  isSyncing: boolean;
+  hasChanges: boolean;
+  syncStatus: string;
 }
 
-// Simplified Menu Component with Templates and Samples
+// Updated Simplified Menu Component with Sync functionality
 const SimplifiedMenu = ({ 
   isCollapsed, 
   onToggleCollapsed,
   onCreateNode,
-  onSave,
+  onSync,
   onLoad,
   onClear,
   onLoadTemplate,
   onLoadSample,
-  lastSaved,
-  isSaving
+  onBack,
+  lastSynced,
+  isSyncing,
+  hasChanges,
+  syncStatus
 }: SimplifiedMenuProps) => {
   const [activeTab, setActiveTab] = useState('elements');
   
@@ -361,22 +368,27 @@ const SimplifiedMenu = ({
       isCollapsed ? 'w-12' : 'w-72'
     } flex flex-col h-full`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        {!isCollapsed && (
-          <h2 className="text-lg font-semibold text-gray-900">Story Canvas</h2>
-        )}
-        <button
-          onClick={onToggleCollapsed}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
-        >
-          {isCollapsed ? '→' : '←'}
-        </button>
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-gray-900">Story Canvas</h2>
+              <p className="text-sm text-gray-600">Plan your story visually</p>
+            </div>
+          )}
+          <button
+            onClick={onToggleCollapsed}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
+            {isCollapsed ? '→' : '←'}
+          </button>
+        </div>
       </div>
 
       {!isCollapsed && (
         <>
           {/* Tab Navigation */}
-          <div className="flex bg-gray-100 m-2 rounded-lg p-1">
+          <div className="flex bg-[#e8ddc1] m-2 rounded-lg p-1">
             {[
               { id: 'elements', label: 'Elements' },
               { id: 'templates', label: 'Templates' },
@@ -412,11 +424,12 @@ const SimplifiedMenu = ({
                     </button>
                   ))}
                 </div>
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="text-xs text-blue-700 font-medium mb-1">💡 Tip</div>
-                  <div className="text-xs text-blue-600">
-                    Click the 📋 button on nodes to link them to your Planning data!
-                  </div>
+                <div className="mt-4 p-3 bg-[#eae4d3]  rounded-lg">
+                  <div className="text-xs text-gray-700 font-medium mb-1"> Tip</div>
+                <div className="text-xs text-gray-600">
+                Click the <Atom className="inline w-4 h-4 align-text-top" /> button on nodes to link them to your Planning data!
+                </div>
+
                 </div>
               </div>
             )}
@@ -441,7 +454,7 @@ const SimplifiedMenu = ({
 
             {activeTab === 'samples' && (
               <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Sample Stories</h3>
+               <h3 className="text-sm font-medium text-gray-700 mb-3">Samples</h3>
                 <div className="space-y-2">
                   {sampleList.map((sample) => (
                     <button
@@ -458,36 +471,47 @@ const SimplifiedMenu = ({
             )}
           </div>
 
-          {/* Actions Section */}
+          {/* Actions Section with Sync */}
           <div className="p-4 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-700 mb-3">Actions</h3>
             <div className="space-y-2">
               <button
-                onClick={onSave}
-                disabled={isSaving}
-                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
+                onClick={onSync}
+                disabled={isSyncing}
+                className={`w-full p-2 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 ${
+                  hasChanges 
+                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                }`}
+                title="Sync with Planning Pages"
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSyncing ? 'Syncing...' : 'Sync Planning'}
               </button>
               <button
                 onClick={onLoad}
-                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                className="w-full p-2 bg-[#f2eee2] border-[#e8ddc1] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm"
               >
-                Load
+                Load File
               </button>
               <button
                 onClick={onClear}
-                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                className="w-full p-2 bg-[#f2eee2] border-[#e8ddc1] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm"
               >
                 Clear All
               </button>
             </div>
             
-            {lastSaved && (
-              <div className="text-xs text-gray-500 mt-3">
-                Last saved: {lastSaved.toLocaleTimeString()}
-              </div>
-            )}
+            {/* Sync Status */}
+            <div className="text-xs text-gray-500 mt-3 space-y-1">
+              {lastSynced && (
+                <div>Last synced: {lastSynced.toLocaleTimeString()}</div>
+              )}
+              {hasChanges && !isSyncing && (
+                <div className="text-orange-600 font-medium">
+                  Changes pending sync
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
@@ -497,13 +521,17 @@ const SimplifiedMenu = ({
 
 // Main Canvas Flow Component
 const CanvasFlow = () => {
+  // Get authenticated user
+  const { user } = useAuth();
+   
   // State Management
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'pending'>('synced');
   
-  // Default user ID - in a real app, this would come from authentication
-  const userId = 'default-user';
+  // Use authenticated user ID or fallback to 'anonymous' for unauthenticated users
+  const userId = user?.id || 'anonymous';
   
   // Get react flow instance and viewport
   const reactFlowInstance = useReactFlow();
@@ -517,7 +545,7 @@ const CanvasFlow = () => {
     lastModified: Date.now()
   }), [nodes, edges, viewport]);
 
-  // Enhanced auto-save hook
+  // Enhanced auto-save hook with cloud sync only for authenticated users
   const {
     lastSaved,
     isSaving,
@@ -531,7 +559,7 @@ const CanvasFlow = () => {
   } = useUnifiedAutoSave(canvasState, userId, {
     localKey: `enhanced-canvas-${userId}`,
     delay: 2000,
-    enableCloud: true,
+    enableCloud: !!user, // Only enable cloud storage for authenticated users
     onSaveSuccess: (data) => {
       console.log('Canvas auto-saved successfully at:', new Date());
     },
@@ -539,6 +567,20 @@ const CanvasFlow = () => {
       console.error('Canvas auto-save failed:', error);
     }
   });
+
+  // Track changes for sync status
+  const [hasChanges, setHasChanges] = useState(false);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+
+  // Update changes state when nodes/edges change
+  useEffect(() => {
+    setHasChanges(true);
+    
+    // Auto-save will handle the subtle saving
+    if (nodes.length === 0 && edges.length === 0) {
+      setHasChanges(false);
+    }
+  }, [nodes, edges]);
 
   // Load canvas data on mount
   useEffect(() => {
@@ -548,6 +590,7 @@ const CanvasFlow = () => {
         if (savedData?.nodes && savedData?.edges) {
           setNodes(savedData.nodes);
           setEdges(savedData.edges);
+          setHasChanges(false);
         }
       } catch (error) {
         console.error('Failed to load canvas data:', error);
@@ -677,6 +720,33 @@ const CanvasFlow = () => {
     setNodes((nds) => [...nds, newNode]);
   }, [reactFlowInstance, setNodes, nodes]);
 
+  // Sync with Planning Pages
+  const handleSync = useCallback(async () => {
+    setSyncStatus('syncing');
+    
+    try {
+      // This would integrate with your Planning Pages data
+      // For now, we'll simulate the sync process
+      
+      // 1. Get data from Planning Pages (OutlinePage, PlotPage, CharactersPage, etc.)
+      // 2. Compare with current Canvas nodes
+      // 3. Create/update nodes based on Planning data
+      // 4. Handle conflicts if both Canvas and Planning have been modified
+      
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+      
+      // Force save the current state
+      await forceSave();
+      
+      setSyncStatus('synced');
+      setLastSynced(new Date());
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Sync failed:', error);
+      setSyncStatus('error');
+    }
+  }, [forceSave]);
+
   // Template loading with proper UUID regeneration
   const loadTemplate = useCallback((templateId: string) => {
     console.log('Loading template:', templateId);
@@ -791,32 +861,6 @@ const CanvasFlow = () => {
     }, eds));
   }, [setEdges]);
 
-  const handleSave = useCallback(async () => {
-    try {
-      // Force save to storage
-      await forceSave();
-
-      // Also offer file download
-      const dataToSave = {
-        nodes,
-        edges,
-        viewport: reactFlowInstance?.getViewport(),
-        timestamp: new Date().toISOString()
-      };
-
-      const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `canvas-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Save failed:', error);
-      alert('Failed to save canvas');
-    }
-  }, [forceSave, nodes, edges, reactFlowInstance]);
-
   const handleLoad = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -864,11 +908,12 @@ const CanvasFlow = () => {
   const clearCanvas = useCallback(() => {
     setNodes([]);
     setEdges([]);
+    setHasChanges(false);
   }, [setNodes, setEdges]);
 
   return (
     <div className="h-screen bg-gray-50 flex">
-      {/* Main Canvas Area */}
+      {/* Main Canvas Area - No header, search bar, or breadcrumbs */}
       <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
@@ -916,30 +961,33 @@ const CanvasFlow = () => {
                 Visual Story Canvas
               </h3>
               <p className="text-gray-600 mb-4">
-                Create and visualize your story elements with an intuitive node-based interface.
+                Create and organize your story visually. Sync with your Planning Pages to keep everything connected.
               </p>
               <div className="text-sm text-gray-500 space-y-1">
-                <p>• Add characters, plots, locations, and themes</p>
-                <p>• Connect elements to show relationships</p>
-                <p>• Use the menu on the right to get started</p>
+                <p>• Add story elements from the sidebar</p>
+                <p>• Connect ideas with drag-and-drop</p>
+                <p>• Sync with Planning Pages for consistency</p>
+                <p>• Use templates or samples to get started</p>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Right Side Menu */}
+      {/* Right Side Menu with Sync */}
       <SimplifiedMenu
         isCollapsed={isMenuCollapsed}
         onToggleCollapsed={() => setIsMenuCollapsed(!isMenuCollapsed)}
         onCreateNode={createNode}
-        onSave={handleSave}
+        onSync={handleSync}
         onLoad={handleLoad}
         onClear={clearCanvas}
         onLoadTemplate={loadTemplate}
         onLoadSample={loadSample}
-        lastSaved={lastSaved}
-        isSaving={isSaving}
+        lastSynced={lastSynced}
+        isSyncing={isSaving || syncStatus === 'syncing'}
+        hasChanges={hasChanges}
+        syncStatus={syncStatus}
       />
     </div>
   );

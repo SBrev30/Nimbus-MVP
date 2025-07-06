@@ -174,7 +174,7 @@ export function Library() {
           <h1 className="text-2xl font-semibold text-gray-900">Files</h1>
           <button
             onClick={() => setShowImportWizard(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
           >
             <Plus className="w-4 h-4" />
             Import Content

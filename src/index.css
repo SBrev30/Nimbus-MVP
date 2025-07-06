@@ -5,9 +5,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global Color */
-body {
-  background-color: rgb(246, 246, 241);
+/* Global Background Color */
+@layer base {
+  html,
+  body,
+  #root {
+    background-color: #f2eee2;
+  }
+  
+  /* Ensure canvas areas can maintain their own backgrounds */
+  .react-flow__pane,
+  .react-flow__viewport {
+    background-color: inherit;
+  }
 }
 
 /* Canvas Node Styles */

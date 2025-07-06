@@ -167,14 +167,14 @@ export function Files() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-t-[17px] overflow-hidden">
+    <div className="flex-1 flex flex-col bg-[#f2eee2] rounded-t-[17px] overflow-hidden">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold text-gray-900">Files</h1>
           <button
             onClick={() => setShowImportWizard(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
           >
             <Plus className="w-4 h-4" />
             Import Content
@@ -244,7 +244,7 @@ export function Files() {
                 {items.length === 0 && (
                   <button
                     onClick={() => setShowImportWizard(true)}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    className="px-6 py-2 bg-[#ff4e00] text-gray rounded-lg hover:bg-[#ff4e00]"
                   >
                     Import Content
                   </button>
@@ -310,7 +310,7 @@ export function Files() {
                         {item.tags.map((tag) => (
                           <span
                             key={tag.id}
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-[#ff4e00]-100 text-gray-700 rounded-full text-sm"
                           >
                             <Tag className="w-3 h-3" />
                             {tag.tag_name}

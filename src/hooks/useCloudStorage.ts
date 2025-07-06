@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// Check if Supabase credentials are available
+const hasSupabaseCredentials = () => {
+  return !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+};
+
 // Create a mock Supabase client when credentials are missing
 const createMockSupabase = () => ({
   from: () => ({
@@ -21,7 +26,7 @@ const createSupabaseClient = () => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   
-  if (!supabaseUrl || !supabaseKey) {
+  if (!hasSupabaseCredentials()) {
     console.log('Supabase credentials not found, using local storage only');
     return createMockSupabase();
   }
@@ -37,7 +42,7 @@ const createSupabaseClient = () => {
 // Initialize the client
 const supabase = createSupabaseClient();
 
-export const useCloudStorage = (userId: string) => {
+export const useCloudStorage = (userId: string | null) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'offline'>('synced');
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -63,21 +68,61 @@ export const useCloudStorage = (userId: string) => {
   }, []);
 
   const saveToCloud = useCallback(async (data: any): Promise<boolean> => {
-    if (!isOnline || !userId) {
+    if (!isOnline || !userId || !hasSupabaseCredentials() || userId === 'anonymous') {
+      setSyncStatus('offline');
       return false;
     }
 
     try {
       setSyncStatus('syncing');
       
-      const { error } = await supabase
+      // Check if the user_id is a valid UUID
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+        console.error('Invalid UUID format for user_id:', userId);
+        setSyncStatus('error');
+        return false;
+      }
+      
+      // First check if record exists
+      const { data: existingData, error: checkError } = await supabase
         .from('canvas_data')
-        .upsert({
-          user_id: userId,
-          canvas_data: data,
-          last_modified: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error('Error checking existing data:', checkError);
+        setSyncStatus('error');
+        return false;
+      }
+      
+      let error;
+      
+      if (existingData) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('canvas_data')
+          .update({
+            canvas_data: data,
+            last_modified: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+          
+        error = updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('canvas_data')
+          .insert({
+            user_id: userId,
+            canvas_data: data,
+            last_modified: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+          
+        error = insertError;
+      }
 
       if (error) {
         console.error('Cloud save error:', error);
@@ -96,12 +141,20 @@ export const useCloudStorage = (userId: string) => {
   }, [isOnline, userId]);
 
   const loadFromCloud = useCallback(async (): Promise<any | null> => {
-    if (!isOnline || !userId) {
+    if (!isOnline || !userId || !hasSupabaseCredentials() || userId === 'anonymous') {
+      setSyncStatus('offline');
       return null;
     }
 
     try {
       setSyncStatus('syncing');
+      
+      // Check if the user_id is a valid UUID
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+        console.error('Invalid UUID format for user_id:', userId);
+        setSyncStatus('error');
+        return null;
+      }
       
       const { data, error } = await supabase
         .from('canvas_data')
@@ -131,12 +184,20 @@ export const useCloudStorage = (userId: string) => {
   }, [isOnline, userId]);
 
   const deleteFromCloud = useCallback(async (): Promise<boolean> => {
-    if (!isOnline || !userId) {
+    if (!isOnline || !userId || !hasSupabaseCredentials() || userId === 'anonymous') {
+      setSyncStatus('offline');
       return false;
     }
 
     try {
       setSyncStatus('syncing');
+      
+      // Check if the user_id is a valid UUID
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+        console.error('Invalid UUID format for user_id:', userId);
+        setSyncStatus('error');
+        return false;
+      }
       
       const { error } = await supabase
         .from('canvas_data')

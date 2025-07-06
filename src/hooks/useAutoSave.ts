@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 export function useAutoSave<T>(
   value: T,
-  onSave: (value: T) => void,
+  onSave: ((value: T) => void) | undefined,
   delay: number = 2000
 ) {
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -13,6 +13,8 @@ export function useAutoSave<T>(
   }, [value]);
 
   useEffect(() => {
+    if (!onSave) return;
+    
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }

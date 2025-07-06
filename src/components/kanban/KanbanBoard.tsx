@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useMemo } from 'react';
 import { KanbanColumn } from './KanbanColumn';
 import { TaskLightbox } from './TaskLightbox';
 import { CreateTaskModal } from './CreateTaskModal';
@@ -13,12 +14,29 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: KanbanBoardProps) {
-  const [columns, setColumns] = useLocalStorage<KanbanColumnType[]>(`kanban-${projectId}`, [
+  const [rawColumns, setRawColumns] = useLocalStorage<KanbanColumnType[]>(`kanban-${projectId}`, [
     { id: 'todo', title: 'TO DO', tasks: [] },
     { id: 'active', title: 'Active', tasks: [] },
     { id: 'in_progress', title: 'In Progress', tasks: [] },
     { id: 'completed', title: 'Completed', tasks: [] },
   ]);
+
+  // Convert date strings back to Date objects when retrieving from localStorage
+  const columns = useMemo(() => {
+    return rawColumns.map(column => ({
+      ...column,
+      tasks: column.tasks.map(task => ({
+        ...task,
+        createdAt: typeof task.createdAt === 'string' ? new Date(task.createdAt) : task.createdAt,
+        updatedAt: typeof task.updatedAt === 'string' ? new Date(task.updatedAt) : task.updatedAt,
+        dueDate: task.dueDate && typeof task.dueDate === 'string' ? new Date(task.dueDate) : task.dueDate,
+      }))
+    }));
+  }, [rawColumns]);
+
+  const setColumns = useCallback((updater: React.SetStateAction<KanbanColumnType[]>) => {
+    setRawColumns(updater);
+  }, [setRawColumns]);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -102,11 +120,11 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
   return (
     <div className="h-screen bg-[#F8F9FA] flex flex-col font-inter">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="bg-[#f2eee2] border-b border-gray-200 shadow-sm">
         <div className="px-6 py-4">
           {/* Top section with project title and actions */}
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-semibold text-gray-900">{projectTitle}</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">{projectTitle} Kanban Board</h1>
             
             <div className="flex items-center gap-3">
               {/* Search */}
@@ -122,16 +140,12 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
               {/* Add Project Button */}
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] text-gray rounded-lg hover:bg-[#ff4e00] transition-colors font-medium"
               >
                 <Plus className="w-4 h-4" />
                 Add Task
               </button>
               
-              {/* Share button */}
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                <Share2 className="w-5 h-5" />
-              </button>
               
               {/* More options */}
               <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
@@ -142,13 +156,13 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
 
           {/* Bottom section with view toggles */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-[#e8ddc1] rounded-lg p-1">
               <button
                 onClick={() => handleViewChange('board')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   activeView === 'board'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[#f2eee2] text-gray shadow-sm'
+                    : 'text-gray-600 hover:text-gray'
                 }`}
               >
                 Board
@@ -157,20 +171,14 @@ export function KanbanBoard({ projectId, projectTitle, onBackToLibrary }: Kanban
                 onClick={() => handleViewChange('library')}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   activeView === 'library'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[#f2eee2] text-gray shadow-sm'
+                    : 'text-gray hover:text-gray'
                 }`}
               >
                 Library
               </button>
             </div>
 
-            <div className="flex items-center gap-4">
-              <button className="text-gray-500 hover:text-gray-700">
-                <Share2 className="w-4 h-4" />
-                <span className="ml-1 text-sm font-medium">Share</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>

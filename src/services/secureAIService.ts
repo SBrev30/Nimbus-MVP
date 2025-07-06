@@ -43,7 +43,8 @@ class SecureAIService {
         authToken = anonSession?.access_token;
       }
 
-      const { data, error } = await supabase.functions.invoke('ai-analysis', {
+      // FIXED: Use correct edge function name 'analyze-content' instead of 'ai-analysis'
+      const { data, error } = await supabase.functions.invoke('analyze-content', {
         body,
         headers: {
           Authorization: `Bearer ${authToken}`

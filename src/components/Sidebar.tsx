@@ -89,33 +89,54 @@ const UserAvatar = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const initials = "SB"; // SBrev30 initials
   
   return (
-    <div className={`${isCollapsed ? 'w-6 h-6' : 'w-8 h-8'} bg-gray-200 rounded-lg flex items-center justify-center border-2 border-gray-300`}>
+    <div className={`${isCollapsed ? 'w-6 h-6' : 'w-8 h-8'} bg-white-200 rounded-lg flex items-center justify-center border-2 border-gray-300 hover:border-[#e8ddc1] transition-colors duration-150`}>
       <span className={`text-gray-700 font-semibold ${isCollapsed ? 'text-xs' : 'text-sm'}`}>{initials}</span>
     </div>
   );
 };
 
-// Tooltip Component for collapsed state
-const Tooltip = ({ content, children }: { content: string; children: React.ReactNode }) => (
-  <div className="relative group">
-    {children}
-    <div className="absolute left-16 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100] whitespace-nowrap">
-      {content}
-    </div>
-  </div>
-);
+// Enhanced Tooltip Component for collapsed state
+const Tooltip = ({ content, children, position = 'right' }: { 
+  content: string; 
+  children: React.ReactNode;
+  position?: 'right' | 'left' | 'top' | 'bottom';
+}) => {
+  const positionClasses = {
+    right: 'left-16 top-1/2 transform -translate-y-1/2',
+    left: 'right-16 top-1/2 transform -translate-y-1/2',
+    top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
+    bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-2'
+  };
 
-// Dropdown Menu for collapsed state
+  return (
+    <div className="relative group">
+      {children}
+      <div className={`absolute ${positionClasses[position]} px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[300] whitespace-nowrap shadow-lg`}>
+        {content}
+        {/* Arrow for tooltip */}
+        {position === 'right' && (
+          <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Dropdown Menu for collapsed state
 const CollapsedDropdownMenu = ({ 
   item, 
   onItemClick, 
-  activeView 
+  activeView,
+  isVisible 
 }: { 
   item: any; 
   onItemClick: (view: string) => void;
   activeView: string;
+  isVisible: boolean;
 }) => (
-  <div className="absolute left-16 top-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto z-[100] w-48">
+  <div className={`absolute left-14 top-0 bg-white border border-gray-200 rounded-lg shadow-xl py-2 transition-opacity duration-200 z-[200] min-w-[200px] ${
+    isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+  }`}>
     <div className="px-3 py-2 text-sm font-semibold text-gray-900 border-b border-gray-100">
       {item.label}
     </div>
@@ -127,10 +148,10 @@ const CollapsedDropdownMenu = ({
             <button
               key={subItem.id}
               onClick={() => onItemClick(subItem.id)}
-              className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${
+              className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 hover:bg-[#e8ddc1] hover:text-gray-900 ${
                 isSubActive
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-[#e8ddc1] text-gray-900 font-medium'
+                  : 'text-gray-600'
               }`}
             >
               {subItem.label}
@@ -142,7 +163,7 @@ const CollapsedDropdownMenu = ({
       <div className="py-1">
         <button
           onClick={() => onItemClick(item.id)}
-          className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
+          className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900 transition-colors duration-150"
         >
           Go to {item.label}
         </button>
@@ -179,7 +200,8 @@ const menuItems: MenuItem[] = [
   {
     id: 'canvas',
     label: 'Canvas',
-    icon: Layers
+    icon: Layers,
+    isNew: false
   },
   {
     id: 'planning',
@@ -229,6 +251,12 @@ interface SidebarProps {
   onToggle?: () => void;
 }
 
+
+export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onViewChange }: SidebarProps) {
+  const [expandedItems, setExpandedItems] = useState<string[]>(['planning', 'settings']);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
 export default function Sidebar({ 
   activeView = 'dashboard', 
   onViewChange,
@@ -249,6 +277,7 @@ export default function Sidebar({
     }
   };
 
+
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
       prev.includes(itemId) 
@@ -260,6 +289,31 @@ export default function Sidebar({
   const isExpanded = (itemId: string) => expandedItems.includes(itemId);
 
   const handleItemClick = (view: string) => {
+    // When collapsed and clicking on a main item with dropdown, don't expand the dropdown
+    // Just navigate to the main item
+    if (isCollapsed) {
+      if (onViewChange) {
+        onViewChange(view);
+      }
+      return;
+    }
+    
+    // When expanded, normal behavior
+    if (onViewChange) {
+      onViewChange(view);
+    }
+  };
+
+  const handleCollapsedItemClick = (itemId: string) => {
+    if (activeDropdown === itemId) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(itemId);
+    }
+  };
+
+  const handleDropdownItemClick = (view: string) => {
+    setActiveDropdown(null); // Close dropdown after selection
     if (onViewChange) {
       onViewChange(view);
     }
@@ -275,6 +329,21 @@ export default function Sidebar({
   };
 
   return (
+
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
+        isCollapsed ? 'w-16' : 'w-64'
+      } flex flex-col flex-shrink-0 ${isCollapsed ? 'overflow-visible' : ''}`}>
+        
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-center">
+            <div>
+              <NimbusLogo isCollapsed={isCollapsed} />
+            </div>
+          </div>
+
     <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
     } flex flex-col flex-shrink-0 h-screen`}>
@@ -283,8 +352,79 @@ export default function Sidebar({
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-center">
           <NimbusLogo isCollapsed={isCollapsed} />
+
         </div>
       </div>
+
+
+        {/* Navigation */}
+        <nav className={`flex-1 py-4 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
+          <ul className="space-y-1 px-3">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = isItemActive(item.id, item.subItems);
+
+              if (isCollapsed) {
+                return (
+                  <li key={item.id} className="relative">
+                    <div className="relative">
+                      {activeDropdown !== item.id ? (
+                        <Tooltip content={item.label}>
+                          <button
+                            onClick={() => {
+                              if (item.hasDropdown) {
+                                handleCollapsedItemClick(item.id);
+                              } else {
+                                handleItemClick(item.id);
+                              }
+                            }}
+                            className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
+                              isActive 
+                                ? 'bg-[#eae4d3] text-gray-900' 
+                                : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
+                            }`}
+                          >
+                            <Icon className="w-5 h-5 flex-shrink-0" />
+                            {item.isNew && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+                            )}
+                          </button>
+                        </Tooltip>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (item.hasDropdown) {
+                              handleCollapsedItemClick(item.id);
+                            } else {
+                              handleItemClick(item.id);
+                            }
+                          }}
+                          className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
+                            isActive 
+                              ? 'bg-[#eae4d3] text-gray-900' 
+                              : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
+                          }`}
+                        >
+                          <Icon className="w-5 h-5 flex-shrink-0" />
+                          {item.isNew && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Collapsed Dropdown Menu */}
+                    {item.hasDropdown && (
+                      <CollapsedDropdownMenu 
+                        item={item}
+                        onItemClick={handleDropdownItemClick}
+                        activeView={activeView}
+                        isVisible={activeDropdown === item.id}
+                      />
+                    )}
+                  </li>
+                );
+              }
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">
@@ -292,6 +432,7 @@ export default function Sidebar({
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = isItemActive(item.id, item.subItems);
+
 
             if (isCollapsed) {
               return (
@@ -301,10 +442,56 @@ export default function Sidebar({
                       onClick={() => handleItemClick(item.id)}
                       className={`w-full flex items-center justify-center px-3 py-2.5 rounded-lg transition-colors duration-150 relative ${
                         isActive 
-                          ? 'bg-gray-100 text-gray-900' 
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-[#e8ddc1] text-gray-900' 
+                          : 'text-gray-600 hover:bg-[#e8ddc1] hover:text-gray-900'
                       }`}
                     >
+
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <Icon className="w-5 h-5 flex-shrink-0" />
+                        <span className="font-medium truncate">{item.label}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 flex-shrink-0">
+                        {item.isNew && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium">
+                            New
+                          </span>
+                        )}
+                        {item.hasDropdown && (
+                          <div className="flex-shrink-0">
+                            {isExpanded(item.id) ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Dropdown items */}
+                  {item.hasDropdown && isExpanded(item.id) && (
+                    <ul className="mt-1 ml-8 space-y-1">
+                      {item.subItems?.map((subItem) => {
+                        const isSubActive = activeView === subItem.id;
+                        return (
+                          <li key={subItem.id}>
+                            <button 
+                              onClick={() => handleItemClick(subItem.id)}
+                              className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors duration-150 ${
+                                isSubActive
+                                  ? 'bg-[#e8ddc1] text-gray-900 font-medium'
+                                  : 'text-gray-600 hover:text-gray-900 hover:bg-[#e8ddc1]'
+                              }`}
+                            >
+                              {subItem.label}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+
                       <Icon className="w-5 h-5 flex-shrink-0" />
                       {item.isNew && (
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
@@ -319,10 +506,39 @@ export default function Sidebar({
                       onItemClick={handleItemClick}
                       activeView={activeView}
                     />
+
                   )}
                 </li>
               );
             }
+
+
+        {/* Bottom section */}
+        <div className="border-t border-gray-200 flex-shrink-0">
+          {/* User profile */}
+          <div className="p-3">
+            <div className={`flex items-center p-3 rounded-lg bg-gray-50 hover:bg-[#e8ddc1] transition-colors duration-150 ${
+              isCollapsed ? 'justify-center' : 'space-x-3'
+            }`}>
+              <UserAvatar isCollapsed={isCollapsed} />
+              {!isCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-gray-900 truncate">SBrev30</div>
+                  <div className="text-sm text-gray-500">Admin</div>
+                </div>
+              )}
+              {!isCollapsed && (
+                <div className="flex space-x-1">
+                  <Tooltip content="Profile">
+                    <button className="p-1 hover:bg-[#e8ddc1] rounded transition-colors duration-150">
+                      <User className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Sign Out">
+                    <button className="p-1 hover:bg-[#e8ddc1] rounded transition-colors duration-150">
+                      <LogOut className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </Tooltip>
 
             return (
               <li key={item.id}>
@@ -364,6 +580,7 @@ export default function Sidebar({
                       )}
                     </div>
                   </button>
+
                 </div>
 
                 {/* Dropdown items */}
@@ -425,6 +642,23 @@ export default function Sidebar({
           </div>
         </div>
 
+
+          {/* Collapse button */}
+          <div className="p-3">
+            {isCollapsed ? (
+              <Tooltip content="Expand Sidebar">
+                <button 
+                  onClick={() => setIsCollapsed(false)}
+                  className="w-full flex justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-[#e8ddc1] rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
+                >
+                  <PanelLeftClose className="w-4 h-4 rotate-180" />
+                </button>
+              </Tooltip>
+            ) : (
+              <button 
+                onClick={() => setIsCollapsed(true)}
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-[#e8ddc1] rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
+
         {/* Collapse button */}
         <div className="p-3">
           {isCollapsed ? (
@@ -432,6 +666,7 @@ export default function Sidebar({
               <button 
                 onClick={toggleCollapsed}
                 className="w-full flex justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-150 border border-gray-200 hover:shadow-sm"
+
               >
                 <PanelLeftClose className="w-4 h-4 rotate-180" />
               </button>
@@ -451,4 +686,8 @@ export default function Sidebar({
   );
 }
 
+
+export const Sidebar = EnhancedNimbusSidebar;
+
 export { Sidebar };
+

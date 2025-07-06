@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LibraryView } from './library/LibraryView';
-import { KanbanBoard } from './kanban/KanbanBoard';
+import { KanbanBoard } from './kanban';
 import { Project } from '../types/kanban';
 
 export function KanbanApp() {

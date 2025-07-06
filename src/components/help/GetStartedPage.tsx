@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Play, RotateCcw, CheckCircle } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Play, 
+  RotateCcw, 
+  CheckCircle,
+  PenTool,
+  Palette,
+  Bot,
+  FolderKanban,
+  Lightbulb
+} from 'lucide-react';
 import { HelpLayout } from './HelpLayout';
 
 interface OnboardingStep {
@@ -24,41 +35,52 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
   const onboardingSteps: OnboardingStep[] = [
     {
       id: 'welcome',
-      title: 'Welcome to WritersBlock',
+      title: 'Welcome to Nimbus Note',
       description: 'Your creative writing platform with AI assistance',
       duration: '30 seconds',
       content: (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-[#A5F7AC] to-green-200 p-6 rounded-lg">
-            <h3 className="text-xl font-bold text-gray-900 mb-3 font-inter">Welcome to WritersBlock!</h3>
-            <p className="text-gray-800 font-inter leading-relaxed">
-              WritersBlock is a visual writing platform that combines traditional writing tools with infinite canvas brainstorming and AI assistance. Whether you're writing a novel, screenplay, or game narrative, we've got you covered.
+          <div className="bg-[#e8ddc1] p-6 rounded-lg">
+          <p className="text-gray-800 font-inter leading-relaxed">
+              Nimbus Note is a visual writing platform that combines traditional writing tools with infinite canvas brainstorming and AI assistance. Whether you're writing a novel, screenplay, or game narrative, we've got you covered.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border border-[#C6C5C5] rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 font-inter">🖊️ Focused Writing</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <PenTool className="w-5 h-5 text-[#ff4e00]" />
+                <h4 className="font-semibold text-gray-900 font-inter">Focused Writing</h4>
+              </div>
               <p className="text-sm text-[#889096] font-inter">Distraction-free writing environment with auto-save</p>
             </div>
             <div className="p-4 border border-[#C6C5C5] rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 font-inter">🎨 Visual Canvas</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <Palette className="w-5 h-5 text-[#ff4e00]" />
+                <h4 className="font-semibold text-gray-900 font-inter">Visual Canvas</h4>
+              </div>
               <p className="text-sm text-[#889096] font-inter">Infinite canvas for story mapping and brainstorming</p>
             </div>
             <div className="p-4 border border-[#C6C5C5] rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 font-inter">🤖 AI Assistance</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <Bot className="w-5 h-5 text-[#ff4e00]" />
+                <h4 className="font-semibold text-gray-900 font-inter">AI Assistance</h4>
+              </div>
               <p className="text-sm text-[#889096] font-inter">Context-aware AI to help develop characters and plots</p>
             </div>
             <div className="p-4 border border-[#C6C5C5] rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 font-inter">📚 Project Management</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <FolderKanban className="w-5 h-5 text-[#ff4e00]" />
+                <h4 className="font-semibold text-gray-900 font-inter">Project Management</h4>
+              </div>
               <p className="text-sm text-[#889096] font-inter">Kanban boards and library views for organization</p>
             </div>
           </div>
         </div>
       ),
       tips: [
-        'You can skip this tour at any time and return later',
-        'Each step includes interactive elements to try',
+        'Take your time to explore each feature',
+        'You can always come back to this guide from the Help menu',
         'Your progress is automatically saved'
       ]
     },
@@ -70,7 +92,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
       content: (
         <div className="space-y-6">
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2 font-inter">🧭 Navigation Overview</h4>
+            <h4 className="font-semibold text-blue-900 mb-2 font-inter">Navigation Overview</h4>
             <p className="text-blue-800 font-inter">
               The sidebar on the left contains all your main navigation. You can collapse it for more writing space or expand it for full access to features.
             </p>
@@ -78,8 +100,8 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
           
           <div className="space-y-4">
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
-              <div className="w-8 h-8 bg-[#A5F7AC] rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold">W</span>
+              <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-white">W</span>
               </div>
               <div>
                 <h5 className="font-semibold text-gray-900 font-inter">Write Section</h5>
@@ -88,8 +110,8 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             </div>
             
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
-              <div className="w-8 h-8 bg-[#A5F7AC] rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold">C</span>
+              <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-white">C</span>
               </div>
               <div>
                 <h5 className="font-semibold text-gray-900 font-inter">Canvas</h5>
@@ -98,8 +120,8 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             </div>
             
             <div className="flex items-start gap-4 p-4 border border-[#C6C5C5] rounded-lg">
-              <div className="w-8 h-8 bg-[#A5F7AC] rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold">P</span>
+              <div className="w-8 h-8 bg-[#ff4e00] rounded flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-white">P</span>
               </div>
               <div>
                 <h5 className="font-semibold text-gray-900 font-inter">Planning</h5>
@@ -115,7 +137,6 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         'Each section has subsections accessible via dropdown'
       ]
     }
-    // ... (other steps would continue here - truncated for brevity)
   ];
 
   const nextStep = () => {
@@ -154,15 +175,17 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
   const progress = ((currentStep + 1) / onboardingSteps.length) * 100;
 
   return (
-    <HelpLayout
-      activeView={activeView}
-      onNavigate={onNavigate}
-      title="Get Started"
-      description="Interactive walkthrough of WritersBlock features"
-      showBackButton
-    >
+  <HelpLayout
+    activeView={activeView}
+    onNavigate={onNavigate}
+    title="Get Started"
+    description="Interactive walkthrough of Nimbus Note features"
+    showBackButton
+    showBreadcrumb={false}
+  >
+    <div className="space-y-8">
       {/* Progress Bar */}
-      <div className="mb-8">
+      <div>
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-[#889096] font-inter">
             Step {currentStep + 1} of {onboardingSteps.length}
@@ -173,7 +196,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
-            className="bg-[#A5F7AC] h-2 rounded-full transition-all duration-300"
+            className="bg-[#ff4e00] h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -211,7 +234,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
             onClick={() => goToStep(index)}
             className={`px-3 py-1 text-xs rounded-full transition-colors font-inter ${
               index === currentStep
-                ? 'bg-[#A5F7AC] text-gray-900'
+                ? 'bg-[#ff4e00] text-white'
                 : completedSteps.has(index)
                 ? 'bg-green-100 text-green-800'
                 : 'bg-gray-100 text-[#889096] hover:bg-gray-200'
@@ -246,7 +269,10 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         {/* Tips Section */}
         {currentStepData.tips && currentStepData.tips.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 mb-3 font-inter">💡 Tips</h4>
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="w-4 h-4 text-blue-600" />
+              <h4 className="font-semibold text-blue-900 font-inter">Tips</h4>
+            </div>
             <ul className="space-y-1">
               {currentStepData.tips.map((tip, index) => (
                 <li key={index} className="text-sm text-blue-800 font-inter">
@@ -285,7 +311,7 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
               markStepComplete(currentStep);
               onNavigate?.('projects');
             }}
-            className="inline-flex items-center gap-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+            className="inline-flex items-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white px-4 py-2 rounded-lg transition-colors font-inter font-medium"
           >
             Start Writing
             <ChevronRight className="w-4 h-4" />
@@ -293,13 +319,14 @@ export function GetStartedPage({ activeView, onNavigate }: GetStartedPageProps) 
         ) : (
           <button
             onClick={nextStep}
-            className="inline-flex items-center gap-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+            className="inline-flex items-center gap-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white px-4 py-2 rounded-lg transition-colors font-inter font-medium"
           >
             Next
             <ChevronRight className="w-4 h-4" />
           </button>
-        )}
+         )}
       </div>
-    </HelpLayout>
+    </div>
+  </HelpLayout>
   );
 }

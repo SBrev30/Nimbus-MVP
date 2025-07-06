@@ -1,3 +1,5 @@
+// src/components/Breadcrumb.tsx - Updated breadcrumb logic
+
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 
@@ -18,23 +20,22 @@ export function Breadcrumb({ activeView, currentChapter, projectTitle, onNavigat
       case 'write':
         return [
           ...basePath,
+          { label: 'Projects', view: 'projects', href: '#' },
           { label: 'Write', view: 'write', href: '#', active: true }
         ];
       
       case 'projects':
         return [
           ...basePath,
-          { label: 'Write', view: 'write', href: '#' },
           { label: 'Projects', view: 'projects', href: '#', active: true }
         ];
       
       case 'editor':
         return [
           ...basePath,
-          { label: 'Write', view: 'write', href: '#' },
           { label: 'Projects', view: 'projects', href: '#' },
-          { label: projectTitle || 'Project 1', view: 'projects', href: '#' },
-          { label: currentChapter?.title || 'Chapter 1', view: 'editor', href: '#', active: true }
+          { label: 'Write', view: 'write', href: '#' },
+          { label: currentChapter?.title || 'Chapter', view: 'editor', href: '#', active: true }
         ];
       
       case 'canvas':

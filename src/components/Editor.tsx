@@ -8,13 +8,11 @@ import {
   AlignRight, 
   Type, 
   FileText,
-  Save,
   RotateCcw,
   RotateCw,
-  Eye,
-  EyeOff,
   Check,
-  Cloud
+  Cloud,
+  ChevronDown
 } from 'lucide-react';
 import { EditorContent } from '../types';
 import { useWordCount, useUndo, useKeyboard } from '../hooks/useUtilities';
@@ -28,14 +26,6 @@ interface EditorProps {
   className?: string;
 }
 
-interface Chapter {
-  id: string;
-  title: string;
-  number: number;
-  wordCount: number;
-  status: 'draft' | 'review' | 'final';
-}
-
 const FONT_OPTIONS = [
   { name: 'Inter', value: 'Inter, sans-serif' },
   { name: 'Georgia', value: 'Georgia, serif' },
@@ -46,12 +36,6 @@ const FONT_OPTIONS = [
 ];
 
 const FONT_SIZES = [12, 14, 16, 18, 20, 24, 28, 32];
-
-const ALIGNMENT_OPTIONS = [
-  { icon: AlignLeft, value: 'left' },
-  { icon: AlignCenter, value: 'center' },
-  { icon: AlignRight, value: 'right' }
-];
 
 // Auto-save notification component
 const AutoSaveNotification = ({ 
@@ -75,13 +59,11 @@ const AutoSaveNotification = ({
     } else if (saveError) {
       setNotificationType('error');
       setShowNotification(true);
-      // Auto-hide error after 5 seconds
       const timer = setTimeout(() => setShowNotification(false), 5000);
       return () => clearTimeout(timer);
     } else if (lastSaved && !hasUnsavedChanges) {
       setNotificationType('saved');
       setShowNotification(true);
-      // Auto-hide success after 2 seconds
       const timer = setTimeout(() => setShowNotification(false), 2000);
       return () => clearTimeout(timer);
     }
@@ -125,17 +107,72 @@ const AutoSaveNotification = ({
   );
 };
 
+// Alignment Dropdown Component
+const AlignmentDropdown = ({ 
+  currentAlignment, 
+  onAlignmentChange 
+}: { 
+  currentAlignment: string; 
+  onAlignmentChange: (alignment: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const alignmentOptions = [
+    { value: 'left', icon: AlignLeft, label: 'Left Align' },
+    { value: 'center', icon: AlignCenter, label: 'Center Align' },
+    { value: 'right', icon: AlignRight, label: 'Right Align' }
+  ];
+
+  const currentOption = alignmentOptions.find(opt => opt.value === currentAlignment) || alignmentOptions[0];
+  const CurrentIcon = currentOption.icon;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center px-2 py-1 rounded hover:bg-[#e8ddc1] transition-colors"
+        title="Text Alignment"
+      >
+        <CurrentIcon className="w-3 h-3 text-black" />
+        <ChevronDown className="w-3 h-3 ml-1 text-gray-600" />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute bottom-full left-0 mb-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[120px]">
+          {alignmentOptions.map((option) => {
+            const Icon = option.icon;
+            return (
+              <button
+                key={option.value}
+                onClick={() => {
+                  onAlignmentChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`flex items-center w-full px-3 py-2 text-xs hover:bg-gray-100 transition-colors ${
+                  currentAlignment === option.value ? 'bg-gray-100' : ''
+                }`}
+              >
+                <Icon className="w-3 h-3 mr-2" />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const Editor: React.FC<EditorProps> = ({ 
   content, 
   onChange, 
-  selectedChapter,
+  selectedChapter = null,
   isLoading = false,
   className = ''
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState(content.title);
   const [editorContent, setEditorContent] = useState(content.content);
-  const [isReadOnly, setIsReadOnly] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Enhanced editor state
@@ -144,6 +181,14 @@ export const Editor: React.FC<EditorProps> = ({
   const [currentAlignment, setCurrentAlignment] = useState('left');
   const [showWordCount, setShowWordCount] = useState(true);
   
+  // Helper function to get text content safely
+  function getTextContent(): string {
+    if (editorRef.current) {
+      return editorRef.current.textContent || '';
+    }
+    return '';
+  }
+
   // Enhanced hooks
   const { words, characters, charactersNoSpaces, readingTime } = useWordCount(getTextContent());
   const { state: undoState, setState: setUndoState, undo, redo, canUndo, canRedo } = useUndo({
@@ -154,18 +199,17 @@ export const Editor: React.FC<EditorProps> = ({
   // Enhanced auto-save with 3-minute delay
   const { lastSaved, isSaving, saveError, cloudSyncStatus } = useUnifiedAutoSave(
     { title, content: editorContent, wordCount: words, lastSaved: new Date() },
-    'current-user', // Replace with actual user ID
+    'current-user',
     {
       localKey: `chapter-${selectedChapter?.id || 'default'}`,
       enableCloud: true,
-      delay: 180000, // 3 minutes = 180,000ms
+      delay: 180000,
       onSaveSuccess: (data) => {
         onChange(data);
         setHasUnsavedChanges(false);
       },
       onSaveError: (error) => {
         console.error('Auto-save failed:', error);
-        // Changes are still saved locally via localStorage
       }
     }
   );
@@ -198,15 +242,8 @@ export const Editor: React.FC<EditorProps> = ({
     }
   }, [canUndo, canRedo, undo, redo]);
 
-  function getTextContent(): string {
-    if (editorRef.current) {
-      return editorRef.current.textContent || '';
-    }
-    return '';
-  }
-
   const handleContentChange = useCallback(() => {
-    if (editorRef.current && !isReadOnly) {
+    if (editorRef.current) {
       const newContent = editorRef.current.innerHTML;
       const textContent = getTextContent();
       
@@ -214,7 +251,6 @@ export const Editor: React.FC<EditorProps> = ({
       setUndoState({ title, content: newContent });
       setHasUnsavedChanges(true);
       
-      // Trigger onChange with updated content (this will trigger auto-save after delay)
       onChange({
         title,
         content: newContent,
@@ -222,7 +258,7 @@ export const Editor: React.FC<EditorProps> = ({
         lastSaved: new Date(),
       });
     }
-  }, [title, onChange, setUndoState, isReadOnly]);
+  }, [title, onChange, setUndoState]);
 
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle);
@@ -249,11 +285,9 @@ export const Editor: React.FC<EditorProps> = ({
   }, [title, editorContent, words, onChange]);
 
   const formatText = useCallback((command: string, value?: string) => {
-    if (isReadOnly) return;
-    
     document.execCommand(command, false, value);
     handleContentChange();
-  }, [handleContentChange, isReadOnly]);
+  }, [handleContentChange]);
 
   const applyFont = useCallback((font: string) => {
     setCurrentFont(font);
@@ -298,38 +332,26 @@ export const Editor: React.FC<EditorProps> = ({
     }
   }, [content.content, content.title, title]);
 
-  // Container dimensions for responsive design
-  const [containerDimensions, setContainerDimensions] = useState({
-    width: 900,
-    height: 600,
-    borderRadius: 17,
-    topPadding: 20
-  });
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const updateDimensions = () => {
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      
-      setContainerDimensions({
-        width: Math.min(900, windowWidth - 40),
-        height: Math.min(600, windowHeight - 200),
-        borderRadius: windowWidth < 768 ? 8 : 17,
-        topPadding: windowWidth < 768 ? 10 : 20
-      });
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
     };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#F9FAFB]">
-        <div className="text-center">
+      <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: '#f2eee2' }}>
+        <div className="text-center p-8">
           <div className="w-16 h-16 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#889096]">Loading chapter...</p>
+          <p className="text-[#889096] font-inter">Loading chapter content...</p>
+          <p className="text-xs text-[#889096] mt-2 font-inter">Please wait while we retrieve your chapter from the database</p>
         </div>
       </div>
     );
@@ -337,8 +359,8 @@ export const Editor: React.FC<EditorProps> = ({
 
   return (
     <div 
-      className={`flex-1 flex flex-col bg-[#F9FAFB] relative overflow-hidden ${className}`}
-      style={{ paddingTop: `${containerDimensions.topPadding}px` }}
+      className={`flex-1 flex flex-col relative overflow-hidden ${className}`}
+      style={{ backgroundColor: '#f2eee2' }}
     >
       {/* Auto-save Notification */}
       <AutoSaveNotification 
@@ -348,154 +370,124 @@ export const Editor: React.FC<EditorProps> = ({
         hasUnsavedChanges={hasUnsavedChanges}
       />
 
-      {/* Enhanced Toolbar */}
-      <div className="px-6 py-3 bg-white border-b border-gray-200 flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center space-x-4 flex-wrap">
-          {/* Font Controls */}
-          <div className="flex items-center space-x-2">
-            <select
-              value={currentFont}
-              onChange={(e) => applyFont(e.target.value)}
-              className="text-sm border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-            >
-              {FONT_OPTIONS.map(font => (
-                <option key={font.value} value={font.value}>{font.name}</option>
-              ))}
-            </select>
-            
-            <select
-              value={currentFontSize}
-              onChange={(e) => applyFontSize(Number(e.target.value))}
-              className="text-sm border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-            >
-              {FONT_SIZES.map(size => (
-                <option key={size} value={size}>{size}px</option>
-              ))}
-            </select>
-          </div>
+      {/* Enhanced Floating Toolbar */}
+      <div 
+        className="fixed left-1/2 transform -translate-x-1/2 flex items-center px-2 py-1 gap-2"
+        style={{
+          backgroundColor: '#e8ddc1',
+          width: 'auto',
+          maxWidth: '450px',
+          minWidth: '300px',
+          height: '32px',
+          borderRadius: '5.277px',
+          bottom: '60px',
+          zIndex: 50,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          border: '1px solid rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        {/* Section 1: Undo/Redo */}
+        <button
+          onClick={undo}
+          disabled={!canUndo}
+          className={`p-1 rounded transition-colors ${
+            canUndo 
+              ? 'hover:bg-gray-200 text-black' 
+              : 'text-gray-400 cursor-not-allowed'
+          }`}
+          title="Undo"
+        >
+          <RotateCcw className="w-3 h-3" />
+        </button>
+        <button
+          onClick={redo}
+          disabled={!canRedo}
+          className={`p-1 rounded transition-colors ${
+            canRedo 
+              ? 'hover:bg-gray-200 text-black' 
+              : 'text-gray-400 cursor-not-allowed'
+          }`}
+          title="Redo"
+        >
+          <RotateCw className="w-3 h-3" />
+        </button>
 
-          {/* Format Controls */}
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => formatText('bold')}
-              className="p-2 hover:bg-gray-100 rounded transition-colors"
-              title="Bold (Ctrl+B)"
-            >
-              <Bold className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => formatText('italic')}
-              className="p-2 hover:bg-gray-100 rounded transition-colors"
-              title="Italic (Ctrl+I)"
-            >
-              <Italic className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => formatText('underline')}
-              className="p-2 hover:bg-gray-100 rounded transition-colors"
-              title="Underline (Ctrl+U)"
-            >
-              <Underline className="w-4 h-4" />
-            </button>
-          </div>
+        {/* 1pt Separator */}
+        <div className="w-px h-4 bg-gray-400"></div>
 
-          {/* Alignment Controls */}
-          <div className="flex items-center space-x-1">
-            {ALIGNMENT_OPTIONS.map(({ icon: Icon, value }) => (
-              <button
-                key={value}
-                onClick={() => applyAlignment(value)}
-                className={`p-2 rounded transition-colors ${
-                  currentAlignment === value ? 'bg-[#A5F7AC] text-white' : 'hover:bg-gray-100'
-                }`}
-                title={`Align ${value}`}
-              >
-                <Icon className="w-4 h-4" />
-              </button>
-            ))}
-          </div>
+        {/* Section 2: Font Controls */}
+        <select
+          value={currentFont}
+          onChange={(e) => applyFont(e.target.value)}
+          className="text-xs bg-transparent border-none outline-none cursor-pointer min-w-[80px] text-black"
+          title="Font Family"
+        >
+          {FONT_OPTIONS.map(font => (
+            <option key={font.value} value={font.value}>{font.name}</option>
+          ))}
+        </select>
 
-          {/* Undo/Redo */}
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={undo}
-              disabled={!canUndo}
-              className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Undo (Ctrl+Z)"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-            <button
-              onClick={redo}
-              disabled={!canRedo}
-              className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Redo (Ctrl+Y)"
-            >
-              <RotateCw className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <select
+          value={currentFontSize}
+          onChange={(e) => applyFontSize(Number(e.target.value))}
+          className="text-xs bg-transparent border-none outline-none cursor-pointer min-w-[35px] text-black"
+          title="Font Size"
+        >
+          {FONT_SIZES.map(size => (
+            <option key={size} value={size}>{size}</option>
+          ))}
+        </select>
 
-        {/* Right Side Controls */}
-        <div className="flex items-center space-x-4">
-          {/* Read Only Toggle */}
-          <button
-            onClick={() => setIsReadOnly(!isReadOnly)}
-            className={`flex items-center space-x-2 px-3 py-1 rounded-lg transition-colors ${
-              isReadOnly ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-            }`}
-            title={isReadOnly ? 'Enable editing' : 'Read only mode'}
-          >
-            {isReadOnly ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span className="text-sm">{isReadOnly ? 'Read Only' : 'Edit'}</span>
-          </button>
+        {/* 1pt Separator */}
+        <div className="w-px h-4 bg-gray-400"></div>
 
-          {/* Subtle Save Status Indicator */}
-          {hasUnsavedChanges && (
-            <div className="flex items-center space-x-2 text-xs text-gray-500">
-              <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
-              <span>Unsaved changes</span>
-            </div>
-          )}
+        {/* Section 3: Text Formatting */}
+        <button
+          onClick={() => formatText('bold')}
+          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors font-bold text-black"
+          title="Bold"
+        >
+          B
+        </button>
+        <button
+          onClick={() => formatText('italic')}
+          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors italic text-black"
+          title="Italic"
+        >
+          I
+        </button>
+        <button
+          onClick={() => formatText('underline')}
+          className="text-xs px-2 py-1 rounded hover:bg-gray-200 min-w-[24px] transition-colors underline text-black"
+          title="Underline"
+        >
+          U
+        </button>
 
-          {/* Manual Save Button */}
-          <button
-            onClick={handleSave}
-            className="flex items-center space-x-2 px-3 py-1 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 text-white rounded-lg transition-colors"
-            title="Save Now (Ctrl+S)"
-            disabled={isSaving}
-          >
-            <Save className="w-4 h-4" />
-            <span className="text-sm">Save</span>
-          </button>
-        </div>
+        {/* Alignment Dropdown */}
+        <AlignmentDropdown 
+          currentAlignment={currentAlignment} 
+          onAlignmentChange={applyAlignment} 
+        />
       </div>
 
-      {/* Editor Container */}
-      <div className="flex-1 flex justify-center overflow-hidden">
-        <div 
-          className="relative bg-white overflow-hidden"
-          style={{
-            width: `${containerDimensions.width}px`,
-            height: `${containerDimensions.height}px`,
-            borderTopLeftRadius: `${containerDimensions.borderRadius}px`,
-            borderTopRightRadius: `${containerDimensions.borderRadius}px`
-          }}
-        >
+      {/* Editor Container - Full width since NotesPanel is handled by App.tsx */}
+      <div className="flex-1 flex overflow-hidden">
+        <div className="w-full h-full bg-white mx-3 md:mx-6 mb-3 md:mb-6 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {/* Chapter Info */}
-          {selectedChapter && (
-            <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+          {selectedChapter?.title && (
+            <div className="px-4 md:px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-2">
               <div className="flex items-center space-x-3">
                 <FileText className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-700">
-                  Chapter {selectedChapter.number}: {selectedChapter.title}
+                  Chapter {selectedChapter?.number || 'Unknown'}: {selectedChapter.title}
                 </span>
               </div>
               {showWordCount && (
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
                   <span>{words} words</span>
-                  <span>{characters} characters</span>
-                  <span>{readingTime} min read</span>
+                  <span className="hidden sm:inline">{characters} characters</span>
+                  <span className="hidden md:inline">{readingTime} min read</span>
                 </div>
               )}
             </div>
@@ -512,31 +504,26 @@ export const Editor: React.FC<EditorProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="px-10 pt-10 pb-32">
+              <div className="px-4 md:px-10 pt-6 md:pt-10 pb-20 md:pb-32">
                 <div className="max-w-[803px] mx-auto">
                   {/* Title Input */}
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => handleTitleChange(e.target.value)}
-                    readOnly={isReadOnly}
-                    className={`text-4xl font-semibold text-black text-center mb-16 font-inter w-full bg-transparent border-none outline-none ${
-                      isReadOnly ? 'cursor-default' : 'cursor-text'
-                    }`}
+                    className="text-2xl md:text-4xl font-semibold text-black text-center mb-8 md:mb-16 font-inter w-full bg-transparent border-none outline-none cursor-text"
                     placeholder="Chapter Title"
                   />
                   
                   {/* Content Editor */}
                   <div
                     ref={editorRef}
-                    contentEditable={!isReadOnly}
+                    contentEditable
                     onInput={handleContentChange}
-                    className={`text-base text-black leading-[1.1875] font-inter outline-none min-h-96 ${
-                      isReadOnly ? 'cursor-default' : 'cursor-text'
-                    }`}
+                    className="text-sm md:text-base text-black leading-relaxed font-inter outline-none min-h-96 cursor-text focus:outline-none focus:ring-0"
                     style={{ 
                       fontFamily: currentFont,
-                      fontSize: `${currentFontSize}px`,
+                      fontSize: isMobile ? `${Math.max(14, currentFontSize - 2)}px` : `${currentFontSize}px`,
                       textAlign: currentAlignment as any
                     }}
                     suppressContentEditableWarning={true}
@@ -549,41 +536,24 @@ export const Editor: React.FC<EditorProps> = ({
         </div>
       </div>
 
-      {/* Minimalist Status Bar */}
-      <div className="px-6 py-2 bg-white border-t border-gray-200 flex items-center justify-between text-sm">
-        <div className="flex items-center space-x-6">
-          <button
-            onClick={() => setShowWordCount(!showWordCount)}
-            className="flex items-center space-x-2 hover:text-[#A5F7AC] transition-colors"
-          >
-            <Type className="w-4 h-4" />
+      {/* Bottom Status Bar */}
+      <div className="bg-white border-t border-[#C6C5C5] px-4 md:px-6 py-2">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs text-[#889096]">
+          <div className="flex flex-wrap items-center gap-2 md:gap-4">
             <span>{words} words</span>
-          </button>
-          <span className="text-gray-500">{characters} characters</span>
-          <span className="text-gray-500">{charactersNoSpaces} without spaces</span>
-          <span className="text-gray-500">{readingTime} min read</span>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          {/* Last Saved Info (subtle) */}
-          {lastSaved && !hasUnsavedChanges && (
-            <div className="flex items-center space-x-2 text-xs text-gray-400">
-              <Check className="w-3 h-3" />
-              <span>Saved {new Date(lastSaved).toLocaleTimeString()}</span>
-            </div>
-          )}
-
-          {/* Chapter Navigation */}
-          {selectedChapter && (
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-500">Chapter {selectedChapter.number}</span>
-            </div>
-          )}
-
-          {/* Font Info */}
-          <span className="text-gray-500">
-            {currentFont.split(',')[0]} {currentFontSize}px
-          </span>
+            <span className="hidden sm:inline">{characters} characters</span>
+            <span className="hidden md:inline">{charactersNoSpaces} without spaces</span>
+            <span>{readingTime} min read</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isSaving ? (
+              <span className="text-blue-600">Auto-saving...</span>
+            ) : (
+              lastSaved && (
+                <span className="text-xs">Saved {lastSaved.toLocaleTimeString()}</span>
+              )
+            )}
+          </div>
         </div>
       </div>
     </div>
