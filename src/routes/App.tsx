@@ -130,17 +130,6 @@ function AppContent() {
   // ALL CALLBACK HANDLERS - MOVED TO TOP BEFORE ANY CONDITIONAL LOGIC
   const handleEditorChange = useCallback((content: EditorContent) => {
     setEditorContent(content);
-
-    // Add this new handler function:
-const handleNavigateToWriteFromProject = useCallback((projectId: string, chapterId?: string) => {
-  if (chapterId) {
-    // Navigate directly to editor with specific chapter
-    handleSelectChapter(chapterId, 'Loading...');
-  } else {
-    // Navigate to write view for project
-    setActiveView('write');
-  }
-}, [handleSelectChapter]);
     
     // Save current chapter if we're editing a specific chapter
     if (currentChapter) {
@@ -161,43 +150,58 @@ const handleNavigateToWriteFromProject = useCallback((projectId: string, chapter
   }, []);
 
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
-  // Set loading state
-  setEditorLoading(true);
-  
-  // Set current chapter immediately to ensure navigation works
-  setCurrentChapter({ id: chapterId, title: chapterTitle });
-  setActiveView('editor');
+    // Set loading state
+    setEditorLoading(true);
+    
+    // Set current chapter immediately to ensure navigation works
+    setCurrentChapter({ id: chapterId, title: chapterTitle });
+    setActiveView('editor');
 
-  // Save current content before switching
-  if (currentChapter) {
-    setChapterContents(prev => ({
-      ...prev,
-      [currentChapter.id]: editorContent
-    }));
-  }
+    // Save current content before switching
+    if (currentChapter) {
+      setChapterContents(prev => ({
+        ...prev,
+        [currentChapter.id]: editorContent
+      }));
+    }
 
-  // Fetch chapter content from database
-  chapterService.getChapter(chapterId)
-    .then(chapter => {
-      if (chapter) {
-        // Create editor content from chapter data
-        const chapterContent = {
-          title: chapter.title,
-          content: chapter.content || '<p>Start writing your chapter here...</p>',
-          wordCount: chapter.wordCount || 0,
-          lastSaved: new Date(),
-        };
+    // Fetch chapter content from database
+    chapterService.getChapter(chapterId)
+      .then(chapter => {
+        if (chapter) {
+          // Create editor content from chapter data
+          const chapterContent = {
+            title: chapter.title,
+            content: chapter.content || '<p>Start writing your chapter here...</p>',
+            wordCount: chapter.wordCount || 0,
+            lastSaved: new Date(),
+          };
+          
+          // Update editor content
+          setEditorContent(chapterContent);
+          
+          // Also update chapter contents cache
+          setChapterContents(prev => ({
+            ...prev,
+            [chapterId]: chapterContent
+          }));
+        } else {
+          // Chapter not found, use cached content or create new
+          const existingContent = chapterContents[chapterId];
+          const fallbackContent = existingContent || {
+            title: chapterTitle,
+            content: '<p>Start writing your chapter here...</p>',
+            wordCount: 0,
+            lastSaved: new Date(),
+          };
+          
+          setEditorContent(fallbackContent);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching chapter:', error);
         
-        // Update editor content
-        setEditorContent(chapterContent);
-        
-        // Also update chapter contents cache
-        setChapterContents(prev => ({
-          ...prev,
-          [chapterId]: chapterContent
-        }));
-      } else {
-        // Chapter not found, use cached content or create new
+        // Fallback to cached content or create new
         const existingContent = chapterContents[chapterId];
         const fallbackContent = existingContent || {
           title: chapterTitle,
@@ -207,26 +211,22 @@ const handleNavigateToWriteFromProject = useCallback((projectId: string, chapter
         };
         
         setEditorContent(fallbackContent);
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching chapter:', error);
-      
-      // Fallback to cached content or create new
-      const existingContent = chapterContents[chapterId];
-      const fallbackContent = existingContent || {
-        title: chapterTitle,
-        content: '<p>Start writing your chapter here...</p>',
-        wordCount: 0,
-        lastSaved: new Date(),
-      };
-      
-      setEditorContent(fallbackContent);
-    })
-    .finally(() => {
-      setEditorLoading(false);
-    });
-}, [currentChapter, editorContent, chapterContents, setEditorContent, setChapterContents]);
+      })
+      .finally(() => {
+        setEditorLoading(false);
+      });
+  }, [currentChapter, editorContent, chapterContents, setEditorContent, setChapterContents]);
+
+  // Add handleNavigateToWriteFromProject AFTER handleSelectChapter since it depends on it
+  const handleNavigateToWriteFromProject = useCallback((projectId: string, chapterId?: string) => {
+    if (chapterId) {
+      // Navigate directly to editor with specific chapter
+      handleSelectChapter(chapterId, 'Loading...');
+    } else {
+      // Navigate to write view for project
+      setActiveView('write');
+    }
+  }, [handleSelectChapter]);
 
   // Notes handlers
   const handleAddNote = useCallback((note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -349,16 +349,16 @@ const handleNavigateToWriteFromProject = useCallback((projectId: string, chapter
         );
 
       case 'projects':
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner message="Loading Projects..." />}>
-        <ProjectsPage 
-          onBack={handleBackToWrite} 
-          onNavigateToWrite={handleNavigateToWriteFromProject} // Add this line
-        />
-      </Suspense>
-    </ErrorBoundary>
-  );
+        return (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading Projects..." />}>
+              <ProjectsPage 
+                onBack={handleBackToWrite} 
+                onNavigateToWrite={handleNavigateToWriteFromProject}
+              />
+            </Suspense>
+          </ErrorBoundary>
+        );
       
       case 'dashboard':
         return (
@@ -429,33 +429,33 @@ const handleNavigateToWriteFromProject = useCallback((projectId: string, chapter
         );
 
       // Help pages (immediate loading - lightweight)
-case 'help-topics':
-  return (
-    <ErrorBoundary>
-      <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
-    </ErrorBoundary>
-  );
+      case 'help-topics':
+        return (
+          <ErrorBoundary>
+            <HelpTopicsPage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );
 
-case 'get-started':
-  return (
-    <ErrorBoundary>
-      <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
-    </ErrorBoundary>
-  );
+      case 'get-started':
+        return (
+          <ErrorBoundary>
+            <GetStartedPage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );
 
-case 'ask-question':
-  return (
-    <ErrorBoundary>
-      <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
-    </ErrorBoundary>
-  );
+      case 'ask-question':
+        return (
+          <ErrorBoundary>
+            <AskQuestionPage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );
 
-case 'give-feedback':
-  return (
-    <ErrorBoundary>
-      <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
-    </ErrorBoundary>
-  );
+      case 'give-feedback':
+        return (
+          <ErrorBoundary>
+            <GiveFeedbackPage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );
 
       // Static pages (immediate)
       case 'planning':
@@ -614,7 +614,9 @@ case 'give-feedback':
     handleSignOut,
     IntegrationPageWithProvider,
     HistoryPageWithProvider,
-    editorLoading
+    editorLoading,
+    currentChapter,
+    handleNavigateToWriteFromProject
   ]);
 
   // Check authentication state on mount - MOVED AFTER ALL CALLBACKS
