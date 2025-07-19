@@ -111,6 +111,31 @@ export const aiService = (useSecureAI && hasSupabaseConfig)
 // Also export individual services for manual selection
 export { originalAIService, secureAIService };
 
+// Export other services
+export { chapterService } from './chapterService';
+export { projectService } from './projectService';
+export { userService } from './userService';
+export { autoSaveService } from './autoSaveService';
+export { intelligentAIService } from './intelligentAIService';
+export { outlineService } from './outlineService';
+
+// Export types
+export type { 
+  OutlineNode, 
+  CreateOutlineNodeData 
+} from './outlineService';
+
+// Re-export common types that might be used across services
+export type {
+  Project,
+  Chapter,
+  Character,
+  PlotPoint,
+  WorldBuildingElement,
+  Note,
+  EditorContent
+} from '../Type';
+
 // Export configuration info for debugging
 export const aiServiceConfig = {
   useSecureAI,
