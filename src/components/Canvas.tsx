@@ -583,13 +583,21 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
       const characterNodes = nodes.filter(n => n.type === 'character');
       if (characterNodes.length > 0) {
         for (const node of characterNodes) {
-          try {
-            const result = await intelligentAIService.analyzeCharacterNode(node.data);
-            results.push(result);
-          } catch (error) {
-            console.error('Character analysis failed:', error);
-          }
-        }
+for (const node of characterNodes) {
+  try {
+    const result = await intelligentAIService.analyzeCharacterNode(node.data);
+    results.push(result);
+  } catch (error) {
+    console.error('Character analysis failed:', error);
+    results.push({
+      type: 'error',
+      title: `Failed to analyze ${node.data.name || 'character'}`,
+      description: 'An error occurred during AI analysis. Please try again.',
+      severity: 'high',
+      nodeId: node.id
+    });
+  }
+}
       }
       
       // Story coherence analysis
