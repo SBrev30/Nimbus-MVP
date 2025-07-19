@@ -15,3 +15,6 @@ export interface EditorContent {
 }
 
 export type NoteCategory = 'All' | 'Person' | 'Place' | 'Plot' | 'Misc';
+
+// Export plot management types
+export * from './plot';
