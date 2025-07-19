@@ -19,13 +19,35 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
 import './Canvas.css';
-import { useAuth } from '../contexts/AuthContext';
-import { Atom } from 'lucide-react';
 
-// Import the enhanced auto-save hook
+// Import contexts and hooks
+import { useAuth } from '../contexts/AuthContext';
+import { useCanvasPlanningData } from '../hooks/useCanvasPlanningData';
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 
-// Import types and utilities
+// Import AI components and services
+import { AIAnalysisPanel } from './canvas/AIAnalysisPanel';
+import { intelligentAIService, AIAnalysisResult } from '../services/intelligentAIService';
+
+// Import enhanced components from the documents
+import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
+import { CharacterPopup } from './canvas/CharacterPopup';
+
+// Import advanced node types
+import {
+  CharacterNode,
+  PlotNode,
+  LocationNode,
+  ThemeNode,
+  ConflictNode,
+  TimelineNode,
+  ResearchNode,
+  enhancedNodeTypes,
+  createNodeData,
+  nodeColors
+} from './canvas/nodes';
+
+// Import types
 import { 
   CharacterNodeData, 
   PlotNodeData, 
@@ -37,179 +59,271 @@ import {
   CanvasState 
 } from './canvas/types';
 
-// Direct imports - files exist
+// Direct imports for templates and samples
 import { templates } from '../data/templates';
 import { sampleStories } from '../data/sampleStories';
 
-// AI Service fallback
-const aiService = {
-  analyzeStoryStructure: async (nodes: any[], edges: any[]) => {
-    console.log('AI Analysis would analyze:', { nodes, edges });
-    return { analysis: 'Mock analysis - AI service not available' };
-  }
-};
+// Icons
+import { Atom, ArrowLeft, Brain } from 'lucide-react';
 
-// TypeScript interfaces for component props
+// Enhanced TypeScript interfaces
 interface NodeProps<T = any> {
   data: T;
   onDataChange: (newData: Partial<T>) => void;
 }
 
-interface PlanningCharacter {
-  id: string;
-  name: string;
-  role: string;
+interface CanvasProps {
+  projectId?: string;
+  onBack?: () => void;
 }
 
-interface PlotPoint {
-  id: string;
-  title: string;
-  type: string;
-}
-
-interface WorldBuildingLocation {
-  id: string;
-  name: string;
-  type: string;
-}
-
-interface DropdownData {
-  planningCharacters: PlanningCharacter[];
-  plotPoints: PlotPoint[];
-  worldBuildingLocations: WorldBuildingLocation[];
-}
-
-// Custom hook for managing planning data
-const usePlanningData = (): DropdownData => {
-  // In a real app, this would fetch from context or API
-  const planningCharacters: PlanningCharacter[] = [
-    { id: '1', name: 'John Doe', role: 'protagonist' },
-    { id: '2', name: 'Jane Smith', role: 'antagonist' },
-    { id: '3', name: 'Bob Wilson', role: 'supporting' },
-    { id: '4', name: 'Alice Cooper', role: 'mentor' },
-    { id: '5', name: 'Tom Hardy', role: 'comic relief' }
-  ];
-
-  const plotPoints: PlotPoint[] = [
-    { id: '1', title: 'Opening Hook', type: 'setup' },
-    { id: '2', title: 'Inciting Incident', type: 'event' },
-    { id: '3', title: 'First Plot Point', type: 'turning_point' },
-    { id: '4', title: 'Midpoint', type: 'turning_point' },
-    { id: '5', title: 'Climax', type: 'climax' },
-    { id: '6', title: 'Rising Action', type: 'event' },
-    { id: '7', title: 'Falling Action', type: 'event' },
-    { id: '8', title: 'Resolution', type: 'resolution' }
-  ];
-
-  const worldBuildingLocations: WorldBuildingLocation[] = [
-    { id: '1', name: 'The Capital City', type: 'city' },
-    { id: '2', name: 'Ancient Forest', type: 'wilderness' },
-    { id: '3', name: 'Royal Palace', type: 'building' },
-    { id: '4', name: 'Hidden Cave', type: 'landmark' },
-    { id: '5', name: 'Mountain Pass', type: 'landmark' },
-    { id: '6', name: 'Tavern Inn', type: 'building' },
-    { id: '7', name: 'Dark Swamp', type: 'wilderness' },
-    { id: '8', name: 'Port Town', type: 'city' }
-  ];
-
-  return {
-    planningCharacters,
-    plotPoints,
-    worldBuildingLocations
-  };
-};
-
-// Enhanced Node Components with proper TypeScript interfaces
-const SimpleCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeData>) => {
+// Enhanced node components with planning integration
+const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeData>) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { planningCharacters } = usePlanningData();
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const { planningCharacters, loading } = useCanvasPlanningData();
 
-  const handleCharacterSelect = (character: PlanningCharacter) => {
+  const handleCharacterSelect = (character: any) => {
     onDataChange({
       name: character.name,
-      role: character.role as any,
+      role: character.role,
+      description: character.description,
       fromPlanning: true,
-      planningId: character.id
+      planningId: character.id,
+      traits: character.traits || [],
+      age: character.age,
+      occupation: character.occupation,
+      completeness_score: character.completeness_score
     });
     setShowDropdown(false);
   };
 
-  return (
-    <div className="bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[150px] shadow-sm relative">
-      <Handle type="target" position={Position.Top} className="w-2 h-2" />
-      <div className="font-semibold text-green-800 text-sm">{data.name || 'Character'}</div>
-      <div className="text-xs text-green-600 mt-1">{data.role || 'Role'}</div>
-      
-      {!data.fromPlanning && (
-        <button
-  onClick={() => setShowDropdown(!showDropdown)}
-  className="absolute top-1 right-1 text-xs bg-green-200 hover:bg-green-300 rounded px-1"
->
-  <Atom className="w-4 h-4" />
-</button>
-      )}
+  const handleNodeClick = (event: React.MouseEvent) => {
+    if (data.fromPlanning) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setPopupPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top
+      });
+      setShowPopup(true);
+    }
+  };
 
-      {showDropdown && (
-        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[140px]">
-          <div className="p-2 text-xs font-medium text-gray-700 border-b">From Planning:</div>
-          {planningCharacters.map((char) => (
+  const getCompletionColor = (score: number = 0) => {
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-yellow-500';
+    if (score >= 40) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
+  return (
+    <>
+      <div 
+        className="bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[180px] shadow-sm relative cursor-pointer transition-all hover:shadow-md"
+        onClick={handleNodeClick}
+      >
+        <Handle type="target" position={Position.Top} className="w-2 h-2" />
+        
+        {/* Header with completion indicator */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-semibold text-green-800 text-sm flex items-center gap-2">
+            {data.name || 'Character'}
+            {data.fromPlanning && (
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-xs text-green-600">Linked</span>
+              </div>
+            )}
+          </div>
+          
+          {!data.fromPlanning && (
             <button
-              key={char.id}
-              onClick={() => handleCharacterSelect(char)}
-              className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100 flex flex-col"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDropdown(!showDropdown);
+              }}
+              className="text-xs bg-green-200 hover:bg-green-300 rounded p-1 transition-colors"
+              title="Link to Planning Character"
             >
-              <span className="font-medium">{char.name}</span>
-              <span className="text-gray-500">{char.role}</span>
+              <Atom className="w-4 h-4" />
             </button>
-          ))}
+          )}
         </div>
+
+        {/* Character info */}
+        <div className="text-xs text-green-600 mb-1 capitalize">{data.role || 'Role'}</div>
+        
+        {/* Completion bar for planning characters */}
+        {data.fromPlanning && data.completeness_score !== undefined && (
+          <div className="mb-2">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-green-700">Completeness</span>
+              <span className="text-green-600">{Math.round(data.completeness_score)}%</span>
+            </div>
+            <div className="w-full bg-green-200 rounded-full h-1.5">
+              <div 
+                className={`h-1.5 rounded-full transition-all duration-300 ${getCompletionColor(data.completeness_score)}`}
+                style={{ width: `${data.completeness_score}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Description preview */}
+        {data.description && (
+          <div className="text-xs text-green-700 line-clamp-2">
+            {data.description}
+          </div>
+        )}
+
+        {/* Planning dropdown */}
+        {showDropdown && (
+          <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
+            <div className="p-2 text-xs font-medium text-gray-700 border-b">
+              {loading ? 'Loading...' : 'From Planning:'}
+            </div>
+            {!loading && planningCharacters.length === 0 && (
+              <div className="p-2 text-xs text-gray-500">No characters found</div>
+            )}
+            {planningCharacters.map((char) => (
+              <button
+                key={char.id}
+                onClick={() => handleCharacterSelect(char)}
+                className="w-full text-left px-2 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0"
+              >
+                <span className="font-medium">{char.name}</span>
+                <span className="text-gray-500 capitalize">{char.role}</span>
+                {char.completeness_score !== undefined && (
+                  <div className="mt-1 flex items-center gap-1">
+                    <div className="w-8 bg-gray-200 rounded-full h-1">
+                      <div 
+                        className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
+                        style={{ width: `${char.completeness_score}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+      </div>
+
+      {/* Character popup */}
+      {showPopup && data.fromPlanning && (
+        <CharacterPopup
+          character={{
+            id: data.planningId || data.id || '',
+            name: data.name || '',
+            role: data.role || '',
+            description: data.description || '',
+            fantasyClass: data.fantasyClass,
+            relationships: data.relationships || []
+          }}
+          position={popupPosition}
+          onClose={() => setShowPopup(false)}
+          onExpand={() => {
+            // TODO: Navigate to character detail view
+            console.log('Expand character:', data.planningId);
+            setShowPopup(false);
+          }}
+        />
       )}
-      
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-    </div>
+    </>
   );
 };
 
-const SimplePlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
+// Enhanced Plot Node with planning integration
+const EnhancedPlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { plotPoints } = usePlanningData();
+  const { plotPoints, loading } = useCanvasPlanningData();
 
-  const handlePlotSelect = (plot: PlotPoint) => {
+  const handlePlotSelect = (plot: any) => {
     onDataChange({
       title: plot.title,
-      type: plot.type as any,
+      type: plot.type,
+      description: plot.description,
       fromPlanning: true,
       planningId: plot.id
     });
     setShowDropdown(false);
   };
 
+  const getSignificanceColor = (significance: string = 'moderate') => {
+    switch (significance) {
+      case 'critical': return 'border-red-400 bg-red-50';
+      case 'major': return 'border-orange-400 bg-orange-50'; 
+      case 'moderate': return 'border-blue-400 bg-blue-50';
+      case 'minor': return 'border-gray-400 bg-gray-50';
+      default: return 'border-blue-400 bg-blue-50';
+    }
+  };
+
   return (
-    <div className="bg-blue-100 border-2 border-blue-300 rounded-lg p-3 min-w-[150px] shadow-sm relative">
+    <div className={`rounded-lg p-3 min-w-[180px] shadow-sm relative border-2 ${getSignificanceColor(data.significance)}`}>
       <Handle type="target" position={Position.Top} className="w-2 h-2" />
-      <div className="font-semibold text-blue-800 text-sm">{data.title || 'Plot Point'}</div>
-      <div className="text-xs text-blue-600 mt-1">{data.type || 'Event'}</div>
       
-      {!data.fromPlanning && (
-        <button
-  onClick={() => setShowDropdown(!showDropdown)}
-  className="absolute top-1 right-1 text-xs bg-blue-200 hover:bg-blue-300 rounded px-1"
->
-  <Atom className="w-4 h-4" />
-</button>
+      <div className="flex items-center justify-between mb-2">
+        <div className="font-semibold text-blue-800 text-sm flex items-center gap-2">
+          {data.title || 'Plot Point'}
+          {data.fromPlanning && (
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full" />
+              <span className="text-xs text-blue-600">Linked</span>
+            </div>
+          )}
+        </div>
+        
+        {!data.fromPlanning && (
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="text-xs bg-blue-200 hover:bg-blue-300 rounded p-1 transition-colors"
+            title="Link to Planning Plot"
+          >
+            <Atom className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="text-xs text-blue-600 mb-1 capitalize">{data.type || 'Event'}</div>
+      
+      {data.significance && (
+        <div className={`text-xs px-2 py-1 rounded mb-2 ${
+          data.significance === 'critical' ? 'bg-red-100 text-red-700' :
+          data.significance === 'major' ? 'bg-orange-100 text-orange-700' :
+          data.significance === 'moderate' ? 'bg-blue-100 text-blue-700' :
+          'bg-gray-100 text-gray-700'
+        }`}>
+          {data.significance} significance
+        </div>
+      )}
+
+      {data.description && (
+        <div className="text-xs text-blue-700 line-clamp-2">
+          {data.description}
+        </div>
       )}
 
       {showDropdown && (
-        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[140px]">
-          <div className="p-2 text-xs font-medium text-gray-700 border-b">From Plot:</div>
+        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
+          <div className="p-2 text-xs font-medium text-gray-700 border-b">
+            {loading ? 'Loading...' : 'From Plot:'}
+          </div>
+          {!loading && plotPoints.length === 0 && (
+            <div className="p-2 text-xs text-gray-500">No plot points found</div>
+          )}
           {plotPoints.map((plot) => (
             <button
               key={plot.id}
               onClick={() => handlePlotSelect(plot)}
-              className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100 flex flex-col"
+              className="w-full text-left px-2 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0"
             >
               <span className="font-medium">{plot.title}</span>
-              <span className="text-gray-500">{plot.type}</span>
+              <span className="text-gray-500 capitalize">{plot.type}</span>
             </button>
           ))}
         </div>
@@ -220,46 +334,93 @@ const SimplePlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
   );
 };
 
-const SimpleLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData>) => {
+// Enhanced Location Node with planning integration  
+const EnhancedLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData>) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { worldBuildingLocations } = usePlanningData();
+  const { worldBuildingLocations, loading } = useCanvasPlanningData();
 
-  const handleLocationSelect = (location: WorldBuildingLocation) => {
+  const handleLocationSelect = (location: any) => {
     onDataChange({
       name: location.name,
-      type: location.type as any,
+      type: location.type,
+      description: location.description,
       fromPlanning: true,
       planningId: location.id
     });
     setShowDropdown(false);
   };
 
+  const getImportanceColor = (importance: string = 'moderate') => {
+    switch (importance) {
+      case 'critical': return 'border-red-400 bg-red-50';
+      case 'high': return 'border-orange-400 bg-orange-50';
+      case 'moderate': return 'border-purple-400 bg-purple-50';
+      case 'low': return 'border-gray-400 bg-gray-50';
+      default: return 'border-purple-400 bg-purple-50';
+    }
+  };
+
   return (
-    <div className="bg-purple-100 border-2 border-purple-300 rounded-lg p-3 min-w-[150px] shadow-sm relative">
+    <div className={`rounded-lg p-3 min-w-[180px] shadow-sm relative border-2 ${getImportanceColor(data.importance)}`}>
       <Handle type="target" position={Position.Top} className="w-2 h-2" />
-      <div className="font-semibold text-purple-800 text-sm">{data.name || 'Location'}</div>
-      <div className="text-xs text-purple-600 mt-1">{data.type || 'Place'}</div>
       
-      {!data.fromPlanning && (
-        <button
-  onClick={() => setShowDropdown(!showDropdown)}
-  className="absolute top-1 right-1 text-xs bg-purple-200 hover:bg-purple-300 rounded px-1"
->
-  <Atom className="w-4 h-4" />
-</button>
+      <div className="flex items-center justify-between mb-2">
+        <div className="font-semibold text-purple-800 text-sm flex items-center gap-2">
+          {data.name || 'Location'}
+          {data.fromPlanning && (
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-purple-500 rounded-full" />
+              <span className="text-xs text-purple-600">Linked</span>
+            </div>
+          )}
+        </div>
+        
+        {!data.fromPlanning && (
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="text-xs bg-purple-200 hover:bg-purple-300 rounded p-1 transition-colors"
+            title="Link to World Building"
+          >
+            <Atom className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="text-xs text-purple-600 mb-1 capitalize">{data.type || 'Place'}</div>
+      
+      {data.importance && (
+        <div className={`text-xs px-2 py-1 rounded mb-2 ${
+          data.importance === 'critical' ? 'bg-red-100 text-red-700' :
+          data.importance === 'high' ? 'bg-orange-100 text-orange-700' :
+          data.importance === 'moderate' ? 'bg-purple-100 text-purple-700' :
+          'bg-gray-100 text-gray-700'
+        }`}>
+          {data.importance} importance
+        </div>
+      )}
+
+      {data.description && (
+        <div className="text-xs text-purple-700 line-clamp-2">
+          {data.description}
+        </div>
       )}
 
       {showDropdown && (
-        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[140px]">
-          <div className="p-2 text-xs font-medium text-gray-700 border-b">From World Building:</div>
+        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
+          <div className="p-2 text-xs font-medium text-gray-700 border-b">
+            {loading ? 'Loading...' : 'From World Building:'}
+          </div>
+          {!loading && worldBuildingLocations.length === 0 && (
+            <div className="p-2 text-xs text-gray-500">No locations found</div>
+          )}
           {worldBuildingLocations.map((location) => (
             <button
               key={location.id}
               onClick={() => handleLocationSelect(location)}
-              className="w-full text-left px-2 py-1 text-xs hover:bg-gray-100 flex flex-col"
+              className="w-full text-left px-2 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0"
             >
               <span className="font-medium">{location.name}</span>
-              <span className="text-gray-500">{location.type}</span>
+              <span className="text-gray-500 capitalize">{location.type}</span>
             </button>
           ))}
         </div>
@@ -270,274 +431,30 @@ const SimpleLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData>)
   );
 };
 
-const SimpleThemeNode = ({ data, onDataChange }: NodeProps<ThemeNodeData>) => (
-  <div className="bg-yellow-100 border-2 border-yellow-300 rounded-lg p-3 min-w-[150px] shadow-sm">
-    <Handle type="target" position={Position.Top} className="w-2 h-2" />
-    <div className="font-semibold text-yellow-800 text-sm">{data.title || 'Theme'}</div>
-    <div className="text-xs text-yellow-600 mt-1">{data.type || 'Concept'}</div>
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-  </div>
-);
-
-const SimpleConflictNode = ({ data, onDataChange }: NodeProps<ConflictNodeData>) => (
-  <div className="bg-red-100 border-2 border-red-300 rounded-lg p-3 min-w-[150px] shadow-sm">
-    <Handle type="target" position={Position.Top} className="w-2 h-2" />
-    <div className="font-semibold text-red-800 text-sm">{data.title || 'Conflict'}</div>
-    <div className="text-xs text-red-600 mt-1">{data.type || 'Issue'}</div>
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-  </div>
-);
-
-const SimpleResearchNode = ({ data, onDataChange }: NodeProps<ResearchNodeData>) => (
-  <div className="bg-indigo-100 border-2 border-indigo-300 rounded-lg p-3 min-w-[150px] shadow-sm">
-    <Handle type="target" position={Position.Top} className="w-2 h-2" />
-    <div className="font-semibold text-indigo-800 text-sm">{data.title || 'Research'}</div>
-    <div className="text-xs text-indigo-600 mt-1">{data.category || 'Notes'}</div>
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-  </div>
-);
-
-const SimpleTimelineNode = ({ data, onDataChange }: NodeProps<TimelineNodeData>) => (
-  <div className="bg-cyan-100 border-2 border-cyan-300 rounded-lg p-3 min-w-[150px] shadow-sm">
-    <Handle type="target" position={Position.Top} className="w-2 h-2" />
-    <div className="font-semibold text-cyan-800 text-sm">{data.title || 'Timeline Event'}</div>
-    <div className="text-xs text-cyan-600 mt-1">{data.timeframe || 'When'}</div>
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-  </div>
-);
-
-// Interface for menu component props
-interface SimplifiedMenuProps {
-  isCollapsed: boolean;
-  onToggleCollapsed: () => void;
-  onCreateNode: (type: string) => void;
-  onSync: () => void;
-  onLoad: () => void;
-  onClear: () => void;
-  onLoadTemplate: (templateId: string) => void;
-  onLoadSample: (sampleId: string) => void;
-  lastSynced: Date | null;
-  isSyncing: boolean;
-  hasChanges: boolean;
-  syncStatus: string;
-}
-
-// Updated Simplified Menu Component with Sync functionality
-const SimplifiedMenu = ({ 
-  isCollapsed, 
-  onToggleCollapsed,
-  onCreateNode,
-  onSync,
-  onLoad,
-  onClear,
-  onLoadTemplate,
-  onLoadSample,
-  onBack,
-  lastSynced,
-  isSyncing,
-  hasChanges,
-  syncStatus
-}: SimplifiedMenuProps) => {
-  const [activeTab, setActiveTab] = useState('elements');
-  
-  const nodeTypes = [
-    { type: 'character', label: 'Character', color: 'green' },
-    { type: 'plot', label: 'Plot', color: 'blue' },
-    { type: 'location', label: 'Location', color: 'purple' },
-    { type: 'theme', label: 'Theme', color: 'yellow' },
-    { type: 'conflict', label: 'Conflict', color: 'red' },
-    { type: 'research', label: 'Research', color: 'indigo' },
-    { type: 'timeline', label: 'Timeline', color: 'cyan' }
-  ];
-
-  const templateList = [
-    { id: 'heroJourney', name: "Hero's Journey", description: 'Classic monomyth structure' },
-    { id: 'threeAct', name: 'Three-Act Structure', description: 'Traditional screenplay format' },
-    { id: 'mysteryStructure', name: 'Mystery Structure', description: 'Detective story template' },
-    { id: 'romanceStructure', name: 'Romance Arc', description: 'Love story progression' }
-  ];
-
-  const sampleList = [
-    { id: 'mysteryNovel', name: 'Mystery Novel', description: 'Complete detective story example' },
-    { id: 'fantasyEpic', name: 'Fantasy Epic', description: 'High fantasy adventure' },
-    { id: 'sciFiThriller', name: 'Sci-Fi Thriller', description: 'Futuristic thriller story' }
-  ];
-
-  return (
-    <div className={`bg-white border-l border-gray-200 transition-all duration-300 ${
-      isCollapsed ? 'w-12' : 'w-72'
-    } flex flex-col h-full`}>
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900">Story Canvas</h2>
-              <p className="text-sm text-gray-600">Plan your story visually</p>
-            </div>
-          )}
-          <button
-            onClick={onToggleCollapsed}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-          >
-            {isCollapsed ? '→' : '←'}
-          </button>
-        </div>
-      </div>
-
-      {!isCollapsed && (
-        <>
-          {/* Tab Navigation */}
-          <div className="flex bg-[#e8ddc1] m-2 rounded-lg p-1">
-            {[
-              { id: 'elements', label: 'Elements' },
-              { id: 'templates', label: 'Templates' },
-              { id: 'samples', label: 'Samples' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto">
-            {activeTab === 'elements' && (
-              <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Add Elements</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {nodeTypes.map(({ type, label, color }) => (
-                    <button
-                      key={type}
-                      onClick={() => onCreateNode(type)}
-                      className={`p-3 text-xs rounded-lg border-2 border-${color}-300 bg-${color}-100 hover:bg-${color}-200 transition-colors flex items-center justify-center font-medium`}
-                    >
-                      <span className={`text-${color}-800`}>{label}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-4 p-3 bg-[#eae4d3]  rounded-lg">
-                  <div className="text-xs text-gray-700 font-medium mb-1"> Tip</div>
-                <div className="text-xs text-gray-600">
-                Click the <Atom className="inline w-4 h-4 align-text-top" /> button on nodes to link them to your Planning data!
-                </div>
-
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'templates' && (
-              <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Story Templates</h3>
-                <div className="space-y-2">
-                  {templateList.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => onLoadTemplate(template.id)}
-                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors overflow-hidden"
-                    >
-                      <div className="font-medium text-sm truncate">{template.name}</div>
-                      <div className="text-xs text-gray-600 mt-1 break-words leading-tight">{template.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'samples' && (
-              <div className="p-4">
-               <h3 className="text-sm font-medium text-gray-700 mb-3">Samples</h3>
-                <div className="space-y-2">
-                  {sampleList.map((sample) => (
-                    <button
-                      key={sample.id}
-                      onClick={() => onLoadSample(sample.id)}
-                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors overflow-hidden"
-                    >
-                      <div className="font-medium text-sm truncate">{sample.name}</div>
-                      <div className="text-xs text-gray-600 mt-1 break-words leading-tight">{sample.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Actions Section with Sync */}
-          <div className="p-4 border-t border-gray-200">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Actions</h3>
-            <div className="space-y-2">
-              <button
-                onClick={onSync}
-                disabled={isSyncing}
-                className={`w-full p-2 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 ${
-                  hasChanges 
-                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                }`}
-                title="Sync with Planning Pages"
-              >
-                {isSyncing ? 'Syncing...' : 'Sync Planning'}
-              </button>
-              <button
-                onClick={onLoad}
-                className="w-full p-2 bg-[#f2eee2] border-[#e8ddc1] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm"
-              >
-                Load File
-              </button>
-              <button
-                onClick={onClear}
-                className="w-full p-2 bg-[#f2eee2] border-[#e8ddc1] text-gray-700 rounded-lg hover:bg-[#e8ddc1] transition-colors text-sm"
-              >
-                Clear All
-              </button>
-            </div>
-            
-            {/* Sync Status */}
-            <div className="text-xs text-gray-500 mt-3 space-y-1">
-              {lastSynced && (
-                <div>Last synced: {lastSynced.toLocaleTimeString()}</div>
-              )}
-              {hasChanges && !isSyncing && (
-                <div className="text-orange-600 font-medium">
-                  Changes pending sync
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
 // Main Canvas Flow Component
-const CanvasFlow = () => {
+const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   // Get authenticated user
   const { user } = useAuth();
    
   // State Management
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'pending'>('synced');
+  const [canvasMode, setCanvasMode] = useState('explore');
   
-  // Use authenticated user ID or fallback to 'anonymous' for unauthenticated users
+  // AI Analysis State
+  const [aiAnalysisResults, setAiAnalysisResults] = useState<AIAnalysisResult[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  
+  // Use authenticated user ID or fallback
   const userId = user?.id || 'anonymous';
   
   // Get react flow instance and viewport
   const reactFlowInstance = useReactFlow();
   const viewport = reactFlowInstance?.getViewport() || { x: 0, y: 0, zoom: 1 };
   
-  // Canvas state for auto-save - automatically updates when dependencies change
+  // Canvas state for auto-save
   const canvasState: CanvasState = useMemo(() => ({
     nodes,
     edges,
@@ -545,23 +462,20 @@ const CanvasFlow = () => {
     lastModified: Date.now()
   }), [nodes, edges, viewport]);
 
-  // Enhanced auto-save hook with cloud sync only for authenticated users
+  // Enhanced auto-save hook
   const {
     lastSaved,
     isSaving,
     saveError,
-    cloudSyncStatus,
     forceSave,
     loadData,
-    clearError,
-    retrySave,
     isOnline
   } = useUnifiedAutoSave(canvasState, userId, {
-    localKey: `enhanced-canvas-${userId}`,
+    localKey: `enhanced-canvas-${userId}-${projectId || 'default'}`,
     delay: 2000,
-    enableCloud: !!user, // Only enable cloud storage for authenticated users
+    enableCloud: !!user,
     onSaveSuccess: (data) => {
-      console.log('Canvas auto-saved successfully at:', new Date());
+      console.log('Canvas auto-saved successfully');
     },
     onSaveError: (error) => {
       console.error('Canvas auto-save failed:', error);
@@ -572,11 +486,12 @@ const CanvasFlow = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
+  // Load planning data
+  const planningData = useCanvasPlanningData(projectId);
+
   // Update changes state when nodes/edges change
   useEffect(() => {
     setHasChanges(true);
-    
-    // Auto-save will handle the subtle saving
     if (nodes.length === 0 && edges.length === 0) {
       setHasChanges(false);
     }
@@ -611,99 +526,33 @@ const CanvasFlow = () => {
     );
   }, [setNodes]);
 
-  // Node Types with enhanced components
+  // Enhanced Node Types with planning integration
   const nodeTypes: NodeTypes = useMemo(() => ({
     character: (props: any) => (
-      <SimpleCharacterNode
+      <EnhancedCharacterNode
         {...props}
         onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
       />
     ),
     plot: (props: any) => (
-      <SimplePlotNode
+      <EnhancedPlotNode
         {...props}
         onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
       />
     ),
     location: (props: any) => (
-      <SimpleLocationNode
+      <EnhancedLocationNode
         {...props}
         onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
       />
     ),
-    theme: SimpleThemeNode,
-    conflict: SimpleConflictNode,
-    research: SimpleResearchNode,
-    timeline: SimpleTimelineNode,
+    theme: ThemeNode,
+    conflict: ConflictNode,
+    timeline: TimelineNode,
+    research: ResearchNode,
   }), [handleNodeDataChange]);
 
-  // Node creation with proper TypeScript interfaces
-  const getDefaultNodeData = (type: string) => {
-    switch (type) {
-      case 'character':
-        return {
-          name: 'New Character',
-          role: 'supporting' as const,
-          description: 'Character description...',
-          traits: [],
-          relationships: [],
-          aiSuggested: false
-        } as CharacterNodeData;
-      case 'plot':
-        return {
-          title: 'New Plot Point',
-          type: 'event' as const,
-          description: 'Plot description...',
-          significance: 'moderate' as const,
-          order: nodes.filter(n => n.type === 'plot').length + 1
-        } as PlotNodeData;
-      case 'location':
-        return {
-          name: 'New Location',
-          type: 'building' as const,
-          description: 'Location description...',
-          importance: 'moderate' as const,
-          connectedCharacters: []
-        } as LocationNodeData;
-      case 'theme':
-        return {
-          title: 'New Theme',
-          type: 'supporting' as const,
-          description: 'Theme description...',
-          significance: 'moderate' as const,
-          relatedCharacters: []
-        } as ThemeNodeData;
-      case 'conflict':
-        return {
-          title: 'New Conflict',
-          type: 'interpersonal' as const,
-          description: 'Conflict description...',
-          parties: [],
-          impact: 'moderate' as const,
-          currentStatus: 'emerging' as const,
-          escalation: 5
-        } as ConflictNodeData;
-      case 'research':
-        return {
-          title: 'New Research',
-          content: 'Research content...',
-          tags: [],
-          category: 'worldbuilding' as const
-        } as ResearchNodeData;
-      case 'timeline':
-        return {
-          title: 'New Timeline Event',
-          type: 'event' as const,
-          description: 'Event description...',
-          timeframe: 'Present',
-          significance: 'medium' as const,
-          order: nodes.filter(n => n.type === 'timeline').length + 1
-        } as TimelineNodeData;
-      default:
-        return {};
-    }
-  };
-
+  // Node creation with enhanced data
   const createNode = useCallback((type: string) => {
     if (!reactFlowInstance) return;
     
@@ -714,26 +563,108 @@ const CanvasFlow = () => {
       id,
       type,
       position,
-      data: getDefaultNodeData(type)
+      data: createNodeData(type)
     };
     
     setNodes((nds) => [...nds, newNode]);
-  }, [reactFlowInstance, setNodes, nodes]);
+  }, [reactFlowInstance, setNodes]);
+
+  // AI Analysis function
+  const handleAIAnalysis = useCallback(async () => {
+    if (!nodes.length) return;
+    
+    setIsAnalyzing(true);
+    setShowAIPanel(true);
+    
+    try {
+      const results: AIAnalysisResult[] = [];
+      
+      // Character analysis
+      const characterNodes = nodes.filter(n => n.type === 'character');
+      if (characterNodes.length > 0) {
+        for (const node of characterNodes) {
+for (const node of characterNodes) {
+  try {
+    const result = await intelligentAIService.analyzeCharacterNode(node.data);
+    results.push(result);
+  } catch (error) {
+    console.error('Character analysis failed:', error);
+    results.push({
+      type: 'error',
+      title: `Failed to analyze ${node.data.name || 'character'}`,
+      description: 'An error occurred during AI analysis. Please try again.',
+      severity: 'high',
+      nodeId: node.id
+    });
+  }
+}
+      }
+      
+      // Story coherence analysis
+      if (nodes.length > 3) {
+        try {
+          const coherenceResult = await intelligentAIService.analyzeStoryCoherence(nodes, edges);
+          results.push(coherenceResult);
+        } catch (error) {
+          console.error('Story coherence analysis failed:', error);
+        }
+      }
+      
+      // Relationship analysis
+      if (characterNodes.length > 1) {
+        try {
+          const relationshipResult = await intelligentAIService.suggestRelationships(characterNodes);
+          results.push(relationshipResult);
+        } catch (error) {
+          console.error('Relationship analysis failed:', error);
+        }
+      }
+      
+      setAiAnalysisResults(results);
+    } catch (error) {
+      console.error('AI Analysis failed:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [nodes, edges]);
 
   // Sync with Planning Pages
   const handleSync = useCallback(async () => {
     setSyncStatus('syncing');
     
     try {
-      // This would integrate with your Planning Pages data
-      // For now, we'll simulate the sync process
+      // Refresh planning data
+      await planningData.refresh();
       
-      // 1. Get data from Planning Pages (OutlinePage, PlotPage, CharactersPage, etc.)
-      // 2. Compare with current Canvas nodes
-      // 3. Create/update nodes based on Planning data
-      // 4. Handle conflicts if both Canvas and Planning have been modified
+      // Update nodes that are linked to planning data
+      const updatedNodes = await Promise.all(
+        nodes.map(async (node) => {
+          if (node.data.fromPlanning && node.data.planningId) {
+            // Fetch updated data from planning
+            if (node.type === 'character') {
+              const updatedChar = planningData.planningCharacters.find(
+                c => c.id === node.data.planningId
+              );
+              if (updatedChar) {
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    name: updatedChar.name,
+                    role: updatedChar.role,
+                    description: updatedChar.description,
+                    completeness_score: updatedChar.completeness_score
+                  }
+                };
+              }
+            }
+            // Add similar logic for plot and location nodes
+          }
+          return node;
+        })
+      );
       
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+      setNodes(updatedNodes);
       
       // Force save the current state
       await forceSave();
@@ -745,12 +676,10 @@ const CanvasFlow = () => {
       console.error('Sync failed:', error);
       setSyncStatus('error');
     }
-  }, [forceSave]);
+  }, [planningData, nodes, forceSave, setNodes]);
 
-  // Template loading with proper UUID regeneration
+  // Template loading
   const loadTemplate = useCallback((templateId: string) => {
-    console.log('Loading template:', templateId);
-    
     try {
       const template = templates[templateId as keyof typeof templates];
       
@@ -852,6 +781,7 @@ const CanvasFlow = () => {
     }
   }, [setNodes, setEdges, reactFlowInstance]);
 
+  // Connection handler
   const onConnect = useCallback((params: Connection) => {
     setEdges((eds) => addEdge({ 
       ...params, 
@@ -861,6 +791,7 @@ const CanvasFlow = () => {
     }, eds));
   }, [setEdges]);
 
+  // File operations
   const handleLoad = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -872,16 +803,9 @@ const CanvasFlow = () => {
         reader.onload = (e) => {
           try {
             const data = JSON.parse(e.target?.result as string);
-            // Validate the loaded data structure
-            if (
-              data?.nodes &&
-              Array.isArray(data.nodes) &&
-              data?.edges &&
-              Array.isArray(data.edges)
-            ) {
+            if (data?.nodes && Array.isArray(data.nodes) && data?.edges && Array.isArray(data.edges)) {
               setNodes(data.nodes);
               setEdges(data.edges);
-              // Restore viewport if available
               if (data.viewport && reactFlowInstance) {
                 reactFlowInstance.setViewport(data.viewport);
               }
@@ -890,14 +814,8 @@ const CanvasFlow = () => {
             }
           } catch (error) {
             console.error('Error loading file:', error);
-            alert(
-              'Failed to load file: ' +
-                (error instanceof Error ? error.message : 'Invalid file format')
-            );
+            alert('Failed to load file: ' + (error instanceof Error ? error.message : 'Invalid file format'));
           }
-        };
-        reader.onerror = () => {
-          alert('Failed to read file');
         };
         reader.readAsText(file);
       }
@@ -909,12 +827,68 @@ const CanvasFlow = () => {
     setNodes([]);
     setEdges([]);
     setHasChanges(false);
+    setAiAnalysisResults([]);
   }, [setNodes, setEdges]);
+
+  const handleExport = useCallback((format: string) => {
+    const exportData = {
+      nodes,
+      edges,
+      viewport: reactFlowInstance?.getViewport(),
+      metadata: {
+        projectId,
+        exportedAt: new Date().toISOString(),
+        nodeCount: nodes.length,
+        edgeCount: edges.length
+      }
+    };
+
+    switch (format) {
+      case 'json':
+        {
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `canvas-${projectId || 'default'}-${Date.now()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        break;
+        }
+      default:
+        console.log(`Export format ${format} not yet implemented`);
+    }
+  }, [nodes, edges, reactFlowInstance, projectId]);
+
+  // AI suggestion handler
+  const handleApplySuggestion = useCallback((suggestionId: string, data: any) => {
+    // Implementation for applying AI suggestions
+    console.log('Applying suggestion:', suggestionId, data);
+    
+    if (suggestionId.startsWith('relationship-')) {
+      // Create edge between characters based on AI suggestion
+      const suggestion = data;
+      // Find character nodes and create connection
+      // This would involve finding the nodes and creating an edge
+    }
+  }, []);
 
   return (
     <div className="h-screen bg-gray-50 flex">
-      {/* Main Canvas Area - No header, search bar, or breadcrumbs */}
+      {/* Main Canvas Area */}
       <div className="flex-1 relative">
+        {/* Back button */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Back</span>
+          </button>
+        )}
+
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -937,18 +911,9 @@ const CanvasFlow = () => {
           />
           <Controls />
           <MiniMap 
-            nodeColor={(node) => {
-              switch (node.type) {
-                case 'character': return '#dcfce7';
-                case 'plot': return '#dbeafe';
-                case 'research': return '#e0e7ff';
-                case 'location': return '#f3e8ff';
-                case 'theme': return '#fef3c7';
-                case 'conflict': return '#fee2e2';
-                case 'timeline': return '#cffafe';
-                default: return '#f3f4f6';
-              }
-            }}
+            nodeColor={(node) => nodeColors[node.type as keyof typeof nodeColors] || '#f3f4f6'}
+            nodeStrokeWidth={3}
+            maskColor="rgba(0, 0, 0, 0.1)"
           />
         </ReactFlow>
 
@@ -958,46 +923,66 @@ const CanvasFlow = () => {
             <div className="text-center p-8 bg-white rounded-lg shadow-lg border border-gray-200 max-w-md">
               <div className="text-4xl mb-4">🎨</div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Visual Story Canvas
+                Enhanced Story Canvas
               </h3>
               <p className="text-gray-600 mb-4">
-                Create and organize your story visually. Sync with your Planning Pages to keep everything connected.
+                Create and organize your story visually. Sync with your Planning Pages and use AI analysis to improve your narrative.
               </p>
               <div className="text-sm text-gray-500 space-y-1">
                 <p>• Add story elements from the sidebar</p>
-                <p>• Connect ideas with drag-and-drop</p>
-                <p>• Sync with Planning Pages for consistency</p>
-                <p>• Use templates or samples to get started</p>
+                <p>• Link nodes to Planning data with the ⚛ button</p>
+                <p>• Use AI analysis for story insights</p>
+                <p>• Connect elements with drag-and-drop</p>
               </div>
             </div>
           </div>
         )}
+
+        {/* AI Analysis Panel */}
+        {showAIPanel && (
+          <AIAnalysisPanel
+            isOpen={showAIPanel}
+            onClose={() => setShowAIPanel(false)}
+            results={aiAnalysisResults}
+            isAnalyzing={isAnalyzing}
+            onApplySuggestion={handleApplySuggestion}
+          />
+        )}
       </div>
 
-      {/* Right Side Menu with Sync */}
-      <SimplifiedMenu
-        isCollapsed={isMenuCollapsed}
-        onToggleCollapsed={() => setIsMenuCollapsed(!isMenuCollapsed)}
+      {/* Enhanced Sidebar */}
+      <EnhancedCanvasToolbar
         onCreateNode={createNode}
+        onTemplate={loadTemplate}
         onSync={handleSync}
         onLoad={handleLoad}
-        onClear={clearCanvas}
-        onLoadTemplate={loadTemplate}
         onLoadSample={loadSample}
+        onClear={clearCanvas}
+        onBack={onBack}
+        onExport={handleExport}
         lastSynced={lastSynced}
         isSyncing={isSaving || syncStatus === 'syncing'}
-        hasChanges={hasChanges}
+        selectedNodes={[]} // TODO: Implement selection tracking
+        onAnalyzeAI={handleAIAnalysis}
+        isAnalyzing={isAnalyzing}
         syncStatus={syncStatus}
+        isOnline={isOnline}
+        canvasMode={canvasMode}
+        onModeChange={setCanvasMode}
+        hasNodes={nodes.length > 0}
+        nodeCount={nodes.length}
+        edgeCount={edges.length}
+        hasChanges={hasChanges}
       />
     </div>
   );
 };
 
 // Main Canvas Component with Provider
-const Canvas = () => {
+const Canvas: React.FC<CanvasProps> = (props) => {
   return (
     <ReactFlowProvider>
-      <CanvasFlow />
+      <CanvasFlow {...props} />
     </ReactFlowProvider>
   );
 };
