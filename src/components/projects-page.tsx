@@ -1,6 +1,6 @@
 // src/components/projects-page.tsx - Enhanced with simplified search and filter
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, 
   ChevronDown, 
@@ -20,7 +20,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ProjectsPageProps {
   onBack?: () => void;
-  onNavigateToWrite?: (projectId: string, chapterId?: string) => void; // Update this line
+  onNavigateToWrite?: (projectId: string, chapterId?: string) => void;
 }
 
 interface ProjectWithChapters extends Project {
@@ -107,6 +107,13 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
 
   const hasActiveFilters = hasStatusFilters || genreFilter !== 'all';
 
+  // Move handleSelectChapter to top level with other callbacks
+  const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
+    if (onNavigateToWrite && selectedProject) {
+      onNavigateToWrite(selectedProject.id, chapterId);
+    }
+  }, [onNavigateToWrite, selectedProject]);
+
   useEffect(() => {
     const fetchProjects = async () => {
       setIsLoading(true);
@@ -171,13 +178,6 @@ export function ProjectsPage({ onBack, onNavigateToWrite }: ProjectsPageProps) {
         orderIndex: 1,
         status: 'draft'
       });
-
-      // Add this new handler function after handleCreateFirstChapter:
-const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
-  if (onNavigateToWrite && selectedProject) {
-    onNavigateToWrite(selectedProject.id, chapterId);
-  }
-}, [onNavigateToWrite, selectedProject]);
       
       if (newChapter && onNavigateToWrite) {
         // Update project with new chapter
@@ -317,15 +317,15 @@ const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string
   };
 
   if (currentView === 'chapters' && selectedProject) {
-  return (
-    <ChaptersPage
-      projectId={selectedProject.id}
-      projectTitle={selectedProject.title}
-      onBack={handleBackToProjects}
-      onSelectChapter={handleSelectChapter} // Add this line
-    />
-  );
-}
+    return (
+      <ChaptersPage
+        projectId={selectedProject.id}
+        projectTitle={selectedProject.title}
+        onBack={handleBackToProjects}
+        onSelectChapter={handleSelectChapter}
+      />
+    );
+  }
 
   return (
     <div className="h-screen bg-[#F9FAFB] flex flex-col font-inter">
