@@ -118,6 +118,8 @@ export { userService } from './userService';
 export { autoSaveService } from './autoSaveService';
 export { intelligentAIService } from './intelligentAIService';
 export { outlineService } from './outlineService';
+export { characterService } from './character-service';
+export { worldBuildingService } from './world-building-service';
 
 // Export types
 export type { 
@@ -125,11 +127,20 @@ export type {
   CreateOutlineNodeData 
 } from './outlineService';
 
+export type {
+  Character,
+  CreateCharacterData
+} from './character-service';
+
+export type {
+  WorldElement,
+  CreateWorldElementData
+} from './world-building-service';
+
 // Re-export common types that might be used across services
 export type {
   Project,
   Chapter,
-  Character,
   PlotPoint,
   WorldBuildingElement,
   Note,
