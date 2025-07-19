@@ -192,20 +192,24 @@ export const getNodeColor = (type: string): string => {
 };
 
 // Export validation functions
-return typeof data.name === 'string' && 
-data.name.trim().length > 0 && 
-typeof data.role === 'string' && 
-['protagonist', 'antagonist', 'supporting'].includes(data.role);
+export const validateNodeData = (type: string, data: any): boolean => {
+  switch (type) {
+    case 'character':
+      return typeof data.name === 'string' && 
+        data.name.trim().length > 0 && 
+        typeof data.role === 'string' && 
+        ['protagonist', 'antagonist', 'supporting'].includes(data.role);
     case 'plot':
     case 'theme':
     case 'conflict':
     case 'timeline':
     case 'research':
       return typeof data.title === 'string' && 
-data.title.trim().length > 0 && 
-['event', 'twist', 'climax', 'resolution'].includes(data.type);
+        data.title.trim().length > 0 && 
+        typeof data.type === 'string';
     case 'location':
-      return typeof data.name === 'string';
+      return typeof data.name === 'string' && 
+        data.name.trim().length > 0;
     default:
       return false;
   }
