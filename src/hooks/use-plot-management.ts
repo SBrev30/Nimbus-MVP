@@ -69,10 +69,38 @@ export function usePlotManagement(): UsePlotManagementReturn {
 
   // Load plot threads with events
   const loadPlotThreads = useCallback(async (projectId: string) => {
+    console.log('🔍 Loading plot threads for project:', projectId);
     setLoading(true);
     setError(null);
     
     try {
+      // First check authentication
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error('❌ Auth error:', authError);
+        throw new Error(`Authentication error: ${authError.message}`);
+      }
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      console.log('✅ User authenticated:', user.id);
+
+      // Check if project exists and user has access
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('id, title, user_id')
+        .eq('id', projectId)
+        .single();
+
+      if (projectError) {
+        console.error('❌ Project error:', projectError);
+        throw new Error(`Project access error: ${projectError.message}`);
+      }
+      if (!project) {
+        throw new Error('Project not found');
+      }
+      console.log('✅ Project found:', project.title);
+
       // Load threads with event counts
       const { data: threads, error: threadsError } = await supabase
         .from('plot_threads_with_event_count')
@@ -80,7 +108,12 @@ export function usePlotManagement(): UsePlotManagementReturn {
         .eq('project_id', projectId)
         .order('created_at', { ascending: true });
 
-      if (threadsError) throw threadsError;
+      if (threadsError) {
+        console.error('❌ Threads error:', threadsError);
+        throw threadsError;
+      }
+
+      console.log('✅ Loaded threads:', threads?.length || 0);
 
       // Load events for each thread
       const threadsWithEvents = await Promise.all(
@@ -92,7 +125,7 @@ export function usePlotManagement(): UsePlotManagementReturn {
             .order('order_index', { ascending: true });
 
           if (eventsError) {
-            console.warn(`Failed to load events for thread ${thread.id}:`, eventsError);
+            console.warn(`⚠️ Failed to load events for thread ${thread.id}:`, eventsError);
             return { ...thread, events: [] };
           }
 
@@ -106,25 +139,54 @@ export function usePlotManagement(): UsePlotManagementReturn {
       if (!selectedThread && threadsWithEvents.length > 0) {
         setSelectedThread(threadsWithEvents[0]);
       }
+
+      console.log('✅ Successfully loaded plot threads');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load plot threads');
-      console.error('Error loading plot threads:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load plot threads';
+      setError(errorMessage);
+      console.error('❌ Error loading plot threads:', err);
     } finally {
       setLoading(false);
     }
   }, [selectedThread]);
 
-  // Create new plot thread
+  // Create new plot thread with enhanced debugging
   const createPlotThread = useCallback(async (data: CreatePlotThreadRequest): Promise<PlotThread | null> => {
+    console.log('🔄 Creating plot thread with data:', data);
     setCreating(true);
     setError(null);
     
     try {
-      const { data: user } = await supabase.auth.getUser();
-      
+      // Check authentication first
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error('❌ Auth error during creation:', authError);
+        throw new Error(`Authentication error: ${authError.message}`);
+      }
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      console.log('✅ User authenticated for creation:', user.id);
+
+      // Verify project access
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('id, title, user_id')
+        .eq('id', data.project_id)
+        .single();
+
+      if (projectError) {
+        console.error('❌ Project verification failed:', projectError);
+        throw new Error(`Project access error: ${projectError.message}`);
+      }
+      if (!project) {
+        throw new Error('Project not found');
+      }
+      console.log('✅ Project verified for creation:', project.title);
+
       const threadData = {
         ...data,
-        user_id: user.user?.id,
+        user_id: user.id,
         color: data.color || '#3B82F6',
         tags: data.tags || [],
         tension_curve: [],
@@ -133,13 +195,20 @@ export function usePlotManagement(): UsePlotManagementReturn {
         completion_percentage: 0
       };
 
+      console.log('📝 Inserting thread data:', threadData);
+
       const { data: newThread, error } = await supabase
         .from('plot_threads')
         .insert([threadData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Database insertion error:', error);
+        throw error;
+      }
+
+      console.log('✅ Thread created successfully:', newThread.id);
 
       // Add to local state with empty events
       const threadWithEvents = { ...newThread, events: [], event_count: 0, avg_tension: 0 };
@@ -148,8 +217,20 @@ export function usePlotManagement(): UsePlotManagementReturn {
       
       return threadWithEvents;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create plot thread');
-      console.error('Error creating plot thread:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create plot thread';
+      setError(errorMessage);
+      console.error('❌ Error creating plot thread:', err);
+      
+      // Enhanced error logging for debugging
+      if (err && typeof err === 'object') {
+        console.error('Error details:', {
+          message: err.message,
+          code: err.code,
+          details: err.details,
+          hint: err.hint
+        });
+      }
+      
       return null;
     } finally {
       setCreating(false);
