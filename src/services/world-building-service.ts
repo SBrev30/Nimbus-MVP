@@ -31,7 +31,19 @@ export interface UpdateWorldElementData extends Partial<CreateWorldElementData> 
   id: string;
 }
 
+export interface ImageUsageStats {
+  totalSizeBytes: number;
+  totalCount: number;
+  remainingBytes: number;
+  remainingCount: number;
+}
+
 class WorldBuildingService {
+  // Constants for free tier limits
+  private readonly FREE_TIER_MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB total
+  private readonly MAX_IMAGES_PER_ELEMENT = 6;
+  private readonly MAX_SINGLE_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB per image max
+
   async getWorldElements(projectId?: string): Promise<WorldElement[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -155,6 +167,19 @@ class WorldBuildingService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Get the element to clean up images
+      const element = await this.getWorldElement(id);
+      if (element?.image_urls) {
+        // Clean up images from storage
+        for (const imageUrl of element.image_urls) {
+          try {
+            await this.deleteImage(imageUrl);
+          } catch (error) {
+            console.warn('Failed to delete image during element deletion:', error);
+          }
+        }
+      }
+
       const { error } = await supabase
         .from('world_elements')
         .delete()
@@ -231,13 +256,77 @@ class WorldBuildingService {
     }
   }
 
-  // Helper method for image upload (you'll need to implement actual upload logic)
+  async getUserImageUsage(): Promise<ImageUsageStats> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Get all user's world elements with images
+      const elements = await this.getWorldElements();
+      
+      let totalSizeBytes = 0;
+      let totalCount = 0;
+
+      // Calculate total usage across all elements
+      for (const element of elements) {
+        if (element.image_urls && element.image_urls.length > 0) {
+          totalCount += element.image_urls.length;
+          
+          // For size calculation, we'll need to get file info from storage
+          // For now, we'll estimate based on average file sizes or store metadata
+          // This is a simplified approach - in production you'd want to track actual sizes
+          for (const imageUrl of element.image_urls) {
+            try {
+              const filename = this.extractFilenameFromUrl(imageUrl);
+              if (filename) {
+                const { data: fileData, error } = await supabase.storage
+                  .from('world-building-images')
+                  .list(user.id, { search: filename });
+                
+                if (fileData && fileData.length > 0) {
+                  const file = fileData.find(f => f.name === filename.split('/').pop());
+                  if (file?.metadata?.size) {
+                    totalSizeBytes += file.metadata.size;
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn('Error getting file size for:', imageUrl, error);
+            }
+          }
+        }
+      }
+
+      const remainingBytes = Math.max(0, this.FREE_TIER_MAX_TOTAL_SIZE - totalSizeBytes);
+      const remainingCount = Math.max(0, 100 - totalCount); // Assume max 100 images total
+
+      return {
+        totalSizeBytes,
+        totalCount,
+        remainingBytes,
+        remainingCount
+      };
+    } catch (error) {
+      console.error('Error calculating image usage:', error);
+      throw error;
+    }
+  }
+
+  private extractFilenameFromUrl(url: string): string | null {
+    try {
+      const urlParts = url.split('/');
+      const filename = urlParts[urlParts.length - 1];
+      return filename || null;
+    } catch {
+      return null;
+    }
+  }
+
   async uploadImage(file: File): Promise<string> {
     try {
-      // Validate file size (max 50MB as requested)
-      const maxSize = 50 * 1024 * 1024; // 50MB in bytes
-      if (file.size > maxSize) {
-        throw new Error('File size exceeds 50MB limit');
+      // Validate file size (max 10MB per individual image)
+      if (file.size > this.MAX_SINGLE_IMAGE_SIZE) {
+        throw new Error('Individual image size cannot exceed 10MB');
       }
 
       // Validate file type
@@ -248,12 +337,26 @@ class WorldBuildingService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Check total usage before uploading
+      const usage = await this.getUserImageUsage();
+      if (usage.totalSizeBytes + file.size > this.FREE_TIER_MAX_TOTAL_SIZE) {
+        const remainingMB = Math.round(usage.remainingBytes / (1024 * 1024) * 10) / 10;
+        const fileMB = Math.round(file.size / (1024 * 1024) * 10) / 10;
+        throw new Error(`Upload would exceed 50MB limit. You have ${remainingMB}MB remaining, but this file is ${fileMB}MB.`);
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
       const { data, error } = await supabase.storage
         .from('world-building-images')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          metadata: {
+            size: file.size,
+            type: file.type,
+            uploaded_at: new Date().toISOString()
+          }
+        });
 
       if (error) {
         logSupabaseError(error, 'WorldBuildingService.uploadImage');
@@ -275,7 +378,7 @@ class WorldBuildingService {
   async deleteImage(imageUrl: string): Promise<void> {
     try {
       // Extract filename from URL
-      const filename = imageUrl.split('/').pop();
+      const filename = this.extractFilenameFromUrl(imageUrl);
       if (!filename) return;
 
       const { error } = await supabase.storage
