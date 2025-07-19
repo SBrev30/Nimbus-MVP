@@ -129,7 +129,7 @@ function AppContent() {
   // Auto-save functionality
   useAutoSave(editorContent, setEditorContent, 5000);
 
-  // Load user's default project on login - THIS LOADS THE PROJECT FOR PLOTPAGE
+  // Load user's default project on login
   useEffect(() => {
     const loadDefaultProject = async () => {
       if (user && !currentProject) {
@@ -143,18 +143,15 @@ function AppContent() {
 
           if (!error && projects && projects.length > 0) {
             setCurrentProject(projects[0]);
-            console.log('✅ Loaded default project:', projects[0].title);
-          } else {
-            console.log('ℹ️ No projects found for user');
           }
         } catch (error) {
-          console.error('Error loading default project:', error);
+          // Could add user notification here if needed
         }
       }
     };
 
     loadDefaultProject();
-  }, [user, currentProject]);
+  }, [user]);
 
   // ALL CALLBACK HANDLERS
   const handleEditorChange = useCallback((content: EditorContent) => {
