@@ -106,3 +106,6 @@ export interface CanvasItem {
   position_y: number
   created_at: string
 }
+
+// Plot management types - exported from types/plot.ts
+export type { PlotThread, PlotEvent, PlotThreadType, ViewMode } from '../types/plot'
