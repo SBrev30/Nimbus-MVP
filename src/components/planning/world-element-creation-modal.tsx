@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
-import { X, Upload, Plus, Trash2, Globe, Users, Zap, DollarSign, Crown, MapPin } from 'lucide-react';
-import { CreateWorldElementData, worldBuildingService } from '../../services/world-building-service';
+import React, { useState, useCallback, useEffect } from 'react';
+import { X, Upload, Plus, Trash2, Globe, Users, Zap, DollarSign, Crown, MapPin, AlertCircle } from 'lucide-react';
+import { CreateWorldElementData, worldBuildingService, ImageUsageStats } from '../../services/world-building-service';
 
 interface WorldElementCreationModalProps {
   isOpen: boolean;
@@ -37,6 +37,27 @@ export function WorldElementCreationModal({
   const [error, setError] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [uploadingImages, setUploadingImages] = useState<boolean[]>([]);
+  const [imageUsage, setImageUsage] = useState<ImageUsageStats | null>(null);
+  const [loadingUsage, setLoadingUsage] = useState(false);
+
+  // Load image usage stats when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadImageUsage();
+    }
+  }, [isOpen]);
+
+  const loadImageUsage = async () => {
+    try {
+      setLoadingUsage(true);
+      const usage = await worldBuildingService.getUserImageUsage();
+      setImageUsage(usage);
+    } catch (error) {
+      console.error('Error loading image usage:', error);
+    } finally {
+      setLoadingUsage(false);
+    }
+  };
 
   const handleInputChange = useCallback((field: keyof CreateWorldElementData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -80,6 +101,9 @@ export function WorldElementCreationModal({
         newImageUrls[index] = imageUrl;
         return { ...prev, image_urls: newImageUrls };
       });
+
+      // Refresh usage stats after successful upload
+      await loadImageUsage();
     } catch (error) {
       console.error('Error uploading image:', error);
       setError(error instanceof Error ? error.message : 'Failed to upload image');
@@ -97,6 +121,8 @@ export function WorldElementCreationModal({
     if (imageUrl) {
       try {
         await worldBuildingService.deleteImage(imageUrl);
+        // Refresh usage stats after deletion
+        await loadImageUsage();
       } catch (error) {
         console.warn('Failed to delete image from storage:', error);
       }
@@ -138,6 +164,7 @@ export function WorldElementCreationModal({
         project_id: projectId
       });
       setTagInput('');
+      await loadImageUsage(); // Refresh usage stats
     } catch (error) {
       console.error('Error creating world element:', error);
       setError(error instanceof Error ? error.message : 'Failed to create world element');
@@ -162,12 +189,15 @@ export function WorldElementCreationModal({
     setTagInput('');
     setError(null);
     setUploadingImages([]);
+    setImageUsage(null);
     onClose();
   }, [isLoading, onClose, projectId]);
 
   if (!isOpen) return null;
 
-  const selectedCategory = categoryOptions.find(cat => cat.value === formData.category);
+  const remainingMB = imageUsage ? Math.round(imageUsage.remainingBytes / (1024 * 1024) * 10) / 10 : 0;
+  const totalUsedMB = imageUsage ? Math.round(imageUsage.totalSizeBytes / (1024 * 1024) * 10) / 10 : 0;
+  const usagePercentage = imageUsage ? Math.round((imageUsage.totalSizeBytes / (50 * 1024 * 1024)) * 100) : 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -189,6 +219,58 @@ export function WorldElementCreationModal({
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {/* Image Usage Alert */}
+          {imageUsage && (
+            <div className={`rounded-lg p-3 ${
+              usagePercentage >= 90 ? 'bg-red-50 border border-red-200' :
+              usagePercentage >= 75 ? 'bg-yellow-50 border border-yellow-200' :
+              'bg-blue-50 border border-blue-200'
+            }`}>
+              <div className="flex items-start gap-2">
+                <AlertCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                  usagePercentage >= 90 ? 'text-red-600' :
+                  usagePercentage >= 75 ? 'text-yellow-600' :
+                  'text-blue-600'
+                }`} />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className={`text-sm font-medium ${
+                      usagePercentage >= 90 ? 'text-red-800' :
+                      usagePercentage >= 75 ? 'text-yellow-800' :
+                      'text-blue-800'
+                    }`}>
+                      Image Storage Usage (Free Tier)
+                    </p>
+                    <span className={`text-xs ${
+                      usagePercentage >= 90 ? 'text-red-600' :
+                      usagePercentage >= 75 ? 'text-yellow-600' :
+                      'text-blue-600'
+                    }`}>
+                      {totalUsedMB}MB / 50MB ({usagePercentage}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all ${
+                        usagePercentage >= 90 ? 'bg-red-500' :
+                        usagePercentage >= 75 ? 'bg-yellow-500' :
+                        'bg-blue-500'
+                      }`}
+                      style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className={`text-xs ${
+                    usagePercentage >= 90 ? 'text-red-700' :
+                    usagePercentage >= 75 ? 'text-yellow-700' :
+                    'text-blue-700'
+                  }`}>
+                    {remainingMB}MB remaining for all images across your world building elements
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -332,12 +414,23 @@ export function WorldElementCreationModal({
               Inspiration Images (up to 6)
             </label>
             <p className="text-xs text-gray-500 mb-4">
-              Upload PNG or JPEG images (max 50MB each) for visual inspiration
+              Upload PNG or JPEG images (max 10MB each). Total storage limit: 50MB for free tier.
             </p>
+            
+            {/* Warning if near limit */}
+            {imageUsage && usagePercentage >= 95 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-red-800">
+                  ⚠️ You're very close to your 50MB storage limit. Consider removing some existing images before uploading new ones.
+                </p>
+              </div>
+            )}
+            
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {Array.from({ length: 6 }, (_, index) => {
                 const hasImage = formData.image_urls?.[index];
                 const isUploading = uploadingImages[index];
+                const canUpload = !imageUsage || usagePercentage < 100;
                 
                 return (
                   <div
@@ -360,14 +453,18 @@ export function WorldElementCreationModal({
                         </button>
                       </>
                     ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-gray-50 transition-colors">
+                      <label className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+                        canUpload 
+                          ? 'cursor-pointer hover:bg-gray-50' 
+                          : 'cursor-not-allowed bg-gray-100 opacity-50'
+                      }`}>
                         {isUploading ? (
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                         ) : (
                           <>
                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
                             <span className="text-xs text-gray-500 text-center px-2">
-                              Click to upload
+                              {canUpload ? 'Click to upload' : 'Storage limit reached'}
                             </span>
                           </>
                         )}
@@ -376,7 +473,7 @@ export function WorldElementCreationModal({
                           accept="image/png,image/jpeg,image/jpg"
                           onChange={(e) => handleImageUpload(e.target.files, index)}
                           className="hidden"
-                          disabled={isUploading}
+                          disabled={isUploading || !canUpload}
                         />
                       </label>
                     )}
