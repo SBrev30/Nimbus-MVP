@@ -1,6 +1,9 @@
 import React, { useState, useCallback } from 'react';
+import { Handle, Position } from 'reactflow';
 import { BaseCanvasNode, withCanvasComponent, BaseCanvasComponentProps } from '../core/BaseCanvasComponent';
-import { User, Edit3, Heart, Brain } from 'lucide-react';
+import { useCanvasPlanningData } from '../../../hooks/useCanvasPlanningData';
+import { CharacterPopup } from '../CharacterPopup';
+import { User, Edit3, Heart, Brain, Atom } from 'lucide-react';
 
 export interface CharacterNodeData {
   name: string;
@@ -13,7 +16,12 @@ export interface CharacterNodeData {
   appearance?: string;
   personality?: string;
   image?: string;
-  completenessScore?: number;
+  completeness_score?: number;
+  // Planning integration fields
+  fromPlanning?: boolean;
+  planningId?: string;
+  traits?: string[];
+  fantasyClass?: string;
   relationships?: Array<{
     characterId: string;
     type: 'family' | 'friend' | 'enemy' | 'romantic' | 'other';
@@ -24,7 +32,7 @@ export interface CharacterNodeData {
 interface CharacterNodeProps extends BaseCanvasComponentProps {
   data: CharacterNodeData;
   isEditing?: boolean;
-  onDataChange?: (field: string, value: any) => void;
+  onDataChange?: (newData: Partial<CharacterNodeData>) => void;
   onAnalyzeAI?: (characterId: string) => void;
 }
 
@@ -37,12 +45,45 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   onAnalyzeAI
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'relationships'>('basic');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  
+  const { planningCharacters, loading } = useCanvasPlanningData();
 
   const handleFieldChange = useCallback((field: string, value: any) => {
     if (onDataChange) {
-      onDataChange(field, value);
+      onDataChange({ [field]: value });
     }
   }, [onDataChange]);
+
+  const handleCharacterSelect = (character: any) => {
+    if (onDataChange) {
+      onDataChange({
+        name: character.name,
+        role: character.role,
+        description: character.description,
+        fromPlanning: true,
+        planningId: character.id,
+        traits: character.traits || [],
+        age: character.age,
+        occupation: character.occupation,
+        completeness_score: character.completeness_score
+      });
+    }
+    setShowDropdown(false);
+  };
+
+  const handleNodeClick = (event: React.MouseEvent) => {
+    if (data.fromPlanning) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setPopupPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top
+      });
+      setShowPopup(true);
+    }
+  };
 
   const calculateCompleteness = useCallback(() => {
     const requiredFields = ['name', 'role', 'description'];
@@ -54,7 +95,14 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     return requiredComplete ? (50 + (optionalComplete / optionalFields.length) * 50) : 0;
   }, [data]);
 
-  const completeness = calculateCompleteness();
+  const getCompletionColor = (score: number = 0) => {
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-yellow-500';
+    if (score >= 40) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
+  const completeness = data.fromPlanning ? (data.completeness_score || 0) : calculateCompleteness();
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -75,160 +123,186 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   };
 
   return (
-    <BaseCanvasNode selected={selected} className={`character-node ${getRoleColor(data.role)}`}>
-      {/* Character Header */}
-      <div className="character-header">
-        <div className="character-avatar">
-          {data.image ? (
-            <img src={data.image} alt={data.name} className="w-12 h-12 rounded-full object-cover" />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-2xl">
-              {getRoleIcon(data.role)}
-            </div>
+    <>
+      <div 
+        className={`bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[180px] shadow-sm relative cursor-pointer transition-all hover:shadow-md ${getRoleColor(data.role)}`}
+        onClick={handleNodeClick}
+      >
+        <Handle type="target" position={Position.Top} className="w-2 h-2" />
+        
+        {/* Character Header */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-semibold text-green-800 text-sm flex items-center gap-2">
+            {data.name || 'Character'}
+            {data.fromPlanning && (
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-xs text-green-600">Linked</span>
+              </div>
+            )}
+          </div>
+          
+          {!data.fromPlanning && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDropdown(!showDropdown);
+              }}
+              className="text-xs bg-green-200 hover:bg-green-300 rounded p-1 transition-colors"
+              title="Link to Planning Character"
+            >
+              <Atom className="w-4 h-4" />
+            </button>
           )}
         </div>
-        <div className="character-info ml-3 flex-1">
-          {isEditing ? (
+
+        <div className="character-avatar-info flex items-center mb-2">
+          <div className="character-avatar mr-2">
+            {data.image ? (
+              <img src={data.image} alt={data.name} className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-lg">
+                {getRoleIcon(data.role)}
+              </div>
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="text-xs text-green-600 mb-1 capitalize">{data.role || 'Role'}</div>
+            
+            {/* Completeness Score */}
+            {(data.fromPlanning || completeness > 0) && (
+              <div className="mb-2">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-green-700">Completeness</span>
+                  <span className="text-green-600">{Math.round(completeness)}%</span>
+                </div>
+                <div className="w-full bg-green-200 rounded-full h-1.5">
+                  <div 
+                    className={`h-1.5 rounded-full transition-all duration-300 ${getCompletionColor(completeness)}`}
+                    style={{ width: `${completeness}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Character Description */}
+        {isEditing ? (
+          <div className="space-y-2">
             <input
               value={data.name || ''}
               onChange={(e) => handleFieldChange('name', e.target.value)}
-              className="text-lg font-bold bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-500"
+              className="w-full text-sm font-medium bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-500"
               placeholder="Character name..."
             />
-          ) : (
-            <h3 className="text-lg font-bold text-gray-800">{data.name || 'Unnamed Character'}</h3>
-          )}
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-gray-600 capitalize">{data.role}</span>
-            <div className="completeness-indicator">
-              <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-green-500 transition-all duration-300"
-                  style={{ width: `${completeness}%` }}
-                />
-              </div>
-              <span className="text-xs text-gray-500 ml-1">{Math.round(completeness)}%</span>
-            </div>
+            <select
+              value={data.role}
+              onChange={(e) => handleFieldChange('role', e.target.value)}
+              className="w-full p-1 border border-gray-300 rounded text-xs"
+            >
+              <option value="protagonist">Protagonist</option>
+              <option value="antagonist">Antagonist</option>
+              <option value="supporting">Supporting</option>
+              <option value="other">Other</option>
+            </select>
+            <textarea
+              value={data.description || ''}
+              onChange={(e) => handleFieldChange('description', e.target.value)}
+              placeholder="Character description..."
+              className="w-full p-2 border border-gray-300 rounded text-xs resize-none"
+              rows={3}
+            />
           </div>
-        </div>
-      </div>
-
-      {/* Character Content Tabs */}
-      <div className="character-content mt-3">
-        <div className="tabs flex border-b border-gray-200 mb-3">
-          <button
-            className={`tab px-3 py-1 text-sm font-medium ${activeTab === 'basic' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
-            onClick={() => setActiveTab('basic')}
-          >
-            Basic
-          </button>
-          <button
-            className={`tab px-3 py-1 text-sm font-medium ${activeTab === 'details' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
-            onClick={() => setActiveTab('details')}
-          >
-            Details
-          </button>
-          <button
-            className={`tab px-3 py-1 text-sm font-medium ${activeTab === 'relationships' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
-            onClick={() => setActiveTab('relationships')}
-          >
-            Relations
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div className="tab-content">
-          {activeTab === 'basic' && (
-            <div className="basic-info space-y-2">
-              {isEditing ? (
-                <>
-                  <select
-                    value={data.role}
-                    onChange={(e) => handleFieldChange('role', e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded text-sm"
-                  >
-                    <option value="protagonist">Protagonist</option>
-                    <option value="antagonist">Antagonist</option>
-                    <option value="supporting">Supporting</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <textarea
-                    value={data.description || ''}
-                    onChange={(e) => handleFieldChange('description', e.target.value)}
-                    placeholder="Character description..."
-                    className="w-full p-2 border border-gray-300 rounded text-sm resize-none"
-                    rows={3}
-                  />
-                </>
-              ) : (
-                <p className="text-sm text-gray-700 line-clamp-3">{data.description || 'No description yet...'}</p>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'details' && (
-            <div className="details-info space-y-2">
-              {isEditing ? (
-                <>
-                  <input
-                    type="number"
-                    value={data.age || ''}
-                    onChange={(e) => handleFieldChange('age', parseInt(e.target.value) || undefined)}
-                    placeholder="Age"
-                    className="w-full p-2 border border-gray-300 rounded text-sm"
-                  />
-                  <input
-                    value={data.occupation || ''}
-                    onChange={(e) => handleFieldChange('occupation', e.target.value)}
-                    placeholder="Occupation"
-                    className="w-full p-2 border border-gray-300 rounded text-sm"
-                  />
-                  <textarea
-                    value={data.motivation || ''}
-                    onChange={(e) => handleFieldChange('motivation', e.target.value)}
-                    placeholder="Motivation & goals..."
-                    className="w-full p-2 border border-gray-300 rounded text-sm resize-none"
-                    rows={2}
-                  />
-                </>
-              ) : (
-                <div className="text-sm text-gray-700 space-y-1">
-                  {data.age && <div><strong>Age:</strong> {data.age}</div>}
-                  {data.occupation && <div><strong>Occupation:</strong> {data.occupation}</div>}
-                  {data.motivation && <div><strong>Motivation:</strong> {data.motivation}</div>}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'relationships' && (
-            <div className="relationships-info">
-              <div className="text-sm text-gray-600">
-                {data.relationships?.length || 0} relationships
+        ) : (
+          <>
+            {data.description && (
+              <div className="text-xs text-green-700 line-clamp-2 mb-2">
+                {data.description}
               </div>
-              {/* TODO: Implement relationship management UI */}
+            )}
+          </>
+        )}
+
+        {/* Planning Dropdown */}
+        {showDropdown && (
+          <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
+            <div className="p-2 text-xs font-medium text-gray-700 border-b">
+              {loading ? 'Loading...' : 'From Planning:'}
             </div>
+            {!loading && planningCharacters.length === 0 && (
+              <div className="p-2 text-xs text-gray-500">No characters found</div>
+            )}
+            {planningCharacters.map((char) => (
+              <button
+                key={char.id}
+                onClick={() => handleCharacterSelect(char)}
+                className="w-full text-left px-2 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0"
+              >
+                <span className="font-medium">{char.name}</span>
+                <span className="text-gray-500 capitalize">{char.role}</span>
+                {char.completeness_score !== undefined && (
+                  <div className="mt-1 flex items-center gap-1">
+                    <div className="w-8 bg-gray-200 rounded-full h-1">
+                      <div 
+                        className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
+                        style={{ width: `${char.completeness_score}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="character-actions mt-3 flex gap-2">
+          {onAnalyzeAI && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAnalyzeAI(id);
+              }}
+              className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
+            >
+              <Brain size={12} />
+              AI Analyze
+            </button>
           )}
+          <button 
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
+          >
+            <Heart size={12} />
+            Connect
+          </button>
         </div>
+
+        <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
       </div>
 
-      {/* Action Buttons */}
-      <div className="character-actions mt-3 flex gap-2">
-        {onAnalyzeAI && (
-          <button
-            onClick={() => onAnalyzeAI(id)}
-            className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
-          >
-            <Brain size={12} />
-            AI Analyze
-          </button>
-        )}
-        <button className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors">
-          <Heart size={12} />
-          Connect
-        </button>
-      </div>
-    </BaseCanvasNode>
+      {/* Character Popup */}
+      {showPopup && data.fromPlanning && (
+        <CharacterPopup
+          character={{
+            id: data.planningId || data.id || id,
+            name: data.name || '',
+            role: data.role || '',
+            description: data.description || '',
+            fantasyClass: data.fantasyClass,
+            relationships: data.relationships || []
+          }}
+          position={popupPosition}
+          onClose={() => setShowPopup(false)}
+          onExpand={() => {
+            console.log('Expand character:', data.planningId);
+            setShowPopup(false);
+          }}
+        />
+      )}
+    </>
   );
 };
 
@@ -240,5 +314,6 @@ export const defaultCharacterData: CharacterNodeData = {
   name: '',
   role: 'other',
   description: '',
-  relationships: []
+  relationships: [],
+  fromPlanning: false
 };
