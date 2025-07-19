@@ -33,7 +33,7 @@ import { intelligentAIService } from '../services/intelligentAIService';
 import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
 import { CharacterPopup } from './canvas/CharacterPopup';
 
-// Import node types from index file
+// Import node types from index file - these should include enhanced versions
 import {
   CharacterNode,
   PlotNode,
@@ -64,7 +64,7 @@ import { templates } from '../data/templates';
 import { sampleStories } from '../data/sampleStories';
 
 // Icons
-import { Atom, ArrowLeft, Brain } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 // Define AIAnalysisResult interface
 interface AIAnalysisResult {
@@ -85,353 +85,6 @@ interface CanvasProps {
   projectId?: string;
   onBack?: () => void;
 }
-
-// Enhanced Character Node Component
-const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeData>) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-  const { planningCharacters, loading } = useCanvasPlanningData();
-
-  const handleCharacterSelect = (character: any) => {
-    onDataChange({
-      name: character.name,
-      role: character.role,
-      description: character.description,
-      fromPlanning: true,
-      planningId: character.id,
-      traits: character.traits || [],
-      age: character.age,
-      occupation: character.occupation,
-      completeness_score: character.completeness_score
-    });
-    setShowDropdown(false);
-  };
-
-  const handleNodeClick = (event: React.MouseEvent) => {
-    if (data.fromPlanning) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      setPopupPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top
-      });
-      setShowPopup(true);
-    }
-  };
-
-  const getCompletionColor = (score: number = 0) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
-    if (score >= 40) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
-
-  return (
-    <>
-      <div 
-        className="bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[180px] shadow-sm relative cursor-pointer transition-all hover:shadow-md"
-        onClick={handleNodeClick}
-      >
-        <Handle type="target" position={Position.Top} className="w-2 h-2" />
-        
-        <div className="flex items-center justify-between mb-2">
-          <div className="font-semibold text-green-800 text-sm flex items-center gap-2">
-            {data.name || 'Character'}
-            {data.fromPlanning && (
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span className="text-xs text-green-600">Linked</span>
-              </div>
-            )}
-          </div>
-          
-          {!data.fromPlanning && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDropdown(!showDropdown);
-              }}
-              className="text-xs bg-green-200 hover:bg-green-300 rounded p-1 transition-colors"
-              title="Link to Planning Character"
-            >
-              <Atom className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        <div className="text-xs text-green-600 mb-1 capitalize">{data.role || 'Role'}</div>
-        
-        {data.fromPlanning && data.completeness_score !== undefined && (
-          <div className="mb-2">
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-green-700">Completeness</span>
-              <span className="text-green-600">{Math.round(data.completeness_score)}%</span>
-            </div>
-            <div className="w-full bg-green-200 rounded-full h-1.5">
-              <div 
-                className={`h-1.5 rounded-full transition-all duration-300 ${getCompletionColor(data.completeness_score)}`}
-                style={{ width: `${data.completeness_score}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {data.description && (
-          <div className="text-xs text-green-700 line-clamp-2">
-            {data.description}
-          </div>
-        )}
-
-        {showDropdown && (
-          <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
-            <div className="p-2 text-xs font-medium text-gray-700 border-b">
-              {loading ? 'Loading...' : 'From Planning:'}
-            </div>
-            {!loading && planningCharacters.length === 0 && (
-              <div className="p-2 text-xs text-gray-500">No characters found</div>
-            )}
-            {planningCharacters.map((char) => (
-              <button
-                key={char.id}
-                onClick={() => handleCharacterSelect(char)}
-                className="w-full text-left px-2 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0"
-              >
-                <span className="font-medium">{char.name}</span>
-                <span className="text-gray-500 capitalize">{char.role}</span>
-                {char.completeness_score !== undefined && (
-                  <div className="mt-1 flex items-center gap-1">
-                    <div className="w-8 bg-gray-200 rounded-full h-1">
-                      <div 
-                        className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
-                        style={{ width: `${char.completeness_score}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-        
-        <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-      </div>
-
-      {showPopup && data.fromPlanning && (
-        <CharacterPopup
-          character={{
-            id: data.planningId || data.id || '',
-            name: data.name || '',
-            role: data.role || '',
-            description: data.description || '',
-            fantasyClass: data.fantasyClass,
-            relationships: data.relationships || []
-          }}
-          position={popupPosition}
-          onClose={() => setShowPopup(false)}
-          onExpand={() => {
-            console.log('Expand character:', data.planningId);
-            setShowPopup(false);
-          }}
-        />
-      )}
-    </>
-  );
-};
-
-// Enhanced Plot Node Component
-const EnhancedPlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const { plotPoints, loading } = useCanvasPlanningData();
-
-  const handlePlotSelect = (plot: any) => {
-    onDataChange({
-      title: plot.title,
-      type: plot.type,
-      description: plot.description,
-      fromPlanning: true,
-      planningId: plot.id
-    });
-    setShowDropdown(false);
-  };
-
-  const getSignificanceColor = (significance: string = 'moderate') => {
-    switch (significance) {
-      case 'critical': return 'border-red-400 bg-red-50';
-      case 'major': return 'border-orange-400 bg-orange-50'; 
-      case 'moderate': return 'border-blue-400 bg-blue-50';
-      case 'minor': return 'border-gray-400 bg-gray-50';
-      default: return 'border-blue-400 bg-blue-50';
-    }
-  };
-
-  return (
-    <div className={`rounded-lg p-3 min-w-[180px] shadow-sm relative border-2 ${getSignificanceColor(data.significance)}`}>
-      <Handle type="target" position={Position.Top} className="w-2 h-2" />
-      
-      <div className="flex items-center justify-between mb-2">
-        <div className="font-semibold text-blue-800 text-sm flex items-center gap-2">
-          {data.title || 'Plot Point'}
-          {data.fromPlanning && (
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full" />
-              <span className="text-xs text-blue-600">Linked</span>
-            </div>
-          )}
-        </div>
-        
-        {!data.fromPlanning && (
-          <button
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="text-xs bg-blue-200 hover:bg-blue-300 rounded p-1 transition-colors"
-            title="Link to Planning Plot"
-          >
-            <Atom className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      <div className="text-xs text-blue-600 mb-1 capitalize">{data.type || 'Event'}</div>
-      
-      {data.significance && (
-        <div className={`text-xs px-2 py-1 rounded mb-2 ${
-          data.significance === 'critical' ? 'bg-red-100 text-red-700' :
-          data.significance === 'major' ? 'bg-orange-100 text-orange-700' :
-          data.significance === 'moderate' ? 'bg-blue-100 text-blue-700' :
-          'bg-gray-100 text-gray-700'
-        }`}>
-          {data.significance} significance
-        </div>
-      )}
-
-      {data.description && (
-        <div className="text-xs text-blue-700 line-clamp-2">
-          {data.description}
-        </div>
-      )}
-
-      {showDropdown && (
-        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
-          <div className="p-2 text-xs font-medium text-gray-700 border-b">
-            {loading ? 'Loading...' : 'From Plot:'}
-          </div>
-          {!loading && plotPoints.length === 0 && (
-            <div className="p-2 text-xs text-gray-500">No plot points found</div>
-          )}
-          {plotPoints.map((plot) => (
-            <button
-              key={plot.id}
-              onClick={() => handlePlotSelect(plot)}
-              className="w-full text-left px-2 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0"
-            >
-              <span className="font-medium">{plot.title}</span>
-              <span className="text-gray-500 capitalize">{plot.type}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-    </div>
-  );
-};
-
-// Enhanced Location Node Component
-const EnhancedLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData>) => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const { worldBuildingLocations, loading } = useCanvasPlanningData();
-
-  const handleLocationSelect = (location: any) => {
-    onDataChange({
-      name: location.name,
-      type: location.type,
-      description: location.description,
-      fromPlanning: true,
-      planningId: location.id
-    });
-    setShowDropdown(false);
-  };
-
-  const getImportanceColor = (importance: string = 'moderate') => {
-    switch (importance) {
-      case 'critical': return 'border-red-400 bg-red-50';
-      case 'high': return 'border-orange-400 bg-orange-50';
-      case 'moderate': return 'border-purple-400 bg-purple-50';
-      case 'low': return 'border-gray-400 bg-gray-50';
-      default: return 'border-purple-400 bg-purple-50';
-    }
-  };
-
-  return (
-    <div className={`rounded-lg p-3 min-w-[180px] shadow-sm relative border-2 ${getImportanceColor(data.importance)}`}>
-      <Handle type="target" position={Position.Top} className="w-2 h-2" />
-      
-      <div className="flex items-center justify-between mb-2">
-        <div className="font-semibold text-purple-800 text-sm flex items-center gap-2">
-          {data.name || 'Location'}
-          {data.fromPlanning && (
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-purple-500 rounded-full" />
-              <span className="text-xs text-purple-600">Linked</span>
-            </div>
-          )}
-        </div>
-        
-        {!data.fromPlanning && (
-          <button
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="text-xs bg-purple-200 hover:bg-purple-300 rounded p-1 transition-colors"
-            title="Link to World Building"
-          >
-            <Atom className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      <div className="text-xs text-purple-600 mb-1 capitalize">{data.type || 'Place'}</div>
-      
-      {data.importance && (
-        <div className={`text-xs px-2 py-1 rounded mb-2 ${
-          data.importance === 'critical' ? 'bg-red-100 text-red-700' :
-          data.importance === 'high' ? 'bg-orange-100 text-orange-700' :
-          data.importance === 'moderate' ? 'bg-purple-100 text-purple-700' :
-          'bg-gray-100 text-gray-700'
-        }`}>
-          {data.importance} importance
-        </div>
-      )}
-
-      {data.description && (
-        <div className="text-xs text-purple-700 line-clamp-2">
-          {data.description}
-        </div>
-      )}
-
-      {showDropdown && (
-        <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
-          <div className="p-2 text-xs font-medium text-gray-700 border-b">
-            {loading ? 'Loading...' : 'From World Building:'}
-          </div>
-          {!loading && worldBuildingLocations.length === 0 && (
-            <div className="p-2 text-xs text-gray-500">No locations found</div>
-          )}
-          {worldBuildingLocations.map((location) => (
-            <button
-              key={location.id}
-              onClick={() => handleLocationSelect(location)}
-              className="w-full text-left px-2 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0"
-            >
-              <span className="font-medium">{location.name}</span>
-              <span className="text-gray-500 capitalize">{location.type}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
-    </div>
-  );
-};
 
 // Main Canvas Flow Component
 const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
@@ -516,30 +169,52 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     );
   }, [setNodes]);
 
-  const nodeTypes: NodeTypes = useMemo(() => ({
-    character: (props: any) => (
-      <EnhancedCharacterNode
-        {...props}
-        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
-      />
-    ),
-    plot: (props: any) => (
-      <EnhancedPlotNode
-        {...props}
-        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
-      />
-    ),
-    location: (props: any) => (
-      <EnhancedLocationNode
-        {...props}
-        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
-      />
-    ),
-    theme: ThemeNode,
-    conflict: ConflictNode,
-    timeline: TimelineNode,
-    research: ResearchNode,
-  }), [handleNodeDataChange]);
+  // Use the imported enhanced node types instead of inline definitions
+  const nodeTypes: NodeTypes = useMemo(() => {
+    // If enhancedNodeTypes includes the enhanced versions with planning integration, use those
+    if (enhancedNodeTypes) {
+      // Create enhanced versions that include the onDataChange handler
+      const enhancedTypes: NodeTypes = {};
+      
+      Object.keys(enhancedNodeTypes).forEach(key => {
+        const NodeComponent = enhancedNodeTypes[key as keyof typeof enhancedNodeTypes];
+        enhancedTypes[key] = (props: any) => (
+          <NodeComponent
+            {...props}
+            onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+          />
+        );
+      });
+      
+      return enhancedTypes;
+    }
+    
+    // Fallback to basic node types if enhanced versions are not available
+    return {
+      character: (props: any) => (
+        <CharacterNode
+          {...props}
+          onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        />
+      ),
+      plot: (props: any) => (
+        <PlotNode
+          {...props}
+          onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        />
+      ),
+      location: (props: any) => (
+        <LocationNode
+          {...props}
+          onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        />
+      ),
+      theme: ThemeNode,
+      conflict: ConflictNode,
+      timeline: TimelineNode,
+      research: ResearchNode,
+    };
+  }, [handleNodeDataChange]);
 
   const createNode = useCallback((type: string) => {
     if (!reactFlowInstance) return;
