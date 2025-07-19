@@ -837,6 +837,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
 
     switch (format) {
       case 'json':
+        {
         const dataStr = JSON.stringify(exportData, null, 2);
         const dataBlob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(dataBlob);
@@ -846,6 +847,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         link.click();
         URL.revokeObjectURL(url);
         break;
+        }
       default:
         console.log(`Export format ${format} not yet implemented`);
     }
