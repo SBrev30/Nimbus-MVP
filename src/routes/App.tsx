@@ -15,7 +15,7 @@ import { ThemeProvider } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { LandingPage } from '../components/landing-page';
-import { chapterService } from '../services/chapterService'; // Add this import
+import { chapterService } from '../services/chapterService';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -34,7 +34,6 @@ interface Note {
   updatedAt: Date;
 }
 
-
 // Import planning components
 import { OutlinePage } from '../components/planning/OutlinePage';
 import { PlotPage } from '../components/planning/PlotPage';
@@ -47,7 +46,7 @@ import { GetStartedPage } from '../components/help/GetStartedPage';
 import { AskQuestionPage } from '../components/help/AskQuestionPage';
 import { GiveFeedbackPage } from '../components/help/GiveFeedbackPage';
 
-// Lazy load heavy components - Fixed Canvas import
+// Lazy load heavy components
 const Canvas = lazy(() => import('../components/Canvas').then(module => ({ default: module.default || module })));
 const Integration = lazy(() => import('../components/Integration').then(module => ({ default: module.default || module })));
 const History = lazy(() => import('../components/History').then(module => ({ default: module.default || module })));
@@ -110,6 +109,9 @@ function AppContent() {
   const [editorLoading, setEditorLoading] = useState(false);
   const [showAuthPage, setShowAuthPage] = useState(false);
   
+  // Add project state for plot management - THIS IS THE KEY FIX
+  const [currentProject, setCurrentProject] = useState<{ id: string; title: string } | null>(null);
+  
   // Editor content state
   const [editorContent, setEditorContent] = useLocalStorage<EditorContent>('editorContent', {
     title: 'Untitled Document',
@@ -127,11 +129,37 @@ function AppContent() {
   // Auto-save functionality
   useAutoSave(editorContent, setEditorContent, 5000);
 
-  // ALL CALLBACK HANDLERS - MOVED TO TOP BEFORE ANY CONDITIONAL LOGIC
+  // Load user's default project on login - THIS LOADS THE PROJECT FOR PLOTPAGE
+  useEffect(() => {
+    const loadDefaultProject = async () => {
+      if (user && !currentProject) {
+        try {
+          const { data: projects, error } = await supabase
+            .from('projects')
+            .select('id, title')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (!error && projects && projects.length > 0) {
+            setCurrentProject(projects[0]);
+            console.log('✅ Loaded default project:', projects[0].title);
+          } else {
+            console.log('ℹ️ No projects found for user');
+          }
+        } catch (error) {
+          console.error('Error loading default project:', error);
+        }
+      }
+    };
+
+    loadDefaultProject();
+  }, [user, currentProject]);
+
+  // ALL CALLBACK HANDLERS
   const handleEditorChange = useCallback((content: EditorContent) => {
     setEditorContent(content);
     
-    // Save current chapter if we're editing a specific chapter
     if (currentChapter) {
       setChapterContents(prev => ({
         ...prev,
@@ -143,21 +171,16 @@ function AppContent() {
   const handleViewChange = useCallback((view: string) => {
     setActiveView(view);
     
-    // Clear current chapter when navigating away from editor
     if (view !== 'write' && view !== 'editor') {
       setCurrentChapter(null);
     }
   }, []);
 
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
-    // Set loading state
     setEditorLoading(true);
-    
-    // Set current chapter immediately to ensure navigation works
     setCurrentChapter({ id: chapterId, title: chapterTitle });
     setActiveView('editor');
 
-    // Save current content before switching
     if (currentChapter) {
       setChapterContents(prev => ({
         ...prev,
@@ -165,11 +188,9 @@ function AppContent() {
       }));
     }
 
-    // Fetch chapter content from database
     chapterService.getChapter(chapterId)
       .then(chapter => {
         if (chapter) {
-          // Create editor content from chapter data
           const chapterContent = {
             title: chapter.title,
             content: chapter.content || '<p>Start writing your chapter here...</p>',
@@ -177,16 +198,12 @@ function AppContent() {
             lastSaved: new Date(),
           };
           
-          // Update editor content
           setEditorContent(chapterContent);
-          
-          // Also update chapter contents cache
           setChapterContents(prev => ({
             ...prev,
             [chapterId]: chapterContent
           }));
         } else {
-          // Chapter not found, use cached content or create new
           const existingContent = chapterContents[chapterId];
           const fallbackContent = existingContent || {
             title: chapterTitle,
@@ -201,7 +218,6 @@ function AppContent() {
       .catch(error => {
         console.error('Error fetching chapter:', error);
         
-        // Fallback to cached content or create new
         const existingContent = chapterContents[chapterId];
         const fallbackContent = existingContent || {
           title: chapterTitle,
@@ -217,13 +233,10 @@ function AppContent() {
       });
   }, [currentChapter, editorContent, chapterContents, setEditorContent, setChapterContents]);
 
-  // Add handleNavigateToWriteFromProject AFTER handleSelectChapter since it depends on it
   const handleNavigateToWriteFromProject = useCallback((projectId: string, chapterId?: string) => {
     if (chapterId) {
-      // Navigate directly to editor with specific chapter
       handleSelectChapter(chapterId, 'Loading...');
     } else {
-      // Navigate to write view for project
       setActiveView('write');
     }
   }, [handleSelectChapter]);
@@ -256,6 +269,7 @@ function AppContent() {
     try {
       await supabase.auth.signOut();
       setUser(null);
+      setCurrentProject(null); // Clear project on sign out
       setActiveView('write');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -267,7 +281,6 @@ function AppContent() {
   const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
   const handleBackToWrite = useCallback(() => setActiveView('write'), []);
   const handleBackToProjects = useCallback(() => {
-    // Save current content before leaving
     if (currentChapter) {
       setChapterContents(prev => ({
         ...prev,
@@ -338,7 +351,6 @@ function AppContent() {
           </ErrorBoundary>
         );
 
-      // Fixed Canvas case - no back button needed
       case 'canvas':
         return (
           <ErrorBoundary>
@@ -378,7 +390,7 @@ function AppContent() {
           </ErrorBoundary>
         );
 
-      // Planning pages (immediate loading - lightweight)
+      // Planning pages
       case 'outline':
         return (
           <ErrorBoundary>
@@ -390,7 +402,10 @@ function AppContent() {
         return (
           <ErrorBoundary>
             <div className="flex-1 pr-[20px]">
-              <PlotPage onBack={handleBackToPlanning} />
+              <PlotPage 
+                onBack={handleBackToPlanning} 
+                projectId={currentProject?.id || 'no-project'} 
+              />
             </div>
           </ErrorBoundary>
         );
@@ -409,7 +424,7 @@ function AppContent() {
           </ErrorBoundary>
         );
       
-      // Settings pages (lazy with providers)
+      // Settings pages
       case 'integrations':
         return (
           <ErrorBoundary>
@@ -428,7 +443,7 @@ function AppContent() {
           </ErrorBoundary>
         );
 
-      // Help pages (immediate loading - lightweight)
+      // Help pages
       case 'help-topics':
         return (
           <ErrorBoundary>
@@ -457,7 +472,7 @@ function AppContent() {
           </ErrorBoundary>
         );
 
-      // Static pages (immediate)
+      // Static pages
       case 'planning':
         return (
           <div className="flex-1 flex items-center justify-center bg-[#f2eee2] rounded-t-[17px]">
@@ -484,7 +499,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => setActiveView('characters')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3]-100 hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
                 >
                   Characters
                 </button>
@@ -616,10 +631,11 @@ function AppContent() {
     HistoryPageWithProvider,
     editorLoading,
     currentChapter,
-    handleNavigateToWriteFromProject
+    handleNavigateToWriteFromProject,
+    currentProject
   ]);
 
-  // Check authentication state on mount - MOVED AFTER ALL CALLBACKS
+  // Check authentication state on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -635,11 +651,11 @@ function AppContent() {
 
     checkAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (event === 'SIGNED_OUT') {
         setActiveView('write');
+        setCurrentProject(null);
       }
     });
 
@@ -655,22 +671,22 @@ function AppContent() {
     );
   }
 
- // Replace the AuthPage section with:
-if (!user) {
- if (showAuthPage) {
-   return (
-     <ThemeProvider>
-       <AuthPage />
-     </ThemeProvider>
-   );
- }
- 
- return (
-   <ThemeProvider>
-     <LandingPage onGetStarted={() => setShowAuthPage(true)} />
-   </ThemeProvider>
- );
-}
+  // Handle unauthenticated users
+  if (!user) {
+    if (showAuthPage) {
+      return (
+        <ThemeProvider>
+          <AuthPage />
+        </ThemeProvider>
+      );
+    }
+    
+    return (
+      <ThemeProvider>
+        <LandingPage onGetStarted={() => setShowAuthPage(true)} />
+      </ThemeProvider>
+    );
+  }
 
   // Determine if we should show header (hide for canvas view)
   const shouldShowHeader = activeView !== 'canvas';
