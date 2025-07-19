@@ -27,13 +27,13 @@ import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 
 // Import AI components and services
 import { AIAnalysisPanel } from './canvas/AIAnalysisPanel';
-import { intelligentAIService, AIAnalysisResult } from '../services/intelligentAIService';
+import { intelligentAIService } from '../services/intelligentAIService';
 
-// Import enhanced components from the documents
+// Import enhanced components
 import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
 import { CharacterPopup } from './canvas/CharacterPopup';
 
-// Import advanced node types
+// Import node types from index file
 import {
   CharacterNode,
   PlotNode,
@@ -66,6 +66,15 @@ import { sampleStories } from '../data/sampleStories';
 // Icons
 import { Atom, ArrowLeft, Brain } from 'lucide-react';
 
+// Define AIAnalysisResult interface
+interface AIAnalysisResult {
+  type: 'conflict' | 'suggestion' | 'question' | 'error';
+  title: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  nodeId?: string;
+}
+
 // Enhanced TypeScript interfaces
 interface NodeProps<T = any> {
   data: T;
@@ -77,7 +86,7 @@ interface CanvasProps {
   onBack?: () => void;
 }
 
-// Enhanced node components with planning integration
+// Enhanced Character Node Component
 const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeData>) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -125,7 +134,6 @@ const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeDa
       >
         <Handle type="target" position={Position.Top} className="w-2 h-2" />
         
-        {/* Header with completion indicator */}
         <div className="flex items-center justify-between mb-2">
           <div className="font-semibold text-green-800 text-sm flex items-center gap-2">
             {data.name || 'Character'}
@@ -151,10 +159,8 @@ const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeDa
           )}
         </div>
 
-        {/* Character info */}
         <div className="text-xs text-green-600 mb-1 capitalize">{data.role || 'Role'}</div>
         
-        {/* Completion bar for planning characters */}
         {data.fromPlanning && data.completeness_score !== undefined && (
           <div className="mb-2">
             <div className="flex items-center justify-between text-xs mb-1">
@@ -170,14 +176,12 @@ const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeDa
           </div>
         )}
 
-        {/* Description preview */}
         {data.description && (
           <div className="text-xs text-green-700 line-clamp-2">
             {data.description}
           </div>
         )}
 
-        {/* Planning dropdown */}
         {showDropdown && (
           <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
             <div className="p-2 text-xs font-medium text-gray-700 border-b">
@@ -213,7 +217,6 @@ const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeDa
         <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
       </div>
 
-      {/* Character popup */}
       {showPopup && data.fromPlanning && (
         <CharacterPopup
           character={{
@@ -227,7 +230,6 @@ const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeDa
           position={popupPosition}
           onClose={() => setShowPopup(false)}
           onExpand={() => {
-            // TODO: Navigate to character detail view
             console.log('Expand character:', data.planningId);
             setShowPopup(false);
           }}
@@ -237,7 +239,7 @@ const EnhancedCharacterNode = ({ data, onDataChange }: NodeProps<CharacterNodeDa
   );
 };
 
-// Enhanced Plot Node with planning integration
+// Enhanced Plot Node Component
 const EnhancedPlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { plotPoints, loading } = useCanvasPlanningData();
@@ -334,7 +336,7 @@ const EnhancedPlotNode = ({ data, onDataChange }: NodeProps<PlotNodeData>) => {
   );
 };
 
-// Enhanced Location Node with planning integration  
+// Enhanced Location Node Component
 const EnhancedLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData>) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { worldBuildingLocations, loading } = useCanvasPlanningData();
@@ -433,28 +435,22 @@ const EnhancedLocationNode = ({ data, onDataChange }: NodeProps<LocationNodeData
 
 // Main Canvas Flow Component
 const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
-  // Get authenticated user
   const { user } = useAuth();
    
-  // State Management
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'pending'>('synced');
   const [canvasMode, setCanvasMode] = useState('explore');
   
-  // AI Analysis State
   const [aiAnalysisResults, setAiAnalysisResults] = useState<AIAnalysisResult[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
   
-  // Use authenticated user ID or fallback
   const userId = user?.id || 'anonymous';
   
-  // Get react flow instance and viewport
   const reactFlowInstance = useReactFlow();
   const viewport = reactFlowInstance?.getViewport() || { x: 0, y: 0, zoom: 1 };
   
-  // Canvas state for auto-save
   const canvasState: CanvasState = useMemo(() => ({
     nodes,
     edges,
@@ -462,7 +458,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     lastModified: Date.now()
   }), [nodes, edges, viewport]);
 
-  // Enhanced auto-save hook
   const {
     lastSaved,
     isSaving,
@@ -482,14 +477,11 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     }
   });
 
-  // Track changes for sync status
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
-  // Load planning data
   const planningData = useCanvasPlanningData(projectId);
 
-  // Update changes state when nodes/edges change
   useEffect(() => {
     setHasChanges(true);
     if (nodes.length === 0 && edges.length === 0) {
@@ -497,7 +489,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     }
   }, [nodes, edges]);
 
-  // Load canvas data on mount
   useEffect(() => {
     const loadCanvasData = async () => {
       try {
@@ -515,7 +506,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     loadCanvasData();
   }, [loadData, setNodes, setEdges]);
 
-  // Node data change handler
   const handleNodeDataChange = useCallback((nodeId: string, newData: any) => {
     setNodes((nds) =>
       nds.map((node) =>
@@ -526,7 +516,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     );
   }, [setNodes]);
 
-  // Enhanced Node Types with planning integration
   const nodeTypes: NodeTypes = useMemo(() => ({
     character: (props: any) => (
       <EnhancedCharacterNode
@@ -552,7 +541,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     research: ResearchNode,
   }), [handleNodeDataChange]);
 
-  // Node creation with enhanced data
   const createNode = useCallback((type: string) => {
     if (!reactFlowInstance) return;
     
@@ -569,7 +557,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     setNodes((nds) => [...nds, newNode]);
   }, [reactFlowInstance, setNodes]);
 
-  // AI Analysis function
   const handleAIAnalysis = useCallback(async () => {
     if (!nodes.length) return;
     
@@ -579,7 +566,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     try {
       const results: AIAnalysisResult[] = [];
       
-      // Character analysis
       const characterNodes = nodes.filter(n => n.type === 'character');
       if (characterNodes.length > 0) {
         for (const node of characterNodes) {
@@ -599,7 +585,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         }
       }
       
-      // Story coherence analysis
       if (nodes.length > 3) {
         try {
           const coherenceResult = await intelligentAIService.analyzeStoryCoherence(nodes, edges);
@@ -609,7 +594,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         }
       }
       
-      // Relationship analysis
       if (characterNodes.length > 1) {
         try {
           const relationshipResult = await intelligentAIService.suggestRelationships(characterNodes);
@@ -627,19 +611,15 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     }
   }, [nodes, edges]);
 
-  // Sync with Planning Pages
   const handleSync = useCallback(async () => {
     setSyncStatus('syncing');
     
     try {
-      // Refresh planning data
       await planningData.refresh();
       
-      // Update nodes that are linked to planning data
       const updatedNodes = await Promise.all(
         nodes.map(async (node) => {
           if (node.data.fromPlanning && node.data.planningId) {
-            // Fetch updated data from planning
             if (node.type === 'character') {
               const updatedChar = planningData.planningCharacters.find(
                 c => c.id === node.data.planningId
@@ -657,15 +637,12 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
                 };
               }
             }
-            // Add similar logic for plot and location nodes
           }
           return node;
         })
       );
       
       setNodes(updatedNodes);
-      
-      // Force save the current state
       await forceSave();
       
       setSyncStatus('synced');
@@ -677,7 +654,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     }
   }, [planningData, nodes, forceSave, setNodes]);
 
-  // Template loading
   const loadTemplate = useCallback((templateId: string) => {
     try {
       const template = templates[templateId as keyof typeof templates];
@@ -687,14 +663,11 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         return;
       }
 
-      // Clear existing nodes and edges
       setNodes([]);
       setEdges([]);
       
-      // Create ID mapping for regeneration
       const nodeIdMap = new Map<string, string>();
       
-      // Generate new nodes with fresh UUIDs
       const newNodes = template.nodes.map((node: any) => {
         const newId = uuidv4();
         nodeIdMap.set(node.id, newId);
@@ -705,7 +678,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         };
       });
       
-      // Generate new edges with updated node references
       const newEdges = template.edges.map((edge: any) => {
         const newSourceId = nodeIdMap.get(edge.source) || edge.source;
         const newTargetId = nodeIdMap.get(edge.target) || edge.target;
@@ -718,7 +690,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         };
       });
       
-      // Set nodes and edges with delay for proper rendering
       setTimeout(() => {
         setNodes(newNodes);
         setEdges(newEdges);
@@ -735,7 +706,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     }
   }, [setNodes, setEdges, reactFlowInstance]);
 
-  // Load sample data
   const loadSample = useCallback((sampleId: string) => {
     try {
       const sample = sampleStories[sampleId as keyof typeof sampleStories];
@@ -745,17 +715,14 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         return;
       }
 
-      // Create ID mapping for regeneration
       const nodeIdMap = new Map<string, string>();
 
-      // Generate new nodes with fresh UUIDs
       const newNodes = (sample.nodes || []).map((node: any) => {
         const newId = uuidv4();
         nodeIdMap.set(node.id, newId);
         return { ...node, id: newId };
       });
 
-      // Generate new edges with updated node references
       const newEdges = (sample.edges || []).map((edge: any) => {
         const newSourceId = nodeIdMap.get(edge.source) || edge.source;
         const newTargetId = nodeIdMap.get(edge.target) || edge.target;
@@ -780,7 +747,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     }
   }, [setNodes, setEdges, reactFlowInstance]);
 
-  // Connection handler
   const onConnect = useCallback((params: Connection) => {
     setEdges((eds) => addEdge({ 
       ...params, 
@@ -790,7 +756,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     }, eds));
   }, [setEdges]);
 
-  // File operations
   const handleLoad = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -860,16 +825,13 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     }
   }, [nodes, edges, reactFlowInstance, projectId]);
 
-  // AI suggestion handler
   const handleApplySuggestion = useCallback((suggestionId: string, data: any) => {
-    // Implementation for applying AI suggestions
     console.log('Applying suggestion:', suggestionId, data);
     
     if (suggestionId.startsWith('relationship-')) {
       // Create edge between characters based on AI suggestion
       const suggestion = data;
       // Find character nodes and create connection
-      // This would involve finding the nodes and creating an edge
     }
   }, []);
 
