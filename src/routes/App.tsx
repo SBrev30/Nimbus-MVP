@@ -401,7 +401,7 @@ function AppContent() {
             <div className="flex-1 pr-[20px]">
               <PlotPage 
                 onBack={handleBackToPlanning} 
-                projectId={currentProject?.id || 'no-project'} 
+                projectId={currentProject?.id ?? ''}
               />
             </div>
           </ErrorBoundary>
