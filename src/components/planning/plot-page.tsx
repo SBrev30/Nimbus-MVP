@@ -44,7 +44,7 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
 
   // Load data on mount
   useEffect(() => {
-    if (projectId) {
+    if (projectId && projectId !== 'no-project') {
       refreshData(projectId);
     }
   }, [projectId, refreshData]);
