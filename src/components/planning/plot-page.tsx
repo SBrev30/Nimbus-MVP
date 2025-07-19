@@ -10,7 +10,8 @@ import {
   Target, 
   MoreHorizontal,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { usePlotManagement } from '../../hooks/use-plot-management';
 import { CreatePlotThreadModal } from './create-plot-thread-modal';
@@ -109,22 +110,24 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
       return `${x},${y}`;
     }).join(' ');
 
+    const gradientId = `gradient-${color.replace('#', '')}`;
+
     return (
       <svg className="w-full h-16" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
         <polyline
           fill="none"
           stroke={color}
           strokeWidth="2"
           points={points}
         />
-        <defs>
-          <linearGradient id={`gradient-${color.replace('#', '')}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.1" />
-          </linearGradient>
-        </defs>
         <polygon
-          fill={`url(#gradient-${color.replace('#', '')})`}
+          fill={`url(#${gradientId})`}
           points={`0,100 ${points} 100,100`}
         />
       </svg>
