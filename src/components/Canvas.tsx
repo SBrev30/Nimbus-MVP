@@ -99,7 +99,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
   
-  const userId = user?.id || 'anonymous';
+  const userId = user?.id || null;
   
   // Add planning data hook for debugging
   const planningData = useCanvasPlanningData();
