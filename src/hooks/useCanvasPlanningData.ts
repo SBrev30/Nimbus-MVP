@@ -70,6 +70,11 @@ export const useCanvasPlanningData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Auto-load data on mount
+  useEffect(() => {
+    loadAllPlanningData();
+  }, []);
+
   // Get current user and project (updated to handle proper project IDs)
   const getCurrentUserAndProject = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -107,6 +112,8 @@ export const useCanvasPlanningData = () => {
   // Fetch characters from planning pages
   const loadCharacters = useCallback(async () => {
     try {
+      console.log('Loading characters from planning...');
+      
       setLoading(true);
       setError(null);
 
@@ -115,6 +122,8 @@ export const useCanvasPlanningData = () => {
         console.warn('No authenticated user found');
         return;
       }
+
+      console.log('User found:', user.id, 'Project ID:', projectId);
 
       // Build query with optional project_id filter
       let query = supabase
@@ -145,11 +154,15 @@ export const useCanvasPlanningData = () => {
         query = query.is('project_id', null);
       }
 
+      console.log('Executing characters query...');
+      
       const { data: characters, error: charactersError } = await query.order('name');
 
       if (charactersError) {
         throw charactersError;
       }
+
+      console.log('Characters loaded from database:', characters?.length || 0);
 
       const formattedCharacters: CanvasCharacterData[] = (characters || []).map(char => ({
         id: char.id,
@@ -169,6 +182,8 @@ export const useCanvasPlanningData = () => {
         fromPlanning: true
       }));
 
+      console.log('Formatted characters:', formattedCharacters.length);
+
       setPlanningData(prev => ({
         ...prev,
         planningCharacters: formattedCharacters
@@ -176,6 +191,7 @@ export const useCanvasPlanningData = () => {
 
     } catch (err) {
       console.error('Error loading characters:', err);
+      console.error('Full error details:', err);
       setError('Failed to load characters from planning');
     } finally {
       setLoading(false);
@@ -312,11 +328,6 @@ export const useCanvasPlanningData = () => {
       setLoading(false);
     }
   }, [loadCharacters, loadPlots, loadLocations]);
-
-  // Auto-load data on mount
-  useEffect(() => {
-    loadAllPlanningData();
-  }, [loadAllPlanningData]);
 
   // Refresh functions
   const refreshCharacters = useCallback(() => {

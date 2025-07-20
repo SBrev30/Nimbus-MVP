@@ -34,6 +34,7 @@ import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
 import { CharacterPopup } from './canvas/CharacterPopup';
 
 // Import node types from index file - these should include enhanced versions
+import { useCanvasPlanningData } from '../hooks/useCanvasPlanningData';
 import {
   CharacterNode,
   PlotNode,
@@ -101,6 +102,9 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   
   const userId = user?.id || 'anonymous';
   
+  // Add planning data hook for debugging
+  const planningData = useCanvasPlanningData();
+  
   const reactFlowInstance = useReactFlow();
   const viewport = reactFlowInstance?.getViewport() || { x: 0, y: 0, zoom: 1 };
   
@@ -133,14 +137,21 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
-  const planningData = useCanvasPlanningData(projectId);
-
   useEffect(() => {
     setHasChanges(true);
     if (nodes.length === 0 && edges.length === 0) {
       setHasChanges(false);
     }
   }, [nodes, edges]);
+
+  // Debug planning data
+  useEffect(() => {
+    console.log('Canvas: Planning data updated:', {
+      characters: planningData.planningCharacters.length,
+      loading: planningData.loading,
+      error: planningData.error
+    });
+  }, [planningData.planningCharacters, planningData.loading, planningData.error]);
 
   useEffect(() => {
     const loadCanvasData = async () => {

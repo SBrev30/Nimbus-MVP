@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { BaseCanvasNode, withCanvasComponent, BaseCanvasComponentProps } from '../core/BaseCanvasComponent';
 import { useCanvasPlanningData } from '../../../hooks/useCanvasPlanningData';
@@ -55,7 +55,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { planningCharacters, loading, refreshCharacters } = useCanvasPlanningData();
+  const { planningCharacters, loading, refreshCharacters, error: planningError } = useCanvasPlanningData();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -72,11 +72,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     }
   }, [showDropdown]);
 
-  // Refresh characters when component mounts
-  useEffect(() => {
-    refreshCharacters();
-  }, [refreshCharacters]);
-
   const handleFieldChange = useCallback((field: string, value: any) => {
     if (onDataChange) {
       onDataChange({ [field]: value });
@@ -84,11 +79,11 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   }, [onDataChange]);
 
   const handleCharacterSelect = useCallback((character: any) => {
-    console.log('Selecting character:', character);
+    console.log('🎯 Selecting character from planning:', character.name);
+    console.log('📊 Full character data:', character);
     
     if (onDataChange) {
-      // Map all character data from planning
-      onDataChange({
+      const updatedData = {
         name: character.name || '',
         role: character.role || 'supporting',
         description: character.description || '',
@@ -104,8 +99,14 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
         planningId: character.id,
         completeness_score: character.completeness_score || 0,
         relationships: character.relationships || []
-      });
+      };
+      
+      console.log('📝 Updating node data with:', updatedData);
+      onDataChange(updatedData);
+    } else {
+      console.warn('⚠️ onDataChange not available');
     }
+    
     
     setShowDropdown(false);
     setSearchQuery('');
@@ -114,6 +115,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   const handleDropdownToggle = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
+    
     setShowDropdown(!showDropdown);
     setSearchQuery('');
   }, [showDropdown]);
@@ -205,10 +207,20 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   };
 
   // Filter characters based on search
-  const filteredCharacters = planningCharacters.filter(char =>
-    char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    char.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCharacters = useMemo(() => {
+    if (!planningCharacters || planningCharacters.length === 0) {
+      return [];
+    }
+    
+    return planningCharacters.filter(char =>
+      char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      char.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      char.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [planningCharacters, searchQuery]);
+
+  console.log('Planning characters available:', planningCharacters.length);
+  console.log('Filtered characters:', filteredCharacters.length);
 
   return (
     <>
@@ -256,6 +268,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                 {/* Planning Dropdown */}
                 {showDropdown && (
                   <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[200px] max-w-[280px]">
+                    {/* Search Input */}
                     <div className="p-2 border-b border-gray-200">
                       <div className="relative">
                         <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -270,24 +283,57 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                       </div>
                     </div>
                     
+                    {/* Refresh Button */}
+                    <div className="px-2 pb-2 border-b border-gray-200">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Manually refreshing characters...');
+                          refreshCharacters();
+                        }}
+                        className="w-full text-xs text-blue-600 hover:text-blue-800 py-1 transition-colors"
+                      >
+                        🔄 Refresh Characters
+                      </button>
+                    </div>
+                    
+                    {/* Character List */}
                     <div className="max-h-48 overflow-y-auto">
                       {loading ? (
                         <div className="p-3 text-xs text-gray-500 text-center">Loading characters...</div>
-                      ) : filteredCharacters.length === 0 ? (
-                        searchQuery ? (
-                          <div className="p-3 text-xs text-gray-500 text-center">No characters match "{searchQuery}"</div>
-                        ) : (
-                          <div className="p-3 text-xs text-gray-500 text-center">No characters found in planning</div>
-                        )
-                      ) : (
-                        filteredCharacters.map((char) => (
+                      ) : planningError ? (
+                        <div className="p-3 text-xs text-red-500 text-center">
+                          Error loading characters: {planningError}
+                        </div>
+                      ) : planningCharacters.length === 0 ? (
+                        <div className="p-3 text-xs text-gray-500 text-center">
+                          No characters found in planning.
+                          <br />
                           <button
-                            key={char.id}
                             onClick={(e) => {
                               e.stopPropagation();
-                              e.preventDefault();
-                              handleCharacterSelect(char);
+                              refreshCharacters();
                             }}
+                            className="text-blue-600 hover:text-blue-800 underline mt-1"
+                          >
+                            Refresh
+                          </button>
+                        </div>
+                      ) : filteredCharacters.length === 0 ? (
+                        searchQuery ? (
+                          <div className="p-3 text-xs text-gray-500 text-center">
+                            No characters match "{searchQuery}"
+                          </div>
+                        ) : (
+                          <div className="p-3 text-xs text-gray-500 text-center">
+                            All characters filtered out
+                          </div>
+                        )
+                      ) : (
+                        filteredCharacters.map((char, index) => (
+                          <button
+                            key={`${char.id}-${index}`}
+                            onClick={() => handleCharacterSelect(char)}
                             className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0 transition-colors"
                           >
                             <div className="flex items-center justify-between mb-1">
@@ -296,7 +342,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                             </div>
                             
                             {char.description && (
-                              <span className="text-gray-600 line-clamp-1 mb-1">{char.description}</span>
+                              <span className="text-gray-600 text-xs mb-1 line-clamp-2">{char.description}</span>
                             )}
                             
                             {char.completeness_score !== undefined && (
@@ -304,7 +350,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                                 <div className="flex-1 bg-gray-200 rounded-full h-1">
                                   <div 
                                     className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
-                                    style={{ width: `${char.completeness_score}%` }}
+                                    style={{ width: `${Math.max(5, char.completeness_score)}%` }}
                                   />
                                 </div>
                                 <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
