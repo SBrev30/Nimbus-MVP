@@ -147,7 +147,8 @@ export function useUnifiedAutoSave<T>(
       const parsedLocal = localData ? JSON.parse(localData) : null;
 
       // If cloud is enabled and online, attempt sync
-      if (options.enableCloud && isOnline && userId && userId !== 'anonymous') {
+      // Step 2: Attempt cloud save if online and enabled
+if (options.enableCloud && isOnline && userId && userId !== 'anonymous' && userId !== 'default') {
         try {
           const cloudData = await loadFromCloud();
           
