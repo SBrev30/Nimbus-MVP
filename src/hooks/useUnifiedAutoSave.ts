@@ -65,7 +65,7 @@ export function useUnifiedAutoSave<T>(
         localStorage.setItem(options.localKey, JSON.stringify(dataWithTimestamp));
         
         // Step 2: Attempt cloud save if online and enabled
-        if (options.enableCloud && isOnline && userId && userId !== 'anonymous') {
+        if (options.enableCloud && isOnline && userId && userId !== 'anonymous' && userId !== 'default') {
           setState(prev => ({ ...prev, cloudSyncStatus: 'syncing' }));
           const cloudSuccess = await saveToCloud(dataWithTimestamp);
           
