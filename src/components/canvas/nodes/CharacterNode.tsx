@@ -55,7 +55,34 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const atomButtonRef = useRef<HTMLButtonElement>(null);
   const { planningCharacters, loading, refreshCharacters, error: planningError } = useCanvasPlanningData();
+
+  // Debug planning data
+  useEffect(() => {
+    console.log('🐛 CharacterNode Debug Info:', {
+      planningCharactersCount: planningCharacters.length,
+      loading,
+      planningError,
+      showDropdown,
+      nodeData: data
+    });
+    
+    if (planningCharacters.length > 0) {
+      console.log('📋 Available characters:', planningCharacters.map(c => ({
+        id: c.id,
+        name: c.name,
+        role: c.role
+      })));
+    }
+  }, [planningCharacters, loading, planningError, showDropdown, data]);
+
+  // Test the character selection manually
+  useEffect(() => {
+    if (showDropdown && planningCharacters.length > 0) {
+      console.log('🔍 Dropdown opened with characters available:', planningCharacters.length);
+    }
+  }, [showDropdown, planningCharacters.length]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -82,7 +109,12 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     console.log('🎯 Selecting character from planning:', character.name);
     console.log('📊 Full character data:', character);
     
-    if (onDataChange) {
+    if (!onDataChange) {
+      console.warn('⚠️ onDataChange not available');
+      return;
+    }
+    
+    try {
       const updatedData = {
         name: character.name || '',
         role: character.role || 'supporting',
@@ -102,16 +134,19 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       };
       
       console.log('📝 Updating node data with:', updatedData);
+      
+      // Update the node data
       onDataChange(updatedData);
       
-      // Force close the dropdown
-      setShowDropdown(false);
-      setSearchQuery('');
+      // Force close the dropdown with a small delay to ensure the update processes
+      setTimeout(() => {
+        setShowDropdown(false);
+        setSearchQuery('');
+        console.log('✅ Character linked successfully:', character.name);
+      }, 100);
       
-      // Show success feedback
-      console.log('✅ Character linked successfully:', character.name);
-    } else {
-      console.warn('⚠️ onDataChange not available');
+    } catch (error) {
+      console.error('❌ Error selecting character:', error);
     }
   }, [onDataChange]);
 
@@ -128,7 +163,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       console.log('🔄 Refreshing characters on dropdown open');
       refreshCharacters();
     }
-  }, [showDropdown]);
+  }, [showDropdown, refreshCharacters]);
 
   const handleNodeClick = (event: React.MouseEvent) => {
     // Don't handle node clicks if dropdown is open
@@ -165,15 +200,19 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     }
   }, [onDataChange]);
 
-  const handleConnectClick = useCallback((event: React.MouseEvent) => {
+  const handleConnectButtonClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
+    
+    console.log('🔗 Connect button clicked for character:', data.name);
     
     if (onConnect) {
       setIsConnecting(true);
       onConnect(id);
+    } else {
+      console.warn('⚠️ onConnect handler not available');
     }
-  }, [onConnect, id]);
+  }, [onConnect, id, data.name]);
 
   const handleEditClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
@@ -270,8 +309,9 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                 <X className="w-3 h-3" />
               </button>
             ) : (
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative">
                 <button
+                  ref={atomButtonRef}
                   onClick={handleDropdownToggle}
                   className="text-xs bg-green-200 hover:bg-green-300 rounded p-1 transition-colors flex items-center gap-1"
                   title="Link to Planning Character"
@@ -279,123 +319,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                   <Atom className="w-3 h-3" />
                   <ChevronDown className="w-2 h-2" />
                 </button>
-                
-                {/* Planning Dropdown */}
-                {showDropdown && (
-                  <div 
-                    className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[200px] max-w-[280px]"
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                  >
-                    {/* Search Input */}
-                    <div className="p-2 border-b border-gray-200">
-                      <div className="relative">
-                        <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search characters..."
-                          className="w-full pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-blue-400"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                          }}
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                          }}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Refresh Button */}
-                    <div className="px-2 pb-2 border-b border-gray-200">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('Manually refreshing characters...');
-                          refreshCharacters();
-                        }}
-                        className="w-full text-xs text-blue-600 hover:text-blue-800 py-1 transition-colors"
-                      >
-                        🔄 Refresh Characters
-                      </button>
-                    </div>
-                    
-                    {/* Character List */}
-                    <div className="max-h-48 overflow-y-auto">
-                      {loading ? (
-                        <div className="p-3 text-xs text-gray-500 text-center">Loading characters...</div>
-                      ) : planningError ? (
-                        <div className="p-3 text-xs text-red-500 text-center">
-                          Error loading characters: {planningError}
-                        </div>
-                      ) : planningCharacters.length === 0 ? (
-                        <div className="p-3 text-xs text-gray-500 text-center">
-                          No characters found in planning.
-                          <br />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              refreshCharacters();
-                            }}
-                            className="text-blue-600 hover:text-blue-800 underline mt-1"
-                          >
-                            Refresh
-                          </button>
-                        </div>
-                      ) : filteredCharacters.length === 0 ? (
-                        searchQuery ? (
-                          <div className="p-3 text-xs text-gray-500 text-center">
-                            No characters match "{searchQuery}"
-                          </div>
-                        ) : (
-                          <div className="p-3 text-xs text-gray-500 text-center">
-                            All characters filtered out
-                          </div>
-                        )
-                      ) : (
-                        filteredCharacters.map((char, index) => (
-                          <button
-                            key={`${char.id}-${index}`}
-                           onClick={(e) => {
-                             e.preventDefault();
-                             e.stopPropagation();
-                             console.log('🎯 Character clicked:', char.name);
-                             handleCharacterSelect(char);
-                           }}
-                           onMouseDown={(e) => {
-                             e.preventDefault();
-                             e.stopPropagation();
-                           }}
-                            className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0 transition-colors"
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium text-gray-900">{char.name}</span>
-                              <span className="text-xs text-gray-500 capitalize">{char.role}</span>
-                            </div>
-                            
-                            {char.description && (
-                              <span className="text-gray-600 text-xs mb-1 line-clamp-2">{char.description}</span>
-                            )}
-                            
-                            {char.completeness_score !== undefined && (
-                              <div className="flex items-center gap-2">
-                                <div className="flex-1 bg-gray-200 rounded-full h-1">
-                                  <div 
-                                    className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
-                                    style={{ width: `${Math.max(5, char.completeness_score)}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
-                              </div>
-                            )}
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -510,7 +433,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
           )}
           
           <button 
-            onClick={handleConnectClick}
+            onClick={handleConnectButtonClick}
             className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
               isConnecting 
                 ? 'bg-blue-200 text-blue-800' 
@@ -536,6 +459,161 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
 
         <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
       </div>
+
+      {/* Planning Dropdown - Portal */}
+      {showDropdown && (
+        <div 
+          ref={dropdownRef}
+          className="fixed inset-0 z-[9999]"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDropdown(false);
+          }}
+        >
+          <div 
+            className="absolute bg-white border border-gray-300 rounded-lg shadow-lg min-w-[200px] max-w-[280px]"
+            style={{
+              // Position relative to the atom button
+              top: atomButtonRef.current ? atomButtonRef.current.getBoundingClientRect().bottom + 4 : '50%',
+              left: atomButtonRef.current ? atomButtonRef.current.getBoundingClientRect().right - 200 : '50%',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+          >
+            {/* Search Input */}
+            <div className="p-2 border-b border-gray-200">
+              <div className="relative">
+                <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search characters..."
+                  className="w-full pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-blue-400"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* Refresh Button */}
+            <div className="px-2 pb-2 border-b border-gray-200">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  console.log('Manually refreshing characters...');
+                  refreshCharacters();
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                className="w-full text-xs text-blue-600 hover:text-blue-800 py-1 transition-colors"
+              >
+                🔄 Refresh Characters
+              </button>
+            </div>
+            
+            {/* Character List */}
+            <div className="max-h-48 overflow-y-auto">
+              {loading ? (
+                <div className="p-3 text-xs text-gray-500 text-center">Loading characters...</div>
+              ) : planningError ? (
+                <div className="p-3 text-xs text-red-500 text-center">
+                  Error loading characters: {planningError}
+                </div>
+              ) : planningCharacters.length === 0 ? (
+                <div className="p-3 text-xs text-gray-500 text-center">
+                  No characters found in planning.
+                  <br />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      refreshCharacters();
+                    }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                    className="text-blue-600 hover:text-blue-800 underline mt-1"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              ) : filteredCharacters.length === 0 ? (
+                searchQuery ? (
+                  <div className="p-3 text-xs text-gray-500 text-center">
+                    No characters match "{searchQuery}"
+                  </div>
+                ) : (
+                  <div className="p-3 text-xs text-gray-500 text-center">
+                    All characters filtered out
+                  </div>
+                )
+              ) : (
+                filteredCharacters.map((char, index) => (
+                  <div
+                    key={`${char.id}-${index}`}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0 transition-colors cursor-pointer"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('🎯 Character clicked:', char.name);
+                      handleCharacterSelect(char);
+                    }}
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-gray-900">{char.name}</span>
+                      <span className="text-xs text-gray-500 capitalize">{char.role}</span>
+                    </div>
+                    
+                    {char.description && (
+                      <span className="text-gray-600 text-xs mb-1 line-clamp-2">{char.description}</span>
+                    )}
+                    
+                    {char.completeness_score !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-1">
+                          <div 
+                            className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
+                            style={{ width: `${Math.max(5, char.completeness_score)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Character Popup */}
       {showPopup && data.fromPlanning && (
