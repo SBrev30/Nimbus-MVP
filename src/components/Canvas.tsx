@@ -170,6 +170,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   }, [loadData, setNodes, setEdges]);
 
   const handleNodeDataChange = useCallback((nodeId: string, newData: any) => {
+    console.log('🔄 Node data change for:', nodeId, newData);
     setNodes((nds) =>
       nds.map((node) =>
         node.id === nodeId
@@ -179,51 +180,47 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     );
   }, [setNodes]);
 
-  // Use the imported enhanced node types instead of inline definitions
+  // Fixed node types registration - ensure enhanced nodes with proper data change handlers
   const nodeTypes: NodeTypes = useMemo(() => {
-    // If enhancedNodeTypes includes the enhanced versions with planning integration, use those
-    if (enhancedNodeTypes) {
-      // Create enhanced versions that include the onDataChange handler
-      const enhancedTypes: NodeTypes = {};
-      
-      Object.keys(enhancedNodeTypes).forEach(key => {
-        const NodeComponent = enhancedNodeTypes[key as keyof typeof enhancedNodeTypes];
-        enhancedTypes[key] = (props: any) => (
-          <NodeComponent
-            {...props}
-            onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
-          />
-        );
-      });
-      
-      return enhancedTypes;
-    }
+    console.log('🎨 Registering node types with enhanced handlers');
     
-    // Fallback to basic node types if enhanced versions are not available
-    return {
-      character: (props: any) => (
+    const enhancedTypes: NodeTypes = {};
+    
+    // Always use the enhanced character node with planning integration
+    enhancedTypes.character = (props: any) => {
+      console.log('🎭 Rendering CharacterNode with props:', props.id);
+      return (
         <CharacterNode
           {...props}
-          onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+          onDataChange={(newData: any) => {
+            console.log('📝 CharacterNode data change:', props.id, newData);
+            handleNodeDataChange(props.id, newData);
+          }}
         />
-      ),
-      plot: (props: any) => (
-        <PlotNode
-          {...props}
-          onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
-        />
-      ),
-      location: (props: any) => (
-        <LocationNode
-          {...props}
-          onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
-        />
-      ),
-      theme: ThemeNode,
-      conflict: ConflictNode,
-      timeline: TimelineNode,
-      research: ResearchNode,
+      );
     };
+    
+    // Add other node types with proper handlers
+    enhancedTypes.plot = (props: any) => (
+      <PlotNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+      />
+    );
+    
+    enhancedTypes.location = (props: any) => (
+      <LocationNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+      />
+    );
+    
+    enhancedTypes.theme = ThemeNode;
+    enhancedTypes.conflict = ConflictNode;
+    enhancedTypes.timeline = TimelineNode;
+    enhancedTypes.research = ResearchNode;
+    
+    return enhancedTypes;
   }, [handleNodeDataChange]);
 
   const createNode = useCallback((type: string) => {
@@ -239,6 +236,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
       data: createNodeData(type)
     };
     
+    console.log('🆕 Creating new node:', type, id);
     setNodes((nds) => [...nds, newNode]);
   }, [reactFlowInstance, setNodes]);
 
@@ -297,6 +295,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   }, [nodes, edges]);
 
   const handleSync = useCallback(async () => {
+    console.log('🔄 Starting canvas sync...');
     setSyncStatus('syncing');
     
     try {
@@ -310,6 +309,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
                 c => c.id === node.data.planningId
               );
               if (updatedChar) {
+                console.log('🔄 Syncing character node:', node.id, 'with planning data:', updatedChar.name);
                 return {
                   ...node,
                   data: {
@@ -333,8 +333,9 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
       setSyncStatus('synced');
       setLastSynced(new Date());
       setHasChanges(false);
+      console.log('✅ Canvas sync completed successfully');
     } catch (error) {
-      console.error('Sync failed:', error);
+      console.error('❌ Sync failed:', error);
       setSyncStatus('error');
     }
   }, [planningData, nodes, forceSave, setNodes]);
