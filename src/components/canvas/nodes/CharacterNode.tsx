@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Handle, Position } from 'reactflow';
 import { BaseCanvasNode, withCanvasComponent, BaseCanvasComponentProps } from '../core/BaseCanvasComponent';
 import { useCanvasPlanningData } from '../../../hooks/useCanvasPlanningData';
 import { CharacterPopup } from '../CharacterPopup';
-import { User, Edit3, Heart, Brain, Atom } from 'lucide-react';
+import { User, Edit3, Heart, Brain, Atom, ChevronDown, X, Search } from 'lucide-react';
 
 export interface CharacterNodeData {
   name: string;
@@ -48,8 +48,25 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [searchQuery, setSearchQuery] = useState('');
   
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { planningCharacters, loading } = useCanvasPlanningData();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+        setSearchQuery('');
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showDropdown]);
 
   const handleFieldChange = useCallback((field: string, value: any) => {
     if (onDataChange) {
@@ -57,22 +74,34 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     }
   }, [onDataChange]);
 
-  const handleCharacterSelect = (character: any) => {
+  const handleCharacterSelect = useCallback((character: any) => {
+    console.log('Selecting character:', character);
+    
     if (onDataChange) {
       onDataChange({
         name: character.name,
-        role: character.role,
-        description: character.description,
+        role: character.role || 'supporting',
+        description: character.description || '',
         fromPlanning: true,
         planningId: character.id,
         traits: character.traits || [],
         age: character.age,
         occupation: character.occupation,
-        completeness_score: character.completeness_score
+        fantasyClass: character.fantasyClass,
+        completeness_score: character.completeness_score || 0
       });
     }
+    
     setShowDropdown(false);
-  };
+    setSearchQuery('');
+  }, [onDataChange]);
+
+  const handleDropdownToggle = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    setShowDropdown(!showDropdown);
+    setSearchQuery('');
+  }, [showDropdown]);
 
   const handleNodeClick = (event: React.MouseEvent) => {
     if (data.fromPlanning) {
@@ -84,6 +113,19 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       setShowPopup(true);
     }
   };
+
+  const handleUnlinkCharacter = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    if (onDataChange) {
+      onDataChange({
+        fromPlanning: false,
+        planningId: undefined,
+        // Keep the current data but remove planning link
+      });
+    }
+  }, [onDataChange]);
 
   const calculateCompleteness = useCallback(() => {
     const requiredFields = ['name', 'role', 'description'];
@@ -115,45 +157,125 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'protagonist': return '🦸';
-      case 'antagonist': return '🦹';
+      case 'protagonist': return '⭐';
+      case 'antagonist': return '⚡';
       case 'supporting': return '👥';
       default: return '👤';
     }
   };
 
+  // Filter characters based on search
+  const filteredCharacters = planningCharacters.filter(char =>
+    char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    char.role.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <div 
-        className={`bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[180px] shadow-sm relative cursor-pointer transition-all hover:shadow-md ${getRoleColor(data.role)}`}
+        className={`bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[200px] max-w-[280px] shadow-sm relative cursor-pointer transition-all hover:shadow-md ${getRoleColor(data.role)}`}
         onClick={handleNodeClick}
       >
         <Handle type="target" position={Position.Top} className="w-2 h-2" />
         
         {/* Character Header */}
         <div className="flex items-center justify-between mb-2">
-          <div className="font-semibold text-green-800 text-sm flex items-center gap-2">
-            {data.name || 'Character'}
+          <div className="font-semibold text-green-800 text-sm flex items-center gap-2 flex-1 min-w-0">
+            <span className="flex-shrink-0">{data.name || 'Character'}</span>
             {data.fromPlanning && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <div className="w-2 h-2 bg-green-500 rounded-full" />
                 <span className="text-xs text-green-600">Linked</span>
               </div>
             )}
           </div>
           
-          {!data.fromPlanning && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDropdown(!showDropdown);
-              }}
-              className="text-xs bg-green-200 hover:bg-green-300 rounded p-1 transition-colors"
-              title="Link to Planning Character"
-            >
-              <Atom className="w-4 h-4" />
-            </button>
-          )}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {data.fromPlanning ? (
+              <button
+                onClick={handleUnlinkCharacter}
+                className="text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded p-1 transition-colors"
+                title="Unlink from Planning Character"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            ) : (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={handleDropdownToggle}
+                  className="text-xs bg-green-200 hover:bg-green-300 rounded p-1 transition-colors flex items-center gap-1"
+                  title="Link to Planning Character"
+                >
+                  <Atom className="w-3 h-3" />
+                  <ChevronDown className="w-2 h-2" />
+                </button>
+                
+                {/* Planning Dropdown */}
+                {showDropdown && (
+                  <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[200px] max-w-[280px]">
+                    <div className="p-2 border-b border-gray-200">
+                      <div className="relative">
+                        <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search characters..."
+                          className="w-full pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-blue-400"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="max-h-48 overflow-y-auto">
+                      {loading ? (
+                        <div className="p-3 text-xs text-gray-500 text-center">Loading characters...</div>
+                      ) : filteredCharacters.length === 0 ? (
+                        searchQuery ? (
+                          <div className="p-3 text-xs text-gray-500 text-center">No characters match "{searchQuery}"</div>
+                        ) : (
+                          <div className="p-3 text-xs text-gray-500 text-center">No characters found in planning</div>
+                        )
+                      ) : (
+                        filteredCharacters.map((char) => (
+                          <button
+                            key={char.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleCharacterSelect(char);
+                            }}
+                            className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0 transition-colors"
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-gray-900">{char.name}</span>
+                              <span className="text-xs text-gray-500 capitalize">{char.role}</span>
+                            </div>
+                            
+                            {char.description && (
+                              <span className="text-gray-600 line-clamp-1 mb-1">{char.description}</span>
+                            )}
+                            
+                            {char.completeness_score !== undefined && (
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-gray-200 rounded-full h-1">
+                                  <div 
+                                    className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
+                                    style={{ width: `${char.completeness_score}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
+                              </div>
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="character-avatar-info flex items-center mb-2">
@@ -161,17 +283,17 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
             {data.image ? (
               <img src={data.image} alt={data.name} className="w-8 h-8 rounded-full object-cover" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-lg">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm">
                 {getRoleIcon(data.role)}
               </div>
             )}
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="text-xs text-green-600 mb-1 capitalize">{data.role || 'Role'}</div>
             
             {/* Completeness Score */}
             {(data.fromPlanning || completeness > 0) && (
-              <div className="mb-2">
+              <div className="mb-1">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-green-700">Completeness</span>
                   <span className="text-green-600">{Math.round(completeness)}%</span>
@@ -195,11 +317,13 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
               onChange={(e) => handleFieldChange('name', e.target.value)}
               className="w-full text-sm font-medium bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-500"
               placeholder="Character name..."
+              onClick={(e) => e.stopPropagation()}
             />
             <select
               value={data.role}
               onChange={(e) => handleFieldChange('role', e.target.value)}
               className="w-full p-1 border border-gray-300 rounded text-xs"
+              onClick={(e) => e.stopPropagation()}
             >
               <option value="protagonist">Protagonist</option>
               <option value="antagonist">Antagonist</option>
@@ -212,6 +336,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
               placeholder="Character description..."
               className="w-full p-2 border border-gray-300 rounded text-xs resize-none"
               rows={3}
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         ) : (
@@ -221,40 +346,15 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                 {data.description}
               </div>
             )}
-          </>
-        )}
-
-        {/* Planning Dropdown */}
-        {showDropdown && (
-          <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto">
-            <div className="p-2 text-xs font-medium text-gray-700 border-b">
-              {loading ? 'Loading...' : 'From Planning:'}
-            </div>
-            {!loading && planningCharacters.length === 0 && (
-              <div className="p-2 text-xs text-gray-500">No characters found</div>
+            
+            {/* Fantasy Class */}
+            {data.fantasyClass && (
+              <div className="text-xs text-purple-600 mb-2 flex items-center gap-1">
+                <span className="text-purple-500">⚔️</span>
+                {data.fantasyClass}
+              </div>
             )}
-            {planningCharacters.map((char) => (
-              <button
-                key={char.id}
-                onClick={() => handleCharacterSelect(char)}
-                className="w-full text-left px-2 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0"
-              >
-                <span className="font-medium">{char.name}</span>
-                <span className="text-gray-500 capitalize">{char.role}</span>
-                {char.completeness_score !== undefined && (
-                  <div className="mt-1 flex items-center gap-1">
-                    <div className="w-8 bg-gray-200 rounded-full h-1">
-                      <div 
-                        className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
-                        style={{ width: `${char.completeness_score}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
+          </>
         )}
 
         {/* Action Buttons */}
@@ -267,15 +367,15 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
               }}
               className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
             >
-              <Brain size={12} />
-              AI Analyze
+              <Brain size={10} />
+              AI
             </button>
           )}
           <button 
             onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
           >
-            <Heart size={12} />
+            <Heart size={10} />
             Connect
           </button>
         </div>
