@@ -70,11 +70,22 @@ export const useCanvasPlanningData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get current user and project (you might need to adjust this based on your auth/project context)
+  // Get current user and project (updated to handle proper project IDs)
   const getCurrentUserAndProject = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    // You might need to get project ID from context or localStorage
-    const projectId = localStorage.getItem('currentProjectId') || 'default-project';
+    if (!user) return { user: null, projectId: null };
+
+    // Get the user's projects to find a valid project ID
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('id, title')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1);
+
+    // Use the most recent project if available, otherwise null (for characters without project association)
+    const projectId = projects && projects.length > 0 ? projects[0].id : null;
+    
     return { user, projectId };
   }, []);
 
@@ -105,9 +116,9 @@ export const useCanvasPlanningData = () => {
         return;
       }
 
-      // Fetch from your characters table - adjust table name based on your schema
-      const { data: characters, error: charactersError } = await supabase
-        .from('characters') // or whatever your characters table is named
+      // Build query with optional project_id filter
+      let query = supabase
+        .from('characters')
         .select(`
           id,
           name,
@@ -125,9 +136,16 @@ export const useCanvasPlanningData = () => {
           created_at,
           updated_at
         `)
-        .eq('user_id', user.id)
-        .eq('project_id', projectId)
-        .order('name');
+        .eq('user_id', user.id);
+
+      // Add project filter if projectId exists, otherwise include characters with null project_id
+      if (projectId) {
+        query = query.or(`project_id.eq.${projectId},project_id.is.null`);
+      } else {
+        query = query.is('project_id', null);
+      }
+
+      const { data: characters, error: charactersError } = await query.order('name');
 
       if (charactersError) {
         throw charactersError;
@@ -170,9 +188,9 @@ export const useCanvasPlanningData = () => {
       const { user, projectId } = await getCurrentUserAndProject();
       if (!user) return;
 
-      // Fetch from your plots/chapters table - adjust based on your schema
-      const { data: plots, error: plotsError } = await supabase
-        .from('chapters') // or 'plots' or whatever your table is named
+      // Build query with optional project_id filter
+      let query = supabase
+        .from('chapters')
         .select(`
           id,
           title,
@@ -184,9 +202,14 @@ export const useCanvasPlanningData = () => {
           created_at,
           updated_at
         `)
-        .eq('user_id', user.id)
-        .eq('project_id', projectId)
-        .order('order');
+        .eq('user_id', user.id);
+
+      // Add project filter if projectId exists
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data: plots, error: plotsError } = await query.order('order');
 
       if (plotsError) {
         throw plotsError;
@@ -220,9 +243,9 @@ export const useCanvasPlanningData = () => {
       const { user, projectId } = await getCurrentUserAndProject();
       if (!user) return;
 
-      // Fetch from your locations table - adjust based on your schema
-      const { data: locations, error: locationsError } = await supabase
-        .from('locations') // adjust table name
+      // Build query with optional project_id filter
+      let query = supabase
+        .from('locations')
         .select(`
           id,
           name,
@@ -235,9 +258,16 @@ export const useCanvasPlanningData = () => {
           created_at,
           updated_at
         `)
-        .eq('user_id', user.id)
-        .eq('project_id', projectId)
-        .order('name');
+        .eq('user_id', user.id);
+
+      // Add project filter if projectId exists, otherwise include locations with null project_id
+      if (projectId) {
+        query = query.or(`project_id.eq.${projectId},project_id.is.null`);
+      } else {
+        query = query.is('project_id', null);
+      }
+
+      const { data: locations, error: locationsError } = await query.order('name');
 
       if (locationsError) {
         throw locationsError;
@@ -357,7 +387,7 @@ export const useCanvasPlanningData = () => {
   // Sync character data back to planning
   const syncCharacterToPlanning = useCallback(async (characterData: CanvasCharacterData): Promise<boolean> => {
     try {
-      const { user, projectId } = await getCurrentUserAndProject();
+      const { user } = await getCurrentUserAndProject();
       if (!user) return false;
 
       const { error } = await supabase
@@ -416,7 +446,7 @@ export const useCanvasPlanningData = () => {
           traits: characterData.traits || [],
           relationships: characterData.relationships || [],
           user_id: user.id,
-          project_id: projectId,
+          project_id: projectId, // Will be null if no project exists
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
