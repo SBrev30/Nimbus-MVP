@@ -3,7 +3,7 @@ import { Handle, Position } from 'reactflow';
 import { BaseCanvasNode, withCanvasComponent, BaseCanvasComponentProps } from '../core/BaseCanvasComponent';
 import { useCanvasPlanningData } from '../../../hooks/useCanvasPlanningData';
 import { CharacterPopup } from '../CharacterPopup';
-import { User, Edit3, Heart, Brain, Atom, ChevronDown, X, Search } from 'lucide-react';
+import { User, Heart, Brain, Atom, ChevronDown, X, Search, Link, Edit } from 'lucide-react';
 
 export interface CharacterNodeData {
   name: string;
@@ -34,6 +34,8 @@ interface CharacterNodeProps extends BaseCanvasComponentProps {
   isEditing?: boolean;
   onDataChange?: (newData: Partial<CharacterNodeData>) => void;
   onAnalyzeAI?: (characterId: string) => void;
+  onConnect?: (nodeId: string) => void;
+  onEdit?: (nodeId: string) => void;
 }
 
 const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
@@ -42,16 +44,18 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   selected,
   isEditing,
   onDataChange,
-  onAnalyzeAI
+  onAnalyzeAI,
+  onConnect,
+  onEdit
 }) => {
-  const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'relationships'>('basic');
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [searchQuery, setSearchQuery] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { planningCharacters, loading } = useCanvasPlanningData();
+  const { planningCharacters, loading, refreshCharacters } = useCanvasPlanningData();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -68,6 +72,11 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     }
   }, [showDropdown]);
 
+  // Refresh characters when component mounts
+  useEffect(() => {
+    refreshCharacters();
+  }, [refreshCharacters]);
+
   const handleFieldChange = useCallback((field: string, value: any) => {
     if (onDataChange) {
       onDataChange({ [field]: value });
@@ -78,17 +87,23 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     console.log('Selecting character:', character);
     
     if (onDataChange) {
+      // Map all character data from planning
       onDataChange({
-        name: character.name,
+        name: character.name || '',
         role: character.role || 'supporting',
         description: character.description || '',
+        age: character.age,
+        occupation: character.occupation || '',
+        motivation: character.motivation || '',
+        backstory: character.backstory || '',
+        appearance: character.appearance || '',
+        personality: character.personality || '',
+        fantasyClass: character.fantasyClass || '',
+        traits: character.traits || [],
         fromPlanning: true,
         planningId: character.id,
-        traits: character.traits || [],
-        age: character.age,
-        occupation: character.occupation,
-        fantasyClass: character.fantasyClass,
-        completeness_score: character.completeness_score || 0
+        completeness_score: character.completeness_score || 0,
+        relationships: character.relationships || []
       });
     }
     
@@ -104,7 +119,13 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   }, [showDropdown]);
 
   const handleNodeClick = (event: React.MouseEvent) => {
-    if (data.fromPlanning) {
+    if (isConnecting) {
+      // Cancel connection mode
+      setIsConnecting(false);
+      return;
+    }
+
+    if (data.fromPlanning && !isEditing) {
       const rect = event.currentTarget.getBoundingClientRect();
       setPopupPosition({
         x: rect.left + rect.width / 2,
@@ -122,10 +143,29 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       onDataChange({
         fromPlanning: false,
         planningId: undefined,
-        // Keep the current data but remove planning link
+        // Keep current data but remove planning link
       });
     }
   }, [onDataChange]);
+
+  const handleConnectClick = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    if (onConnect) {
+      setIsConnecting(true);
+      onConnect(id);
+    }
+  }, [onConnect, id]);
+
+  const handleEditClick = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    if (onEdit) {
+      onEdit(id);
+    }
+  }, [onEdit, id]);
 
   const calculateCompleteness = useCallback(() => {
     const requiredFields = ['name', 'role', 'description'];
@@ -173,14 +213,17 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   return (
     <>
       <div 
-        className={`bg-green-100 border-2 border-green-300 rounded-lg p-3 min-w-[200px] max-w-[280px] shadow-sm relative cursor-pointer transition-all hover:shadow-md ${getRoleColor(data.role)}`}
+        className={`rounded-lg p-3 min-w-[200px] max-w-[280px] shadow-sm relative transition-all hover:shadow-md ${
+          isConnecting ? 'ring-2 ring-blue-400 bg-blue-50' : ''
+        } ${selected ? 'ring-2 ring-purple-400 ring-offset-2' : ''} ${getRoleColor(data.role)}`}
         onClick={handleNodeClick}
+        style={{ cursor: isConnecting ? 'crosshair' : 'pointer' }}
       >
         <Handle type="target" position={Position.Top} className="w-2 h-2" />
         
         {/* Character Header */}
         <div className="flex items-center justify-between mb-2">
-          <div className="font-semibold text-green-800 text-sm flex items-center gap-2 flex-1 min-w-0">
+          <div className="font-semibold text-sm flex items-center gap-2 flex-1 min-w-0">
             <span className="flex-shrink-0">{data.name || 'Character'}</span>
             {data.fromPlanning && (
               <div className="flex items-center gap-1 flex-shrink-0">
@@ -354,6 +397,19 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                 {data.fantasyClass}
               </div>
             )}
+
+            {/* Additional character details */}
+            {data.age && (
+              <div className="text-xs text-gray-600 mb-1">
+                Age: {data.age}
+              </div>
+            )}
+            
+            {data.occupation && (
+              <div className="text-xs text-gray-600 mb-1">
+                Occupation: {data.occupation}
+              </div>
+            )}
           </>
         )}
 
@@ -366,18 +422,36 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                 onAnalyzeAI(id);
               }}
               className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
+              title="AI Analyze Character"
             >
               <Brain size={10} />
               AI
             </button>
           )}
+          
           <button 
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
+            onClick={handleConnectClick}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+              isConnecting 
+                ? 'bg-blue-200 text-blue-800' 
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+            }`}
+            title={isConnecting ? 'Click another node to connect' : 'Create connection'}
           >
-            <Heart size={10} />
-            Connect
+            <Link size={10} />
+            {isConnecting ? 'Connecting...' : 'Connect'}
           </button>
+
+          {data.fromPlanning && (
+            <button 
+              onClick={handleEditClick}
+              className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200 transition-colors"
+              title="Edit in Planning"
+            >
+              <Edit size={10} />
+              Edit
+            </button>
+          )}
         </div>
 
         <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
@@ -392,12 +466,16 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
             role: data.role || '',
             description: data.description || '',
             fantasyClass: data.fantasyClass,
-            relationships: data.relationships || []
+            relationships: data.relationships?.map(r => r.characterId) || []
           }}
           position={popupPosition}
           onClose={() => setShowPopup(false)}
           onExpand={() => {
             console.log('Expand character:', data.planningId);
+            // Navigate to character planning page
+            if (onEdit) {
+              onEdit(data.planningId || id);
+            }
             setShowPopup(false);
           }}
         />
