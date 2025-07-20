@@ -32,10 +32,12 @@ export interface CharacterNodeData {
 interface CharacterNodeProps extends BaseCanvasComponentProps {
   data: CharacterNodeData;
   isEditing?: boolean;
-  onDataChange?: (newData: Partial<CharacterNodeData>) => void;
+  hasChanges?: boolean;
+  onDataChange?: (field: string, value: any) => void; // HOC provides this format
   onAnalyzeAI?: (characterId: string) => void;
   onConnect?: (nodeId: string) => void;
-  onEdit?: (nodeId: string) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
@@ -43,10 +45,12 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   data,
   selected,
   isEditing,
+  hasChanges,
   onDataChange,
   onAnalyzeAI,
   onConnect,
-  onEdit
+  onEdit,
+  onDelete
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -65,24 +69,10 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       loading,
       planningError,
       showDropdown,
-      nodeData: data
+      nodeData: data,
+      onDataChangeAvailable: !!onDataChange
     });
-    
-    if (planningCharacters.length > 0) {
-      console.log('📋 Available characters:', planningCharacters.map(c => ({
-        id: c.id,
-        name: c.name,
-        role: c.role
-      })));
-    }
-  }, [planningCharacters, loading, planningError, showDropdown, data]);
-
-  // Test the character selection manually
-  useEffect(() => {
-    if (showDropdown && planningCharacters.length > 0) {
-      console.log('🔍 Dropdown opened with characters available:', planningCharacters.length);
-    }
-  }, [showDropdown, planningCharacters.length]);
+  }, [planningCharacters, loading, planningError, showDropdown, data, onDataChange]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -99,12 +89,15 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     }
   }, [showDropdown]);
 
+  // Handle field changes compatible with HOC
   const handleFieldChange = useCallback((field: string, value: any) => {
+    console.log('📝 Field change:', field, value);
     if (onDataChange) {
-      onDataChange({ [field]: value });
+      onDataChange(field, value);
     }
   }, [onDataChange]);
 
+  // Handle character selection from planning
   const handleCharacterSelect = useCallback((character: any) => {
     console.log('🎯 Selecting character from planning:', character.name);
     console.log('📊 Full character data:', character);
@@ -115,7 +108,8 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     }
     
     try {
-      const updatedData = {
+      // Update multiple fields through the HOC's onDataChange
+      const updates = {
         name: character.name || '',
         role: character.role || 'supporting',
         description: character.description || '',
@@ -133,12 +127,14 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
         relationships: character.relationships || []
       };
       
-      console.log('📝 Updating node data with:', updatedData);
+      // Apply all updates field by field for HOC compatibility
+      Object.entries(updates).forEach(([field, value]) => {
+        onDataChange(field, value);
+      });
       
-      // Update the node data
-      onDataChange(updatedData);
+      console.log('📝 Applied character updates via HOC');
       
-      // Force close the dropdown with a small delay to ensure the update processes
+      // Force close the dropdown
       setTimeout(() => {
         setShowDropdown(false);
         setSearchQuery('');
@@ -192,11 +188,8 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     event.preventDefault();
     
     if (onDataChange) {
-      onDataChange({
-        fromPlanning: false,
-        planningId: undefined,
-        // Keep current data but remove planning link
-      });
+      onDataChange('fromPlanning', false);
+      onDataChange('planningId', undefined);
     }
   }, [onDataChange]);
 
@@ -213,15 +206,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       console.warn('⚠️ onConnect handler not available');
     }
   }, [onConnect, id, data.name]);
-
-  const handleEditClick = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    event.preventDefault();
-    
-    if (onEdit) {
-      onEdit(id);
-    }
-  }, [onEdit, id]);
 
   const calculateCompleteness = useCallback(() => {
     const requiredFields = ['name', 'role', 'description'];
@@ -273,9 +257,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     );
   }, [planningCharacters, searchQuery]);
 
-  console.log('Planning characters available:', planningCharacters.length);
-  console.log('Filtered characters:', filteredCharacters.length);
-
   return (
     <>
       <div 
@@ -296,6 +277,9 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                 <div className="w-2 h-2 bg-green-500 rounded-full" />
                 <span className="text-xs text-green-600">Linked</span>
               </div>
+            )}
+            {hasChanges && (
+              <div className="text-xs text-orange-500" title="Auto-saving...">💾</div>
             )}
           </div>
           
@@ -445,9 +429,12 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
             {isConnecting ? 'Connecting...' : 'Connect'}
           </button>
 
-          {data.fromPlanning && (
+          {data.fromPlanning && onEdit && (
             <button 
-              onClick={handleEditClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
               className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200 transition-colors"
               title="Edit in Planning"
             >
@@ -460,157 +447,118 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
         <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
       </div>
 
-      {/* Planning Dropdown - Portal */}
+      {/* Planning Dropdown - Simple positioned dropdown */}
       {showDropdown && (
         <div 
           ref={dropdownRef}
-          className="fixed inset-0 z-[9999]"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowDropdown(false);
+          className="absolute bg-white border border-gray-300 rounded-lg shadow-lg min-w-[200px] max-w-[280px] z-50"
+          style={{
+            top: '100%',
+            right: 0,
+            marginTop: '4px'
           }}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
         >
-          <div 
-            className="absolute bg-white border border-gray-300 rounded-lg shadow-lg min-w-[200px] max-w-[280px]"
-            style={{
-              // Position relative to the atom button
-              top: atomButtonRef.current ? atomButtonRef.current.getBoundingClientRect().bottom + 4 : '50%',
-              left: atomButtonRef.current ? atomButtonRef.current.getBoundingClientRect().right - 200 : '50%',
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-          >
-            {/* Search Input */}
-            <div className="p-2 border-b border-gray-200">
-              <div className="relative">
-                <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search characters..."
-                  className="w-full pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-blue-400"
+          {/* Search Input */}
+          <div className="p-2 border-b border-gray-200">
+            <div className="relative">
+              <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search characters..."
+                className="w-full pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-blue-400"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+          
+          {/* Refresh Button */}
+          <div className="px-2 pb-2 border-b border-gray-200">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Manually refreshing characters...');
+                refreshCharacters();
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="w-full text-xs text-blue-600 hover:text-blue-800 py-1 transition-colors"
+            >
+              🔄 Refresh Characters
+            </button>
+          </div>
+          
+          {/* Character List */}
+          <div className="max-h-48 overflow-y-auto">
+            {loading ? (
+              <div className="p-3 text-xs text-gray-500 text-center">Loading characters...</div>
+            ) : planningError ? (
+              <div className="p-3 text-xs text-red-500 text-center">
+                Error loading characters: {planningError}
+              </div>
+            ) : planningCharacters.length === 0 ? (
+              <div className="p-3 text-xs text-gray-500 text-center">
+                No characters found in planning.
+                <br />
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    e.preventDefault();
+                    refreshCharacters();
                   }}
-                  onMouseDown={(e) => {
-                    e.stopPropagation();
-                  }}
-                />
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className="text-blue-600 hover:text-blue-800 underline mt-1"
+                >
+                  Refresh
+                </button>
               </div>
-            </div>
-            
-            {/* Refresh Button */}
-            <div className="px-2 pb-2 border-b border-gray-200">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  console.log('Manually refreshing characters...');
-                  refreshCharacters();
-                }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-                className="w-full text-xs text-blue-600 hover:text-blue-800 py-1 transition-colors"
-              >
-                🔄 Refresh Characters
-              </button>
-            </div>
-            
-            {/* Character List */}
-            <div className="max-h-48 overflow-y-auto">
-              {loading ? (
-                <div className="p-3 text-xs text-gray-500 text-center">Loading characters...</div>
-              ) : planningError ? (
-                <div className="p-3 text-xs text-red-500 text-center">
-                  Error loading characters: {planningError}
-                </div>
-              ) : planningCharacters.length === 0 ? (
+            ) : filteredCharacters.length === 0 ? (
+              searchQuery ? (
                 <div className="p-3 text-xs text-gray-500 text-center">
-                  No characters found in planning.
-                  <br />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      refreshCharacters();
-                    }}
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                    className="text-blue-600 hover:text-blue-800 underline mt-1"
-                  >
-                    Refresh
-                  </button>
+                  No characters match "{searchQuery}"
                 </div>
-              ) : filteredCharacters.length === 0 ? (
-                searchQuery ? (
-                  <div className="p-3 text-xs text-gray-500 text-center">
-                    No characters match "{searchQuery}"
-                  </div>
-                ) : (
-                  <div className="p-3 text-xs text-gray-500 text-center">
-                    All characters filtered out
-                  </div>
-                )
               ) : (
-                filteredCharacters.map((char, index) => (
-                  <div
-                    key={`${char.id}-${index}`}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0 transition-colors cursor-pointer"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('🎯 Character clicked:', char.name);
-                      handleCharacterSelect(char);
-                    }}
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-gray-900">{char.name}</span>
-                      <span className="text-xs text-gray-500 capitalize">{char.role}</span>
-                    </div>
-                    
-                    {char.description && (
-                      <span className="text-gray-600 text-xs mb-1 line-clamp-2">{char.description}</span>
-                    )}
-                    
-                    {char.completeness_score !== undefined && (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-1">
-                          <div 
-                            className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
-                            style={{ width: `${Math.max(5, char.completeness_score)}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
-                      </div>
-                    )}
+                <div className="p-3 text-xs text-gray-500 text-center">
+                  All characters filtered out
+                </div>
+              )
+            ) : (
+              filteredCharacters.map((char, index) => (
+                <div
+                  key={`${char.id}-${index}`}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0 transition-colors cursor-pointer"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('🎯 Character clicked:', char.name);
+                    handleCharacterSelect(char);
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-gray-900">{char.name}</span>
+                    <span className="text-xs text-gray-500 capitalize">{char.role}</span>
                   </div>
-                ))
-              )}
-            </div>
+                  
+                  {char.description && (
+                    <span className="text-gray-600 text-xs mb-1 line-clamp-2">{char.description}</span>
+                  )}
+                  
+                  {char.completeness_score !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-1">
+                        <div 
+                          className={`h-1 rounded-full ${getCompletionColor(char.completeness_score)}`}
+                          style={{ width: `${Math.max(5, char.completeness_score)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400">{Math.round(char.completeness_score)}%</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -630,9 +578,8 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
           onClose={() => setShowPopup(false)}
           onExpand={() => {
             console.log('Expand character:', data.planningId);
-            // Navigate to character planning page
             if (onEdit) {
-              onEdit(data.planningId || id);
+              onEdit();
             }
             setShowPopup(false);
           }}
