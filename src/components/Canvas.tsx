@@ -34,7 +34,6 @@ import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
 import { CharacterPopup } from './canvas/CharacterPopup';
 
 // Import node types from index file - these should include enhanced versions
-import { useCanvasPlanningData } from '../hooks/useCanvasPlanningData';
 import {
   CharacterNode,
   PlotNode,
