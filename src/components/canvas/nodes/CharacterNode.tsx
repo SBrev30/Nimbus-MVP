@@ -103,24 +103,39 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       
       console.log('📝 Updating node data with:', updatedData);
       onDataChange(updatedData);
+      
+      // Force close the dropdown
+      setShowDropdown(false);
+      setSearchQuery('');
+      
+      // Show success feedback
+      console.log('✅ Character linked successfully:', character.name);
     } else {
       console.warn('⚠️ onDataChange not available');
     }
-    
-    
-    setShowDropdown(false);
-    setSearchQuery('');
   }, [onDataChange]);
 
   const handleDropdownToggle = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
     
+    console.log('🔽 Dropdown toggle clicked, current state:', showDropdown);
     setShowDropdown(!showDropdown);
     setSearchQuery('');
+    
+    // If opening dropdown, refresh characters
+    if (!showDropdown) {
+      console.log('🔄 Refreshing characters on dropdown open');
+      refreshCharacters();
+    }
   }, [showDropdown]);
 
   const handleNodeClick = (event: React.MouseEvent) => {
+    // Don't handle node clicks if dropdown is open
+    if (showDropdown) {
+      return;
+    }
+    
     if (isConnecting) {
       // Cancel connection mode
       setIsConnecting(false);
@@ -267,7 +282,11 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                 
                 {/* Planning Dropdown */}
                 {showDropdown && (
-                  <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[200px] max-w-[280px]">
+                  <div 
+                    className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[200px] max-w-[280px]"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
                     {/* Search Input */}
                     <div className="p-2 border-b border-gray-200">
                       <div className="relative">
@@ -278,7 +297,13 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Search characters..."
                           className="w-full pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-blue-400"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                          }}
                         />
                       </div>
                     </div>
@@ -333,7 +358,16 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
                         filteredCharacters.map((char, index) => (
                           <button
                             key={`${char.id}-${index}`}
-                            onClick={() => handleCharacterSelect(char)}
+                           onClick={(e) => {
+                             e.preventDefault();
+                             e.stopPropagation();
+                             console.log('🎯 Character clicked:', char.name);
+                             handleCharacterSelect(char);
+                           }}
+                           onMouseDown={(e) => {
+                             e.preventDefault();
+                             e.stopPropagation();
+                           }}
                             className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 flex flex-col border-b border-gray-100 last:border-b-0 transition-colors"
                           >
                             <div className="flex items-center justify-between mb-1">
