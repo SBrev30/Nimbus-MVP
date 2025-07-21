@@ -68,31 +68,31 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
   };
 
   const createPlotThread = async (threadData: any) => {
-    try {
-      setCreating(true);
-      setError(null);
-      const newThread = await plotService.createPlotThread({
-        ...threadData,
-        project_id: projectId
-      });
-      
-      if (newThread) {
-        setPlotThreads(prev => [...prev, newThread]);
-        setShowCreateModal(false);
-        if (refreshCanvasData) {
-          await refreshCanvasData(); // Refresh canvas integration
-        }
-        return true;
+  try {
+    setCreating(true);
+    setError(null);
+    const newThread = await plotService.createPlotThread({
+      ...threadData,
+      project_id: projectId
+    });
+    
+    if (newThread) {
+      setPlotThreads(prev => [...prev, newThread]);
+      setShowCreateModal(false);
+      if (refreshCanvasData) {
+        await refreshCanvasData();
       }
-      return false;
-    } catch (err) {
-      console.error('Error creating plot thread:', err);
-      setError('Failed to create plot thread');
-      return false;
-    } finally {
-      setCreating(false);
+      return true;
     }
-  };
+    return false;
+  } catch (err) {
+    console.error('Error creating plot thread:', err);
+    setError('Failed to create plot thread');
+    return false;
+  } finally {
+    setCreating(false);
+  }
+};
 
   const deletePlotThread = async (threadId: string) => {
     try {
@@ -577,7 +577,7 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
                           <div className="text-sm text-gray-600">{completeness}%</div>
                         </div>
 
-                        <h3 className="font-semibold text-gray-900 mb-2">{thread.name}</h3>
+                        <h3 className="font-semibold text-gray-900 mb-2">{thread.title}</h3>
                         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{thread.description || 'No description'}</p>
 
                         {/* Tension Curve Preview */}
@@ -632,7 +632,7 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <span className="text-2xl">{getTypeIcon(selectedThread.thread_type)}</span>
-                        <h2 className="text-xl font-semibold text-gray-900">{selectedThread.name}</h2>
+                        <h2 className="text-xl font-semibold text-gray-900">{selectedThread.title}</h2>
                         <span className={`px-3 py-1 text-sm font-medium rounded-full ${getTypeColor(selectedThread.thread_type)}`}>
                           {selectedThread.thread_type.replace('_', ' ').charAt(0).toUpperCase() + selectedThread.thread_type.replace('_', ' ').slice(1)}
                         </span>
