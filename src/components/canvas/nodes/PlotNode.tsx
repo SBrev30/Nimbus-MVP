@@ -6,7 +6,7 @@ import {
   ExternalLink,
   MoreHorizontal
 } from 'lucide-react';
-import { useCanvasPlanningData } from '../../hooks/useCanvasPlanningData';
+import { useCanvasPlanningData } from '../../../hooks/useCanvasPlanningData';
 
 export interface PlotNodeData {
   // Existing fields from your current PlotNode
