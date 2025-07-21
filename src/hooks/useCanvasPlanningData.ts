@@ -300,7 +300,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       console.log('Loading plot threads for user:', user.id, 'Project:', finalProjectId);
 
-      // Build query for plot threads
+      // Build query for plot threads using correct column names
       let threadsQuery = supabase
         .from('plot_threads')
         .select(`
@@ -382,8 +382,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
         return {
           id: thread.id,
-          title: thread.name || '',
-          type: thread.thread_type || 'subplot',
+          title: thread.name || '', // Map database 'name' to interface 'title'
+          type: thread.thread_type || 'subplot', // Map database 'thread_type' to interface 'type'
           description: thread.description || '',
           color: thread.color || '#3B82F6',
           completion_percentage,
@@ -394,7 +394,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
           connected_thread_ids: thread.metadata?.connected_thread_ids || [],
           events: (thread.events || []).map((event: any) => ({
             id: event.id,
-            title: event.name,
+            title: event.name, // Map database 'name' to interface 'title'
             description: event.description,
             event_type: event.event_type,
             tension_level: event.tension_level,
@@ -636,8 +636,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
       const { error } = await supabase
         .from('plot_threads')
         .update({
-          name: threadData.title,
-          thread_type: threadData.type,
+          name: threadData.title, // Map interface 'title' to database 'name'
+          thread_type: threadData.type, // Map interface 'type' to database 'thread_type'
           description: threadData.description,
           color: threadData.color,
           start_tension: threadData.tension_curve[0],
@@ -651,6 +651,21 @@ export const useCanvasPlanningData = (projectId?: string) => {
           updated_at: new Date().toISOString()
         })
         .eq('id', threadData.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error syncing plot thread:', error);
+        return false;
+      }
+
+      // Refresh local data
+      await refreshPlotThreads();
+      return true;
+    } catch (err) {
+      console.error('Error syncing plot thread to planning:', err);
+      return false;
+    }
+  }, [getCurrentUserAndProject, refreshPlotThreads]);id', threadData.id)
         .eq('user_id', user.id);
 
       if (error) {
