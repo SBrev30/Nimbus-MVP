@@ -1,6 +1,6 @@
 // src/services/canvas-integration-service.ts
 import { supabase } from '../lib/supabase';
-import { CanvasCharacterData, CanvasPlotData, CanvasLocationData } from '../hooks/useCanvasPlanningData';
+import { CanvasCharacterData, CanvasPlotData, CanvasLocationData, CanvasPlotThreadData } from '../hooks/useCanvasPlanningData';
 
 export interface CanvasConnection {
   id: string;
@@ -286,6 +286,13 @@ class CanvasIntegrationService {
     // Example: router.push(`/planning/plots/${plotId}`);
   }
 
+  // NEW: Navigate to plot thread planning
+  navigateToPlotThreadPlanning(threadId: string): void {
+    // Navigate to plot thread planning page
+    console.log('Navigate to plot thread planning:', threadId);
+    // Example: router.push(`/planning/plot-threads/${threadId}`);
+  }
+
   navigateToLocationPlanning(locationId: string): void {
     // Navigate to location planning page
     console.log('Navigate to location planning:', locationId);
@@ -328,6 +335,28 @@ class CanvasIntegrationService {
     };
   }
 
+  // NEW: Format plot thread for canvas
+  formatPlotThreadForCanvas(thread: CanvasPlotThreadData): CanvasNodeData {
+    return {
+      id: thread.id,
+      type: 'plot',
+      title: thread.title,
+      description: thread.description,
+      fromPlanning: thread.fromPlanning,
+      planningId: thread.id,
+      position: { x: 0, y: 0 },
+      plotType: thread.type,
+      completion: thread.completion_percentage,
+      eventCount: thread.event_count,
+      color: thread.color,
+      tensionCurve: thread.tension_curve,
+      tags: thread.tags,
+      connectedCharacters: thread.connected_character_ids,
+      connectedThreads: thread.connected_thread_ids,
+      completeness_score: thread.completion_percentage
+    };
+  }
+
   formatLocationForCanvas(location: CanvasLocationData): CanvasNodeData {
     return {
       id: location.id,
@@ -343,6 +372,136 @@ class CanvasIntegrationService {
       culture: location.culture,
       connectedCharacters: location.connectedCharacters
     };
+  }
+
+  // NEW: Get planning content for canvas integration
+  async getPlanningContent(projectId?: string): Promise<CanvasNodeData[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const finalProjectId = projectId || localStorage.getItem('currentProjectId') || 'default-project';
+      const canvasContent: CanvasNodeData[] = [];
+
+      // Load characters
+      const { data: characters } = await supabase
+        .from('characters')
+        .select('*')
+        .eq('user_id', user.id)
+        .or(`project_id.eq.${finalProjectId},project_id.is.null`);
+
+      if (characters) {
+        characters.forEach(char => {
+          canvasContent.push(this.formatCharacterForCanvas({
+            id: char.id,
+            name: char.name,
+            role: char.role,
+            description: char.description,
+            age: char.age,
+            occupation: char.occupation,
+            motivation: char.motivation,
+            backstory: char.backstory,
+            appearance: char.appearance,
+            personality: char.personality,
+            fantasyClass: char.fantasy_class,
+            traits: char.traits,
+            relationships: char.relationships,
+            completeness_score: 0, // Will be calculated
+            fromPlanning: true
+          }));
+        });
+      }
+
+      // NEW: Load plot threads
+      const { data: plotThreads } = await supabase
+        .from('plot_threads')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('project_id', finalProjectId);
+
+      if (plotThreads) {
+        plotThreads.forEach(thread => {
+          canvasContent.push(this.formatPlotThreadForCanvas({
+            id: thread.id,
+            title: thread.name, // Map database 'name' to interface 'title'
+            type: thread.thread_type, // Map database 'thread_type' to interface 'type'
+            description: thread.description,
+            color: thread.color,
+            completion_percentage: 0, // Will be calculated
+            event_count: 0, // Will be loaded separately
+            tension_curve: [thread.start_tension, thread.peak_tension, thread.end_tension].filter(t => t !== undefined),
+            tags: thread.metadata?.tags || [],
+            connected_character_ids: thread.connected_character_ids || [],
+            connected_thread_ids: thread.metadata?.connected_thread_ids || [],
+            fromPlanning: true,
+            created_at: thread.created_at,
+            updated_at: thread.updated_at
+          }));
+        });
+      }
+
+      // Load locations
+      const { data: locations } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('user_id', user.id)
+        .or(`project_id.eq.${finalProjectId},project_id.is.null`);
+
+      if (locations) {
+        locations.forEach(loc => {
+          canvasContent.push(this.formatLocationForCanvas({
+            id: loc.id,
+            name: loc.name,
+            type: loc.type,
+            description: loc.description,
+            importance: loc.importance,
+            geography: loc.geography,
+            culture: loc.culture,
+            connectedCharacters: loc.connected_characters,
+            fromPlanning: true
+          }));
+        });
+      }
+
+      return canvasContent;
+    } catch (err) {
+      console.error('Error loading planning content:', err);
+      return [];
+    }
+  }
+
+  // NEW: Sync plot thread to planning
+  async syncPlotThreadToPlanning(threadData: CanvasNodeData): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !threadData.planningId) return false;
+
+      const { error } = await supabase
+        .from('plot_threads')
+        .update({
+          name: threadData.title, // Map interface 'title' to database 'name'
+          description: threadData.description,
+          color: threadData.color,
+          metadata: {
+            tags: threadData.tags || [],
+            connected_thread_ids: threadData.connectedThreads || []
+          },
+          connected_character_ids: threadData.connectedCharacters || [],
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', threadData.planningId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error syncing plot thread:', error);
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Error syncing plot thread to planning:', err);
+      return false;
+    }
   }
 
   // Sync helpers
@@ -397,6 +556,37 @@ class CanvasIntegrationService {
         }
       }
     }
+
+    // Character-Plot Thread connections
+    const plotThreads = nodes.filter(n => n.type === 'plot');
+    characters.forEach(char => {
+      plotThreads.forEach(plot => {
+        // Check if character is connected to plot thread in planning
+        if (plot.connectedCharacters && plot.connectedCharacters.includes(char.id)) {
+          suggestions.push({
+            source: char.id,
+            target: plot.id,
+            type: 'plot_flow',
+            reason: `${char.name} is connected to ${plot.title} in planning`,
+            confidence: 0.9
+          });
+        }
+        
+        // Check description mentions
+        const charDesc = (char.description || '').toLowerCase();
+        const plotTitle = (plot.title || '').toLowerCase();
+        
+        if (charDesc.includes(plotTitle)) {
+          suggestions.push({
+            source: char.id,
+            target: plot.id,
+            type: 'plot_flow',
+            reason: `${char.name} description mentions ${plot.title}`,
+            confidence: 0.7
+          });
+        }
+      });
+    });
 
     // Character-Location connections
     const locations = nodes.filter(n => n.type === 'location');
