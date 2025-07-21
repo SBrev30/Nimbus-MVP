@@ -28,14 +28,16 @@ export class PlotService {
         .from('plot_threads')
         .select(`
           *,
-          plot_events!plot_events_plot_thread_id_fkey (
+          plot_events!plot_events_thread_id_fkey (
             id,
             name,
             description,
             chapter_id,
+            project_id,
+            user_id,
             tension_level,
             event_type,
-            order_in_thread,
+            order_index,
             metadata,
             created_at,
             updated_at
@@ -75,14 +77,16 @@ export class PlotService {
         .from('plot_threads')
         .select(`
           *,
-          plot_events!plot_events_plot_thread_id_fkey (
+          plot_events!plot_events_thread_id_fkey (
             id,
             name,
             description,
             chapter_id,
+            project_id,
+            user_id,
             tension_level,
             event_type,
-            order_in_thread,
+            order_index,
             metadata,
             created_at,
             updated_at
@@ -271,10 +275,10 @@ export class PlotService {
         .from('plot_events')
         .select('*')
         .eq('user_id', user.id)
-        .order('order_in_thread', { ascending: true });
+        .order('order_index', { ascending: true });
 
       if (threadId) {
-        query = query.eq('plot_thread_id', threadId);
+        query = query.eq('thread_id', threadId);
       }
 
       if (projectId) {
@@ -436,14 +440,15 @@ export class PlotService {
       }
 
       const newEvent = {
-        plot_thread_id: eventData.thread_id,
+        thread_id: eventData.thread_id,
+        project_id: eventData.project_id,
         user_id: user.id,
         name: eventData.title,
         description: eventData.description || '',
-        chapter_id: eventData.chapter_reference,
+        chapter_id: eventData.chapter_id,
         tension_level: eventData.tension_level || 5,
         event_type: eventData.event_type,
-        order_in_thread: eventData.order_index || 0,
+        order_index: eventData.order_index || 0,
         metadata: {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

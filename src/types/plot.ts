@@ -1,9 +1,11 @@
 export interface PlotEvent {
   id: string;
   thread_id: string;
+  project_id?: string;
+  user_id?: string;
   title: string;
   description: string;
-  chapter_reference?: string;
+  chapter_id?: string;
   tension_level: number; // 1-10
   event_type: 'setup' | 'conflict' | 'climax' | 'resolution';
   order_index: number;
