@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { CreatePlotThreadRequest, PlotThread } from '../../types/plot';
 
@@ -8,6 +8,8 @@ interface CreatePlotThreadModalProps {
   onSubmit: (data: CreatePlotThreadRequest) => Promise<PlotThread | null>;
   projectId: string;
   isLoading?: boolean;
+  initialData?: Partial<CreatePlotThreadRequest>;
+  isEditing?: boolean;
 }
 
 const threadTypes = [
@@ -33,7 +35,9 @@ export function CreatePlotThreadModal({
   onClose,
   onSubmit,
   projectId,
-  isLoading = false
+  isLoading = false,
+  initialData,
+  isEditing = false
 }: CreatePlotThreadModalProps) {
   const [formData, setFormData] = useState<CreatePlotThreadRequest>({
     project_id: projectId,
@@ -46,6 +50,32 @@ export function CreatePlotThreadModal({
   
   const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Initialize form data when modal opens or initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        project_id: projectId,
+        title: initialData.title || '',
+        type: initialData.type || 'main',
+        description: initialData.description || '',
+        color: initialData.color || threadColors[0],
+        tags: initialData.tags || []
+      });
+    } else {
+      // Reset to default values when creating new thread
+      setFormData({
+        project_id: projectId,
+        title: '',
+        type: 'main',
+        description: '',
+        color: threadColors[0],
+        tags: []
+      });
+    }
+    setTagInput('');
+    setErrors({});
+  }, [initialData, projectId, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,27 +96,37 @@ export function CreatePlotThreadModal({
       return;
     }
     
-    // Submit form
-    const result = await onSubmit({
-      ...formData,
-      title: formData.title.trim(),
-      description: formData.description?.trim() || undefined
-    });
-    
-    if (result) {
-      // Reset form and close modal
-      setFormData({
-        project_id: projectId,
-        title: '',
-        type: 'main',
-        description: '',
-        color: threadColors[0],
-        tags: []
+    try {
+      // Submit form
+      const result = await onSubmit({
+        ...formData,
+        title: formData.title.trim(),
+        description: formData.description?.trim() || undefined
       });
-      setTagInput('');
-      setErrors({});
-      onClose();
+      
+      if (result) {
+        // Reset form and close modal
+        resetForm();
+        onClose();
+      }
+    } catch (error) {
+      // Handle submission error
+      console.error('Error submitting plot thread:', error);
+      setErrors({ submit: 'Failed to save plot thread. Please try again.' });
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      project_id: projectId,
+      title: '',
+      type: 'main',
+      description: '',
+      color: threadColors[0],
+      tags: []
+    });
+    setTagInput('');
+    setErrors({});
   };
 
   const handleAddTag = (e: React.KeyboardEvent) => {
@@ -113,16 +153,7 @@ export function CreatePlotThreadModal({
 
   const handleClose = () => {
     if (!isLoading) {
-      setFormData({
-        project_id: projectId,
-        title: '',
-        type: 'main',
-        description: '',
-        color: threadColors[0],
-        tags: []
-      });
-      setTagInput('');
-      setErrors({});
+      resetForm();
       onClose();
     }
   };
@@ -134,7 +165,9 @@ export function CreatePlotThreadModal({
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Create New Plot Thread</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isEditing ? 'Edit Plot Thread' : 'Create New Plot Thread'}
+          </h2>
           <button
             onClick={handleClose}
             disabled={isLoading}
@@ -146,6 +179,13 @@ export function CreatePlotThreadModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Submit Error */}
+          {errors.submit && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{errors.submit}</p>
+            </div>
+          )}
+
           {/* Title */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -309,7 +349,7 @@ export function CreatePlotThreadModal({
               {isLoading && (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
-              Create Thread
+              {isEditing ? 'Save Changes' : 'Create Thread'}
             </button>
           </div>
         </form>
