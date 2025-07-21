@@ -29,12 +29,12 @@ export class PlotService {
           *,
           plot_events (
             id,
-            title,
+            name,
             description,
-            chapter_reference,
+            chapter_id,
             tension_level,
             event_type,
-            order_index,
+            order_in_thread,
             metadata,
             created_at,
             updated_at
@@ -76,12 +76,12 @@ export class PlotService {
           *,
           plot_events (
             id,
-            title,
+            name,
             description,
-            chapter_reference,
+            chapter_id,
             tension_level,
             event_type,
-            order_index,
+            order_in_thread,
             metadata,
             created_at,
             updated_at
@@ -124,16 +124,19 @@ export class PlotService {
       const newThread = {
         project_id: threadData.project_id,
         user_id: user.id,
-        title: threadData.title,
-        type: threadData.type,
+        name: threadData.title, // Map title to name for database
+        thread_type: threadData.type, // Map type to thread_type for database
         description: threadData.description || '',
+        status: 'planning', // Default status
         color: defaultColor,
-        tension_curve: [1, 2, 3, 5, 7, 6, 4, 2], // Default tension curve
+        start_tension: 1,
+        peak_tension: 7,
+        end_tension: 2,
         connected_character_ids: [],
-        connected_thread_ids: [],
-        completion_percentage: 0,
-        tags: threadData.tags || [],
-        metadata: {},
+        metadata: {
+          tags: threadData.tags || [],
+          connected_thread_ids: []
+        },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -184,12 +187,12 @@ export class PlotService {
           *,
           plot_events (
             id,
-            title,
+            name,
             description,
-            chapter_reference,
+            chapter_id,
             tension_level,
             event_type,
-            order_index,
+            order_in_thread,
             metadata,
             created_at,
             updated_at
@@ -227,7 +230,7 @@ export class PlotService {
       const { error: eventsError } = await supabase
         .from('plot_events')
         .delete()
-        .eq('thread_id', threadId);
+        .eq('plot_thread_id', threadId);
 
       if (eventsError) {
         console.error('Error deleting plot events:', eventsError);
@@ -254,6 +257,44 @@ export class PlotService {
   }
 
   /**
+   * Get all plot events for a thread or project
+   */
+  async getPlotEvents(threadId?: string, projectId?: string): Promise<PlotEvent[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      let query = supabase
+        .from('plot_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('order_in_thread', { ascending: true });
+
+      if (threadId) {
+        query = query.eq('plot_thread_id', threadId);
+      }
+
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching plot events:', error);
+        throw new Error(`Failed to fetch plot events: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getPlotEvents:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Search plot threads by title or description
    */
   async searchPlotThreads(query: string, projectId?: string): Promise<PlotThread[]> {
@@ -271,12 +312,12 @@ export class PlotService {
           *,
           plot_events (
             id,
-            title,
+            name,
             description,
-            chapter_reference,
+            chapter_id,
             tension_level,
             event_type,
-            order_index,
+            order_in_thread,
             metadata,
             created_at,
             updated_at
@@ -284,7 +325,7 @@ export class PlotService {
         `)
         .eq('user_id', user.id)
         .eq('project_id', currentProjectId)
-        .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -321,12 +362,12 @@ export class PlotService {
           *,
           plot_events (
             id,
-            title,
+            name,
             description,
-            chapter_reference,
+            chapter_id,
             tension_level,
             event_type,
-            order_index,
+            order_in_thread,
             metadata,
             created_at,
             updated_at
@@ -334,7 +375,7 @@ export class PlotService {
         `)
         .eq('user_id', user.id)
         .eq('project_id', currentProjectId)
-        .eq('type', type)
+        .eq('thread_type', type)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -394,13 +435,14 @@ export class PlotService {
       }
 
       const newEvent = {
-        thread_id: eventData.thread_id,
-        title: eventData.title,
+        plot_thread_id: eventData.thread_id,
+        user_id: user.id,
+        name: eventData.title,
         description: eventData.description || '',
-        chapter_reference: eventData.chapter_reference,
+        chapter_id: eventData.chapter_reference,
         tension_level: eventData.tension_level || 5,
         event_type: eventData.event_type,
-        order_index: eventData.order_index || 0,
+        order_in_thread: eventData.order_index || 0,
         metadata: {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -498,6 +540,33 @@ export class PlotService {
 
     // Tension curve (10%)
     if (thread.tension_curve && thread.tension_curve.length > 0) score += 10;
+
+    return Math.min(score, 100);
+  }
+
+  /**
+   * Calculate completeness score for a plot thread with events
+   */
+  calculateThreadCompleteness(thread: any, events: any[]): number {
+    let score = 0;
+    
+    // Basic info (40%)
+    if (thread.name && thread.name.trim().length > 0) score += 15;
+    if (thread.description && thread.description.trim().length > 20) score += 15;
+    if (thread.thread_type) score += 10;
+
+    // Events (30%)
+    const eventCount = events.length;
+    if (eventCount > 0) score += 10;
+    if (eventCount >= 3) score += 10;
+    if (eventCount >= 5) score += 10;
+
+    // Connections (20%)
+    if (thread.connected_character_ids && thread.connected_character_ids.length > 0) score += 10;
+    if (thread.metadata?.connected_thread_ids && thread.metadata.connected_thread_ids.length > 0) score += 10;
+
+    // Tension curve (10%)
+    if (thread.start_tension !== undefined && thread.peak_tension !== undefined && thread.end_tension !== undefined) score += 10;
 
     return Math.min(score, 100);
   }
