@@ -35,6 +35,33 @@ export interface CanvasPlotData {
   fromPlanning: boolean;
 }
 
+// Enhanced Plot Thread Data for Canvas Integration
+export interface CanvasPlotThreadData {
+  id: string;
+  title: string;
+  type: 'main' | 'subplot' | 'side_story' | 'character_arc';
+  description: string;
+  color: string;
+  completion_percentage: number;
+  event_count: number;
+  tension_curve: number[];
+  tags: string[];
+  connected_character_ids: string[];
+  connected_thread_ids: string[];
+  events?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    event_type: string;
+    tension_level: number;
+    chapter_reference?: string;
+    order_index: number;
+  }>;
+  fromPlanning: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CanvasLocationData {
   id: string;
   name: string;
@@ -58,6 +85,7 @@ export interface CanvasLocationData {
 interface PlanningData {
   planningCharacters: CanvasCharacterData[];
   planningPlots: CanvasPlotData[];
+  plotThreads: CanvasPlotThreadData[]; // NEW: Plot threads for enhanced canvas integration
   planningLocations: CanvasLocationData[];
 }
 
@@ -65,6 +93,7 @@ export const useCanvasPlanningData = () => {
   const [planningData, setPlanningData] = useState<PlanningData>({
     planningCharacters: [],
     planningPlots: [],
+    plotThreads: [], // NEW
     planningLocations: []
   });
   const [loading, setLoading] = useState(false);
@@ -198,7 +227,7 @@ export const useCanvasPlanningData = () => {
     }
   }, [getCurrentUserAndProject, calculateCharacterCompleteness]);
 
-  // Fetch plots from planning pages
+  // Fetch plots from planning pages (original plots from chapters)
   const loadPlots = useCallback(async () => {
     try {
       const { user, projectId } = await getCurrentUserAndProject();
@@ -250,6 +279,113 @@ export const useCanvasPlanningData = () => {
     } catch (err) {
       console.error('Error loading plots:', err);
       setError('Failed to load plots from planning');
+    }
+  }, [getCurrentUserAndProject]);
+
+  // NEW: Fetch plot threads from planning pages (enhanced plot management)
+  const loadPlotThreads = useCallback(async () => {
+    try {
+      console.log('Loading plot threads from planning...');
+      
+      const { user, projectId } = await getCurrentUserAndProject();
+      if (!user) {
+        console.warn('No authenticated user found for plot threads');
+        return;
+      }
+
+      console.log('Loading plot threads for user:', user.id, 'Project:', projectId);
+
+      // Build query for plot threads
+      let threadsQuery = supabase
+        .from('plot_threads')
+        .select(`
+          id,
+          title,
+          type,
+          description,
+          color,
+          tension_curve,
+          connected_character_ids,
+          connected_thread_ids,
+          completion_percentage,
+          tags,
+          created_at,
+          updated_at
+        `)
+        .eq('user_id', user.id);
+
+      // Add project filter if projectId exists
+      if (projectId) {
+        threadsQuery = threadsQuery.eq('project_id', projectId);
+      }
+
+      const { data: threads, error: threadsError } = await threadsQuery.order('created_at');
+
+      if (threadsError) {
+        throw threadsError;
+      }
+
+      console.log('Plot threads loaded:', threads?.length || 0);
+
+      // Load events for each thread
+      const threadsWithEvents = await Promise.all(
+        (threads || []).map(async (thread) => {
+          const { data: events, error: eventsError } = await supabase
+            .from('plot_events')
+            .select(`
+              id,
+              title,
+              description,
+              event_type,
+              tension_level,
+              chapter_reference,
+              order_index
+            `)
+            .eq('thread_id', thread.id)
+            .order('order_index');
+
+          if (eventsError) {
+            console.warn(`Failed to load events for thread ${thread.id}:`, eventsError);
+            return { ...thread, events: [], event_count: 0 };
+          }
+
+          return { 
+            ...thread, 
+            events: events || [], 
+            event_count: events?.length || 0 
+          };
+        })
+      );
+
+      const formattedPlotThreads: CanvasPlotThreadData[] = threadsWithEvents.map(thread => ({
+        id: thread.id,
+        title: thread.title || '',
+        type: thread.type || 'subplot',
+        description: thread.description || '',
+        color: thread.color || '#3B82F6',
+        completion_percentage: thread.completion_percentage || 0,
+        event_count: thread.event_count,
+        tension_curve: thread.tension_curve || [],
+        tags: thread.tags || [],
+        connected_character_ids: thread.connected_character_ids || [],
+        connected_thread_ids: thread.connected_thread_ids || [],
+        events: thread.events || [],
+        fromPlanning: true,
+        created_at: thread.created_at,
+        updated_at: thread.updated_at
+      }));
+
+      console.log('Formatted plot threads:', formattedPlotThreads.length);
+
+      setPlanningData(prev => ({
+        ...prev,
+        plotThreads: formattedPlotThreads
+      }));
+
+    } catch (err) {
+      console.error('Error loading plot threads:', err);
+      console.error('Full error details:', err);
+      setError('Failed to load plot threads from planning');
     }
   }, [getCurrentUserAndProject]);
 
@@ -312,13 +448,14 @@ export const useCanvasPlanningData = () => {
     }
   }, [getCurrentUserAndProject]);
 
-  // Load all planning data
+  // Load all planning data (updated to include plot threads)
   const loadAllPlanningData = useCallback(async () => {
     setLoading(true);
     try {
       await Promise.all([
         loadCharacters(),
         loadPlots(),
+        loadPlotThreads(), // NEW
         loadLocations()
       ]);
     } catch (err) {
@@ -327,7 +464,7 @@ export const useCanvasPlanningData = () => {
     } finally {
       setLoading(false);
     }
-  }, [loadCharacters, loadPlots, loadLocations]);
+  }, [loadCharacters, loadPlots, loadPlotThreads, loadLocations]);
 
   // Refresh functions
   const refreshCharacters = useCallback(() => {
@@ -337,6 +474,11 @@ export const useCanvasPlanningData = () => {
   const refreshPlots = useCallback(() => {
     return loadPlots();
   }, [loadPlots]);
+
+  // NEW: Refresh plot threads
+  const refreshPlotThreads = useCallback(() => {
+    return loadPlotThreads();
+  }, [loadPlotThreads]);
 
   const refreshLocations = useCallback(() => {
     return loadLocations();
@@ -369,6 +511,19 @@ export const useCanvasPlanningData = () => {
     );
   }, [planningData.planningPlots]);
 
+  // NEW: Search plot threads
+  const searchPlotThreads = useCallback((query: string): CanvasPlotThreadData[] => {
+    if (!query.trim()) return planningData.plotThreads;
+    
+    const lowerQuery = query.toLowerCase();
+    return planningData.plotThreads.filter(thread =>
+      thread.title.toLowerCase().includes(lowerQuery) ||
+      thread.description.toLowerCase().includes(lowerQuery) ||
+      thread.type.toLowerCase().includes(lowerQuery) ||
+      (thread.tags && thread.tags.some(tag => tag.toLowerCase().includes(lowerQuery)))
+    );
+  }, [planningData.plotThreads]);
+
   const searchLocations = useCallback((query: string): CanvasLocationData[] => {
     if (!query.trim()) return planningData.planningLocations;
     
@@ -389,6 +544,11 @@ export const useCanvasPlanningData = () => {
   const getPlotById = useCallback((id: string): CanvasPlotData | null => {
     return planningData.planningPlots.find(plot => plot.id === id) || null;
   }, [planningData.planningPlots]);
+
+  // NEW: Get plot thread by ID
+  const getPlotThreadById = useCallback((id: string): CanvasPlotThreadData | null => {
+    return planningData.plotThreads.find(thread => thread.id === id) || null;
+  }, [planningData.plotThreads]);
 
   // Get location by ID
   const getLocationById = useCallback((id: string): CanvasLocationData | null => {
@@ -434,6 +594,43 @@ export const useCanvasPlanningData = () => {
       return false;
     }
   }, [getCurrentUserAndProject, refreshCharacters]);
+
+  // NEW: Sync plot thread data back to planning
+  const syncPlotThreadToPlanning = useCallback(async (threadData: CanvasPlotThreadData): Promise<boolean> => {
+    try {
+      const { user } = await getCurrentUserAndProject();
+      if (!user) return false;
+
+      const { error } = await supabase
+        .from('plot_threads')
+        .update({
+          title: threadData.title,
+          type: threadData.type,
+          description: threadData.description,
+          color: threadData.color,
+          tension_curve: threadData.tension_curve,
+          connected_character_ids: threadData.connected_character_ids,
+          connected_thread_ids: threadData.connected_thread_ids,
+          completion_percentage: threadData.completion_percentage,
+          tags: threadData.tags,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', threadData.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error syncing plot thread:', error);
+        return false;
+      }
+
+      // Refresh local data
+      await refreshPlotThreads();
+      return true;
+    } catch (err) {
+      console.error('Error syncing plot thread to planning:', err);
+      return false;
+    }
+  }, [getCurrentUserAndProject, refreshPlotThreads]);
 
   // Create new character in planning
   const createCharacterInPlanning = useCallback(async (characterData: Partial<CanvasCharacterData>): Promise<CanvasCharacterData | null> => {
@@ -500,6 +697,7 @@ export const useCanvasPlanningData = () => {
     // Data
     planningCharacters: planningData.planningCharacters,
     planningPlots: planningData.planningPlots,
+    plotThreads: planningData.plotThreads, // NEW: Enhanced plot threads
     planningLocations: planningData.planningLocations,
     
     // State
@@ -509,29 +707,34 @@ export const useCanvasPlanningData = () => {
     // Refresh functions
     refreshCharacters,
     refreshPlots,
+    refreshPlotThreads, // NEW
     refreshLocations,
     refresh: refreshAll,
     
     // Search functions
     searchCharacters,
     searchPlots,
+    searchPlotThreads, // NEW
     searchLocations,
     
     // Getters
     getCharacterById,
     getPlotById,
+    getPlotThreadById, // NEW
     getLocationById,
     
     // Sync functions
     syncCharacterToPlanning,
+    syncPlotThreadToPlanning, // NEW
     createCharacterInPlanning,
     
-    // Stats
+    // Stats (updated to include plot threads)
     stats: {
       characterCount: planningData.planningCharacters.length,
       plotCount: planningData.planningPlots.length,
+      plotThreadCount: planningData.plotThreads.length, // NEW
       locationCount: planningData.planningLocations.length,
-      totalItems: planningData.planningCharacters.length + planningData.planningPlots.length + planningData.planningLocations.length
+      totalItems: planningData.planningCharacters.length + planningData.planningPlots.length + planningData.plotThreads.length + planningData.planningLocations.length
     }
   };
 };
