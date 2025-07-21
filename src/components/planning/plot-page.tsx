@@ -11,43 +11,103 @@ import {
   MoreHorizontal,
   Trash2,
   AlertCircle,
-  X
+  X,
+  Link,
+  ExternalLink
 } from 'lucide-react';
-import { usePlotManagement } from '../../hooks/use-plot-management';
+import { PlotService } from '../../services/plot-service';
 import { CreatePlotThreadModal } from './create-plot-thread-modal';
-import type { PlotPageProps, PlotThreadFilter, PlotViewMode } from '../../types/plot';
+import type { PlotPageProps, PlotThreadFilter, PlotViewMode, PlotThread, PlotEvent } from '../../types/plot';
 
 export function PlotPage({ onBack, projectId }: PlotPageProps) {
-  const {
-    plotThreads,
-    selectedThread,
-    plotStatistics,
-    loading,
-    creating,
-    deleting,
-    error,
-    loadPlotThreads,
-    createPlotThread,
-    deletePlotThread,
-    setSelectedThread,
-    getFilteredThreads,
-    getTimelineEvents,
-    loadPlotStatistics,
-    clearError,
-    refreshData
-  } = usePlotManagement();
-
+  const [plotThreads, setPlotThreads] = useState<PlotThread[]>([]);
+  const [selectedThread, setSelectedThread] = useState<PlotThread | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<PlotThreadFilter>('all');
   const [viewMode, setViewMode] = useState<PlotViewMode>('threads');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Load data on mount
+  const plotService = new PlotService();
+
+  // Load data on mount and when projectId changes
   useEffect(() => {
     if (projectId && projectId !== 'no-project') {
-      refreshData(projectId);
+      loadPlotThreads();
     }
-  }, [projectId, refreshData]);
+  }, [projectId]);
+
+  const loadPlotThreads = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const threads = await plotService.getPlotThreads(projectId);
+      setPlotThreads(threads);
+    } catch (err) {
+      console.error('Error loading plot threads:', err);
+      setError('Failed to load plot threads');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createPlotThread = async (threadData: any) => {
+    try {
+      setCreating(true);
+      setError(null);
+      const newThread = await plotService.createPlotThread({
+        ...threadData,
+        project_id: projectId
+      });
+      
+      if (newThread) {
+        setPlotThreads(prev => [...prev, newThread]);
+        setShowCreateModal(false);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error creating plot thread:', err);
+      setError('Failed to create plot thread');
+      return false;
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const deletePlotThread = async (threadId: string) => {
+    try {
+      setDeleting(true);
+      setError(null);
+      const success = await plotService.deletePlotThread(threadId);
+      
+      if (success) {
+        setPlotThreads(prev => prev.filter(thread => thread.id !== threadId));
+        if (selectedThread?.id === threadId) {
+          setSelectedThread(null);
+        }
+        setDeleteConfirm(null);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error deleting plot thread:', err);
+      setError('Failed to delete plot thread');
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const getFilteredThreads = (filter: PlotThreadFilter): PlotThread[] => {
+    if (filter === 'all') return plotThreads;
+    return plotThreads.filter(thread => thread.type === filter);
+  };
+
+  const clearError = () => setError(null);
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -134,15 +194,12 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
     );
   };
 
-  const handleDeleteThread = async (threadId: string) => {
-    const success = await deletePlotThread(threadId);
-    if (success) {
-      setDeleteConfirm(null);
-    }
-  };
-
   const filteredThreads = getFilteredThreads(filterType);
-  const timelineEvents = getTimelineEvents();
+  const totalThreads = plotThreads.length;
+  const completedThreads = plotThreads.filter(t => t.completion_percentage >= 100).length;
+  const averageCompletion = totalThreads > 0 
+    ? Math.round(plotThreads.reduce((sum, t) => sum + t.completion_percentage, 0) / totalThreads)
+    : 0;
 
   if (loading && plotThreads.length === 0) {
     return (
@@ -170,8 +227,14 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
           <div className="flex-1">
             <h1 className="text-2xl font-semibold text-gray-900">Plot Development</h1>
             <p className="text-[#889096] mt-1">
-              Multi-threaded story management with {filteredThreads.length} active plot threads
+              Manage your story's plot threads and narrative structure with {filteredThreads.length} active plot threads
             </p>
+          </div>
+
+          {/* Canvas Integration Indicator */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <Link className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-700 font-medium">Canvas Ready</span>
           </div>
           
           <button 
@@ -201,6 +264,28 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
             </button>
           </div>
         )}
+
+        {/* Statistics Row */}
+        <div className="grid grid-cols-4 gap-4 mb-4">
+          <div className="bg-blue-50 rounded-lg p-3">
+            <div className="text-2xl font-bold text-blue-900">{totalThreads}</div>
+            <div className="text-sm text-blue-700">Total Threads</div>
+          </div>
+          <div className="bg-green-50 rounded-lg p-3">
+            <div className="text-2xl font-bold text-green-900">{completedThreads}</div>
+            <div className="text-sm text-green-700">Completed</div>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-3">
+            <div className="text-2xl font-bold text-purple-900">{averageCompletion}%</div>
+            <div className="text-sm text-purple-700">Avg. Progress</div>
+          </div>
+          <div className="bg-orange-50 rounded-lg p-3">
+            <div className="text-2xl font-bold text-orange-900">
+              {plotThreads.reduce((sum, t) => sum + (t.events?.length || 0), 0)}
+            </div>
+            <div className="text-sm text-orange-700">Total Events</div>
+          </div>
+        </div>
 
         {/* Controls */}
         <div className="flex items-center gap-4">
@@ -286,19 +371,25 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
                       : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
                 >
-                  {/* Delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConfirm(thread.id);
-                    }}
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all"
-                    disabled={deleting}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
+                  {/* Canvas Integration Badge */}
+                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                    <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                      <Link className="w-3 h-3" />
+                      Canvas
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirm(thread.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all"
+                      disabled={deleting}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
 
-                  <div className="flex items-start justify-between mb-3 pr-8">
+                  <div className="flex items-start justify-between mb-3 pr-16">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{getTypeIcon(thread.type)}</span>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(thread.type)}`}>
@@ -331,7 +422,7 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
 
                   {/* Stats */}
                   <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                    <span>Events: {thread.event_count || 0}</span>
+                    <span>Events: {thread.events?.length || 0}</span>
                     <span>Characters: {thread.connected_character_ids?.length || 0}</span>
                   </div>
 
@@ -367,13 +458,27 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
                     <span className={`px-3 py-1 text-sm font-medium rounded-full ${getTypeColor(selectedThread.type)}`}>
                       {selectedThread.type.replace('_', ' ').charAt(0).toUpperCase() + selectedThread.type.replace('_', ' ').slice(1)}
                     </span>
+                    {/* Canvas Integration Badge */}
+                    <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
+                      <Link className="w-3 h-3" />
+                      Canvas Ready
+                    </div>
                   </div>
                   <p className="text-[#889096]">{selectedThread.description}</p>
                 </div>
                 
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button 
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors text-sm"
+                    title="Add to Canvas"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Add to Canvas
+                  </button>
+                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                  </button>
+                </div>
               </div>
 
               {/* Stats Grid */}
@@ -519,7 +624,10 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
               <div className="text-center">
                 <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Select a Plot Thread</h3>
-                <p className="text-[#889096]">Choose a plot thread to view events and connections</p>
+                <p className="text-[#889096] mb-4">Choose a plot thread to view events and connections</p>
+                <div className="text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  💡 <strong>Canvas Integration:</strong> Plot threads can be added to the visual canvas for better story visualization and connection mapping.
+                </div>
               </div>
             </div>
           )}
@@ -542,7 +650,7 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Plot Thread</h3>
               <p className="text-gray-600 mb-4">
-                Are you sure you want to delete this plot thread? This action cannot be undone and will also delete all associated plot events.
+                Are you sure you want to delete this plot thread? This action cannot be undone and will also delete all associated plot events and canvas connections.
               </p>
               <div className="flex items-center justify-end gap-3">
                 <button
@@ -553,7 +661,7 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleDeleteThread(deleteConfirm)}
+                  onClick={() => deletePlotThread(deleteConfirm)}
                   disabled={deleting}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
