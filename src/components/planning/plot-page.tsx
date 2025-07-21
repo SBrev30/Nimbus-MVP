@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { ArrowLeft, Plus, BookOpen, Edit3, Trash2, Eye, Circle } from 'lucide-react';
 import { SimpleSearchFilter, useSimpleFilter } from '../shared/simple-search-filter';
 import { plotService } from '../../services/plot-service';
+import { CreatePlotThreadModal } from './create-plot-thread-modal';
+import { PlotThreadDetailModal } from './plot-thread-detail-modal';
 import type { PlotThread, CreatePlotThreadRequest, PlotPageProps } from '../../types/plot';
 
 export function PlotPage({ onBack, projectId }: PlotPageProps) {
@@ -10,6 +12,15 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedThread, setSelectedThread] = useState<PlotThread | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [threadToEdit, setThreadToEdit] = useState<PlotThread | null>(null);
+
+  // Detail modal state
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [threadToView, setThreadToView] = useState<PlotThread | null>(null);
 
   // Define filter options for plot thread types
   const typeFilterOptions = [
@@ -56,8 +67,9 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
     }
   };
 
-  const handleCreateThread = useCallback(async (threadData: CreatePlotThreadRequest) => {
+  const handleCreateThread = useCallback(async (threadData: CreatePlotThreadRequest): Promise<PlotThread | null> => {
     try {
+      setIsCreating(true);
       const newThread = await plotService.createPlotThread({
         ...threadData,
         project_id: projectId
@@ -65,12 +77,46 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
       if (newThread) {
         setPlotThreads(prev => [newThread, ...prev]);
         setIsModalOpen(false);
+        return newThread;
       }
+      return null;
     } catch (error) {
       console.error('Error creating plot thread:', error);
       throw error; // Re-throw so modal can handle it
+    } finally {
+      setIsCreating(false);
     }
   }, [projectId]);
+
+  const handleEditThread = useCallback(async (threadData: CreatePlotThreadRequest): Promise<PlotThread | null> => {
+    if (!threadToEdit) return null;
+    
+    try {
+      setIsCreating(true);
+      const updatedThread = await plotService.updatePlotThread(threadToEdit.id, {
+        title: threadData.title,
+        type: threadData.type,
+        description: threadData.description,
+        color: threadData.color,
+        tags: threadData.tags
+      });
+      
+      if (updatedThread) {
+        setPlotThreads(prev => prev.map(thread => 
+          thread.id === threadToEdit.id ? updatedThread : thread
+        ));
+        setEditModalOpen(false);
+        setThreadToEdit(null);
+        return updatedThread;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error updating plot thread:', error);
+      throw error;
+    } finally {
+      setIsCreating(false);
+    }
+  }, [threadToEdit]);
 
   const handleDeleteThread = useCallback(async (threadId: string) => {
     if (!confirm('Are you sure you want to delete this plot thread? This action cannot be undone.')) {
@@ -87,8 +133,20 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
   }, []);
 
   const handleThreadClick = useCallback((thread: PlotThread) => {
-    setSelectedThread(thread);
-    // TODO: Open thread detail modal or navigate to thread detail page
+    setThreadToView(thread);
+    setDetailModalOpen(true);
+  }, []);
+
+  const handleViewThread = useCallback((e: React.MouseEvent, thread: PlotThread) => {
+    e.stopPropagation();
+    setThreadToView(thread);
+    setDetailModalOpen(true);
+  }, []);
+
+  const handleEditClick = useCallback((e: React.MouseEvent, thread: PlotThread) => {
+    e.stopPropagation();
+    setThreadToEdit(thread);
+    setEditModalOpen(true);
   }, []);
 
   // Helper function for thread type colors
@@ -242,12 +300,14 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
           </div>
         </div>
 
-        {/* Plot Thread Creation Modal - TODO: Create this component */}
+        {/* Create Plot Thread Modal */}
         {isModalOpen && (
-          <PlotThreadModal
+          <CreatePlotThreadModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            onSave={handleCreateThread}
+            onSubmit={handleCreateThread}
+            projectId={projectId}
+            isLoading={isCreating}
           />
         )}
       </>
@@ -347,6 +407,7 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
                     <div
                       key={thread.id}
                       className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer group"
+                      onClick={() => handleThreadClick(thread)}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -360,20 +421,14 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleThreadClick(thread);
-                            }}
+                            onClick={(e) => handleViewThread(e, thread)}
                             className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                             title="View plot thread"
                           >
                             <Eye className="w-4 h-4 text-gray-600" />
                           </button>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // TODO: Implement edit functionality
-                            }}
+                            onClick={(e) => handleEditClick(e, thread)}
                             className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                             title="Edit plot thread"
                           >
@@ -429,124 +484,50 @@ export function PlotPage({ onBack, projectId }: PlotPageProps) {
         </div>
       </div>
 
-      {/* Plot Thread Creation Modal - TODO: Create this component */}
+      {/* Create Plot Thread Modal */}
       {isModalOpen && (
-        <PlotThreadModal
+        <CreatePlotThreadModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSave={handleCreateThread}
+          onSubmit={handleCreateThread}
+          projectId={projectId}
+          isLoading={isCreating}
+        />
+      )}
+
+      {/* Edit Plot Thread Modal */}
+      {editModalOpen && threadToEdit && (
+        <CreatePlotThreadModal
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setThreadToEdit(null);
+          }}
+          onSubmit={handleEditThread}
+          projectId={projectId}
+          isLoading={isCreating}
+          initialData={{
+            title: threadToEdit.title,
+            type: threadToEdit.type,
+            description: threadToEdit.description || '',
+            color: threadToEdit.color || '#3B82F6',
+            tags: threadToEdit.tags || []
+          }}
+          isEditing={true}
+        />
+      )}
+
+      {/* Plot Thread Detail Modal */}
+      {detailModalOpen && (
+        <PlotThreadDetailModal
+          isOpen={detailModalOpen}
+          onClose={() => {
+            setDetailModalOpen(false);
+            setThreadToView(null);
+          }}
+          thread={threadToView}
         />
       )}
     </>
-  );
-}
-
-// Temporary modal component - should be created as a separate component
-function PlotThreadModal({ 
-  isOpen, 
-  onClose, 
-  onSave 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  onSave: (data: CreatePlotThreadRequest) => Promise<void>; 
-}) {
-  const [formData, setFormData] = useState({
-    title: '',
-    type: 'main' as const,
-    description: '',
-    color: '#3B82F6',
-    tags: [] as string[]
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.title.trim()) return;
-
-    setIsSubmitting(true);
-    try {
-      await onSave({
-        title: formData.title,
-        type: formData.type,
-        description: formData.description,
-        color: formData.color,
-        tags: formData.tags,
-        project_id: '' // Will be set by parent
-      });
-      onClose();
-    } catch (error) {
-      console.error('Error creating plot thread:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Create Plot Thread</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                placeholder="Enter plot thread title..."
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-              >
-                <option value="main">Main Plot</option>
-                <option value="subplot">Subplot</option>
-                <option value="side_story">Side Story</option>
-                <option value="character_arc">Character Arc</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A5F7AC] focus:border-transparent"
-                rows={3}
-                placeholder="Describe this plot thread..."
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !formData.title.trim()}
-              className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Creating...' : 'Create'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   );
 }
