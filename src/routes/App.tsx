@@ -36,7 +36,7 @@ interface Note {
 
 // Import planning components
 import { OutlinePage } from '../components/planning/OutlinePage';
-import { PlotPage } from '../components/planning/PlotPage';
+import { PlotPage } from '../components/planning/plot-page';
 import { CharactersPage } from '../components/planning/CharactersPage';
 import { WorldBuildingPage } from '../components/planning/WorldBuildingPage';
 
