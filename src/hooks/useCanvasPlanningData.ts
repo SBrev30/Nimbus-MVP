@@ -665,21 +665,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
       console.error('Error syncing plot thread to planning:', err);
       return false;
     }
-  }, [getCurrentUserAndProject, refreshPlotThreads]);id', threadData.id)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error syncing plot thread:', error);
-        return false;
-      }
-
-      // Refresh local data
-      await refreshPlotThreads();
-      return true;
-    } catch (err) {
-      console.error('Error syncing plot thread to planning:', err);
-      return false;
-    }
   }, [getCurrentUserAndProject, refreshPlotThreads]);
 
   // Create new character in planning
