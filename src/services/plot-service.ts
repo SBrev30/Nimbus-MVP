@@ -523,3 +523,6 @@ export class PlotService {
     }
   }
 }
+
+// Export a singleton instance for easy importing
+export const plotService = new PlotService();
