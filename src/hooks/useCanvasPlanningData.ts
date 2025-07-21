@@ -673,15 +673,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
         return false;
       }
 
-      // Refresh local data
-      await refreshPlotThreads();
-      return true;
-    } catch (err) {
-      console.error('Error syncing plot thread to planning:', err);
-      return false;
-    }
-  }, [getCurrentUserAndProject, refreshPlotThreads]);
-
   // Create new character in planning
   const createCharacterInPlanning = useCallback(async (characterData: Partial<CanvasCharacterData>): Promise<CanvasCharacterData | null> => {
     try {
