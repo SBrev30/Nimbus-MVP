@@ -89,7 +89,7 @@ interface PlanningData {
   planningLocations: CanvasLocationData[];
 }
 
-export const useCanvasPlanningData = () => {
+export const useCanvasPlanningData = (projectId?: string) => {
   const [planningData, setPlanningData] = useState<PlanningData>({
     planningCharacters: [],
     planningPlots: [],
@@ -99,29 +99,34 @@ export const useCanvasPlanningData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-load data on mount
+  // Auto-load data on mount and when projectId changes
   useEffect(() => {
     loadAllPlanningData();
-  }, []);
+  }, [projectId]);
 
   // Get current user and project (updated to handle proper project IDs)
   const getCurrentUserAndProject = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { user: null, projectId: null };
 
-    // Get the user's projects to find a valid project ID
-    const { data: projects } = await supabase
-      .from('projects')
-      .select('id, title')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-      .limit(1);
-
-    // Use the most recent project if available, otherwise null (for characters without project association)
-    const projectId = projects && projects.length > 0 ? projects[0].id : null;
+    // Use the provided projectId if available, otherwise get the user's projects
+    let finalProjectId = projectId;
     
-    return { user, projectId };
-  }, []);
+    if (!finalProjectId || finalProjectId === 'no-project') {
+      // Get the user's projects to find a valid project ID
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id, title')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      // Use the most recent project if available, otherwise null (for characters without project association)
+      finalProjectId = projects && projects.length > 0 ? projects[0].id : null;
+    }
+    
+    return { user, projectId: finalProjectId };
+  }, [projectId]);
 
   // Calculate character completeness score
   const calculateCharacterCompleteness = useCallback((character: any): number => {
@@ -146,13 +151,13 @@ export const useCanvasPlanningData = () => {
       setLoading(true);
       setError(null);
 
-      const { user, projectId } = await getCurrentUserAndProject();
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) {
         console.warn('No authenticated user found');
         return;
       }
 
-      console.log('User found:', user.id, 'Project ID:', projectId);
+      console.log('User found:', user.id, 'Project ID:', finalProjectId);
 
       // Build query with optional project_id filter
       let query = supabase
@@ -177,8 +182,8 @@ export const useCanvasPlanningData = () => {
         .eq('user_id', user.id);
 
       // Add project filter if projectId exists, otherwise include characters with null project_id
-      if (projectId) {
-        query = query.or(`project_id.eq.${projectId},project_id.is.null`);
+      if (finalProjectId) {
+        query = query.or(`project_id.eq.${finalProjectId},project_id.is.null`);
       } else {
         query = query.is('project_id', null);
       }
@@ -230,7 +235,7 @@ export const useCanvasPlanningData = () => {
   // Fetch plots from planning pages (original plots from chapters)
   const loadPlots = useCallback(async () => {
     try {
-      const { user, projectId } = await getCurrentUserAndProject();
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return;
 
       // Build query with optional project_id filter
@@ -250,8 +255,8 @@ export const useCanvasPlanningData = () => {
         .eq('user_id', user.id);
 
       // Add project filter if projectId exists
-      if (projectId) {
-        query = query.eq('project_id', projectId);
+      if (finalProjectId) {
+        query = query.eq('project_id', finalProjectId);
       }
 
       const { data: plots, error: plotsError } = await query.order('order');
@@ -287,36 +292,37 @@ export const useCanvasPlanningData = () => {
     try {
       console.log('Loading plot threads from planning...');
       
-      const { user, projectId } = await getCurrentUserAndProject();
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) {
         console.warn('No authenticated user found for plot threads');
         return;
       }
 
-      console.log('Loading plot threads for user:', user.id, 'Project:', projectId);
+      console.log('Loading plot threads for user:', user.id, 'Project:', finalProjectId);
 
       // Build query for plot threads
       let threadsQuery = supabase
         .from('plot_threads')
         .select(`
           id,
-          title,
-          type,
+          name,
+          thread_type,
           description,
-          color,
-          tension_curve,
+          status,
+          start_tension,
+          peak_tension,
+          end_tension,
           connected_character_ids,
-          connected_thread_ids,
-          completion_percentage,
-          tags,
+          color,
+          metadata,
           created_at,
           updated_at
         `)
         .eq('user_id', user.id);
 
       // Add project filter if projectId exists
-      if (projectId) {
-        threadsQuery = threadsQuery.eq('project_id', projectId);
+      if (finalProjectId) {
+        threadsQuery = threadsQuery.eq('project_id', finalProjectId);
       }
 
       const { data: threads, error: threadsError } = await threadsQuery.order('created_at');
@@ -334,15 +340,15 @@ export const useCanvasPlanningData = () => {
             .from('plot_events')
             .select(`
               id,
-              title,
+              name,
               description,
               event_type,
               tension_level,
-              chapter_reference,
-              order_index
+              chapter_id,
+              order_in_thread
             `)
-            .eq('thread_id', thread.id)
-            .order('order_index');
+            .eq('plot_thread_id', thread.id)
+            .order('order_in_thread');
 
           if (eventsError) {
             console.warn(`Failed to load events for thread ${thread.id}:`, eventsError);
@@ -357,23 +363,49 @@ export const useCanvasPlanningData = () => {
         })
       );
 
-      const formattedPlotThreads: CanvasPlotThreadData[] = threadsWithEvents.map(thread => ({
-        id: thread.id,
-        title: thread.title || '',
-        type: thread.type || 'subplot',
-        description: thread.description || '',
-        color: thread.color || '#3B82F6',
-        completion_percentage: thread.completion_percentage || 0,
-        event_count: thread.event_count,
-        tension_curve: thread.tension_curve || [],
-        tags: thread.tags || [],
-        connected_character_ids: thread.connected_character_ids || [],
-        connected_thread_ids: thread.connected_thread_ids || [],
-        events: thread.events || [],
-        fromPlanning: true,
-        created_at: thread.created_at,
-        updated_at: thread.updated_at
-      }));
+      const formattedPlotThreads: CanvasPlotThreadData[] = threadsWithEvents.map(thread => {
+        // Calculate completion percentage based on thread status and events
+        let completion_percentage = 0;
+        if (thread.status === 'completed') {
+          completion_percentage = 100;
+        } else if (thread.status === 'in_progress') {
+          completion_percentage = 50;
+        } else if (thread.status === 'planning') {
+          completion_percentage = 20;
+        }
+        
+        // Build tension curve from start, peak, end values
+        const tension_curve = [];
+        if (thread.start_tension !== undefined && thread.peak_tension !== undefined && thread.end_tension !== undefined) {
+          tension_curve.push(thread.start_tension, thread.peak_tension, thread.end_tension);
+        }
+
+        return {
+          id: thread.id,
+          title: thread.name || '',
+          type: thread.thread_type || 'subplot',
+          description: thread.description || '',
+          color: thread.color || '#3B82F6',
+          completion_percentage,
+          event_count: thread.event_count,
+          tension_curve,
+          tags: thread.metadata?.tags || [],
+          connected_character_ids: thread.connected_character_ids || [],
+          connected_thread_ids: thread.metadata?.connected_thread_ids || [],
+          events: (thread.events || []).map((event: any) => ({
+            id: event.id,
+            title: event.name,
+            description: event.description,
+            event_type: event.event_type,
+            tension_level: event.tension_level,
+            chapter_reference: event.chapter_id,
+            order_index: event.order_in_thread
+          })),
+          fromPlanning: true,
+          created_at: thread.created_at,
+          updated_at: thread.updated_at
+        };
+      });
 
       console.log('Formatted plot threads:', formattedPlotThreads.length);
 
@@ -392,7 +424,7 @@ export const useCanvasPlanningData = () => {
   // Fetch locations from planning pages
   const loadLocations = useCallback(async () => {
     try {
-      const { user, projectId } = await getCurrentUserAndProject();
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return;
 
       // Build query with optional project_id filter
@@ -413,8 +445,8 @@ export const useCanvasPlanningData = () => {
         .eq('user_id', user.id);
 
       // Add project filter if projectId exists, otherwise include locations with null project_id
-      if (projectId) {
-        query = query.or(`project_id.eq.${projectId},project_id.is.null`);
+      if (finalProjectId) {
+        query = query.or(`project_id.eq.${finalProjectId},project_id.is.null`);
       } else {
         query = query.is('project_id', null);
       }
@@ -604,15 +636,18 @@ export const useCanvasPlanningData = () => {
       const { error } = await supabase
         .from('plot_threads')
         .update({
-          title: threadData.title,
-          type: threadData.type,
+          name: threadData.title,
+          thread_type: threadData.type,
           description: threadData.description,
           color: threadData.color,
-          tension_curve: threadData.tension_curve,
+          start_tension: threadData.tension_curve[0],
+          peak_tension: threadData.tension_curve[1],
+          end_tension: threadData.tension_curve[2],
           connected_character_ids: threadData.connected_character_ids,
-          connected_thread_ids: threadData.connected_thread_ids,
-          completion_percentage: threadData.completion_percentage,
-          tags: threadData.tags,
+          metadata: {
+            tags: threadData.tags,
+            connected_thread_ids: threadData.connected_thread_ids
+          },
           updated_at: new Date().toISOString()
         })
         .eq('id', threadData.id)
@@ -635,7 +670,7 @@ export const useCanvasPlanningData = () => {
   // Create new character in planning
   const createCharacterInPlanning = useCallback(async (characterData: Partial<CanvasCharacterData>): Promise<CanvasCharacterData | null> => {
     try {
-      const { user, projectId } = await getCurrentUserAndProject();
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return null;
 
       const { data, error } = await supabase
@@ -654,7 +689,7 @@ export const useCanvasPlanningData = () => {
           traits: characterData.traits || [],
           relationships: characterData.relationships || [],
           user_id: user.id,
-          project_id: projectId, // Will be null if no project exists
+          project_id: finalProjectId, // Will be null if no project exists
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -698,6 +733,7 @@ export const useCanvasPlanningData = () => {
     planningCharacters: planningData.planningCharacters,
     planningPlots: planningData.planningPlots,
     plotThreads: planningData.plotThreads, // NEW: Enhanced plot threads
+    plotPoints: planningData.plotThreads, // NEW: Alias for backward compatibility
     planningLocations: planningData.planningLocations,
     
     // State
