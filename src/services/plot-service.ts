@@ -23,11 +23,12 @@ export class PlotService {
 
       const currentProjectId = projectId || localStorage.getItem('currentProjectId') || 'default-project';
 
+      // Use the specific foreign key relationship to avoid ambiguity
       const { data, error } = await supabase
         .from('plot_threads')
         .select(`
           *,
-          plot_events (
+          plot_events!plot_events_plot_thread_id_fkey (
             id,
             name,
             description,
@@ -74,7 +75,7 @@ export class PlotService {
         .from('plot_threads')
         .select(`
           *,
-          plot_events (
+          plot_events!plot_events_plot_thread_id_fkey (
             id,
             name,
             description,
@@ -185,7 +186,7 @@ export class PlotService {
         .eq('user_id', user.id)
         .select(`
           *,
-          plot_events (
+          plot_events!plot_events_plot_thread_id_fkey (
             id,
             name,
             description,
@@ -310,7 +311,7 @@ export class PlotService {
         .from('plot_threads')
         .select(`
           *,
-          plot_events (
+          plot_events!plot_events_plot_thread_id_fkey (
             id,
             name,
             description,
@@ -360,7 +361,7 @@ export class PlotService {
         .from('plot_threads')
         .select(`
           *,
-          plot_events (
+          plot_events!plot_events_plot_thread_id_fkey (
             id,
             name,
             description,
