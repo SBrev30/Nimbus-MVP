@@ -1,12 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { X, Upload, Plus, Trash2, Globe, Users, Zap, DollarSign, Crown, MapPin, AlertCircle } from 'lucide-react';
-import { CreateWorldElementData, worldBuildingService, ImageUsageStats } from '../../services/world-building-service';
+import { CreateWorldElementData, WorldElement, worldBuildingService, ImageUsageStats } from '../../services/world-building-service';
 
 interface WorldElementCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (elementData: CreateWorldElementData) => Promise<void>;
   projectId?: string;
+  initialData?: WorldElement;
+  isEditing?: boolean;
 }
 
 const categoryOptions = [
@@ -21,7 +23,9 @@ export function WorldElementCreationModal({
   isOpen, 
   onClose, 
   onSave, 
-  projectId 
+  projectId,
+  initialData,
+  isEditing = false
 }: WorldElementCreationModalProps) {
   const [formData, setFormData] = useState<CreateWorldElementData>({
     title: '',
@@ -40,12 +44,38 @@ export function WorldElementCreationModal({
   const [imageUsage, setImageUsage] = useState<ImageUsageStats | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
 
-  // Load image usage stats when modal opens
+  // Initialize form data when modal opens or initialData changes
   useEffect(() => {
     if (isOpen) {
+      if (initialData && isEditing) {
+        // Populate form with existing data for editing
+        setFormData({
+          title: initialData.title,
+          category: initialData.category,
+          description: initialData.description,
+          details: initialData.details || '',
+          tags: initialData.tags || [],
+          image_urls: initialData.image_urls || [],
+          project_id: projectId
+        });
+      } else {
+        // Reset for creating new element
+        setFormData({
+          title: '',
+          category: 'location',
+          description: '',
+          details: '',
+          tags: [],
+          image_urls: [],
+          project_id: projectId
+        });
+      }
+      setTagInput('');
+      setError(null);
+      setUploadingImages([]);
       loadImageUsage();
     }
-  }, [isOpen]);
+  }, [isOpen, initialData, isEditing, projectId]);
 
   const loadImageUsage = async () => {
     try {
@@ -120,7 +150,10 @@ export function WorldElementCreationModal({
     const imageUrl = formData.image_urls?.[index];
     if (imageUrl) {
       try {
-        await worldBuildingService.deleteImage(imageUrl);
+        // Only delete from storage if not editing (to avoid deleting original images)
+        if (!isEditing) {
+          await worldBuildingService.deleteImage(imageUrl);
+        }
         // Refresh usage stats after deletion
         await loadImageUsage();
       } catch (error) {
@@ -132,7 +165,7 @@ export function WorldElementCreationModal({
       ...prev,
       image_urls: prev.image_urls?.filter((_, i) => i !== index) || []
     }));
-  }, [formData.image_urls]);
+  }, [formData.image_urls, isEditing]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,7 +186,33 @@ export function WorldElementCreationModal({
     try {
       await onSave(formData);
       
-      // Reset form
+      // Only reset form if not editing (editing will close via onClose)
+      if (!isEditing) {
+        setFormData({
+          title: '',
+          category: 'location',
+          description: '',
+          details: '',
+          tags: [],
+          image_urls: [],
+          project_id: projectId
+        });
+        setTagInput('');
+      }
+      await loadImageUsage(); // Refresh usage stats
+    } catch (error) {
+      console.error('Error saving world element:', error);
+      setError(error instanceof Error ? error.message : `Failed to ${isEditing ? 'update' : 'create'} world element`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [formData, onSave, projectId, isEditing]);
+
+  const handleClose = useCallback(() => {
+    if (isLoading) return;
+    
+    // Reset form only if not editing (preserve data for editing)
+    if (!isEditing) {
       setFormData({
         title: '',
         category: 'location',
@@ -163,35 +222,13 @@ export function WorldElementCreationModal({
         image_urls: [],
         project_id: projectId
       });
-      setTagInput('');
-      await loadImageUsage(); // Refresh usage stats
-    } catch (error) {
-      console.error('Error creating world element:', error);
-      setError(error instanceof Error ? error.message : 'Failed to create world element');
-    } finally {
-      setIsLoading(false);
     }
-  }, [formData, onSave, projectId]);
-
-  const handleClose = useCallback(() => {
-    if (isLoading) return;
-    
-    // Reset form
-    setFormData({
-      title: '',
-      category: 'location',
-      description: '',
-      details: '',
-      tags: [],
-      image_urls: [],
-      project_id: projectId
-    });
     setTagInput('');
     setError(null);
     setUploadingImages([]);
     setImageUsage(null);
     onClose();
-  }, [isLoading, onClose, projectId]);
+  }, [isLoading, onClose, projectId, isEditing]);
 
   if (!isOpen) return null;
 
@@ -204,7 +241,9 @@ export function WorldElementCreationModal({
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Create World Element</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isEditing ? 'Edit World Element' : 'Create World Element'}
+          </h2>
           <button
             onClick={handleClose}
             disabled={isLoading}
@@ -223,7 +262,7 @@ export function WorldElementCreationModal({
           )}
 
           {/* Image Usage Alert */}
-          {imageUsage && (
+          {imageUsage && !isEditing && (
             <div className={`rounded-lg p-3 ${
               usagePercentage >= 90 ? 'bg-red-50 border border-red-200' :
               usagePercentage >= 75 ? 'bg-yellow-50 border border-yellow-200' :
@@ -287,6 +326,7 @@ export function WorldElementCreationModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter element title..."
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -305,7 +345,7 @@ export function WorldElementCreationModal({
                       formData.category === category.value
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <input
                       type="radio"
@@ -314,6 +354,7 @@ export function WorldElementCreationModal({
                       checked={formData.category === category.value}
                       onChange={(e) => handleInputChange('category', e.target.value)}
                       className="sr-only"
+                      disabled={isLoading}
                     />
                     <div className="flex items-start gap-3">
                       <IconComponent className="w-5 h-5 text-gray-600 mt-0.5" />
@@ -341,6 +382,7 @@ export function WorldElementCreationModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Brief description of this element..."
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -356,6 +398,7 @@ export function WorldElementCreationModal({
               rows={5}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Detailed information, history, rules, or characteristics..."
+              disabled={isLoading}
             />
           </div>
 
@@ -377,11 +420,13 @@ export function WorldElementCreationModal({
                 }}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Add tag..."
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={handleAddTag}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                disabled={isLoading}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -398,7 +443,8 @@ export function WorldElementCreationModal({
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(index)}
-                      className="hover:bg-blue-200 rounded-full p-0.5"
+                      disabled={isLoading}
+                      className="hover:bg-blue-200 rounded-full p-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -415,10 +461,11 @@ export function WorldElementCreationModal({
             </label>
             <p className="text-xs text-gray-500 mb-4">
               Upload PNG or JPEG images (max 10MB each). Total storage limit: 50MB for free tier.
+              {isEditing && " Note: When editing, existing images are preserved."}
             </p>
             
             {/* Warning if near limit */}
-            {imageUsage && usagePercentage >= 95 && (
+            {imageUsage && usagePercentage >= 95 && !isEditing && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-red-800">
                   ⚠️ You're very close to your 50MB storage limit. Consider removing some existing images before uploading new ones.
@@ -430,7 +477,7 @@ export function WorldElementCreationModal({
               {Array.from({ length: 6 }, (_, index) => {
                 const hasImage = formData.image_urls?.[index];
                 const isUploading = uploadingImages[index];
-                const canUpload = !imageUsage || usagePercentage < 100;
+                const canUpload = !imageUsage || usagePercentage < 100 || isEditing;
                 
                 return (
                   <div
@@ -447,14 +494,15 @@ export function WorldElementCreationModal({
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(index)}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          disabled={isLoading}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
                       </>
                     ) : (
                       <label className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
-                        canUpload 
+                        canUpload && !isLoading
                           ? 'cursor-pointer hover:bg-gray-50' 
                           : 'cursor-not-allowed bg-gray-100 opacity-50'
                       }`}>
@@ -464,7 +512,8 @@ export function WorldElementCreationModal({
                           <>
                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
                             <span className="text-xs text-gray-500 text-center px-2">
-                              {canUpload ? 'Click to upload' : 'Storage limit reached'}
+                              {canUpload && !isLoading ? 'Click to upload' : 
+                               isLoading ? 'Processing...' : 'Storage limit reached'}
                             </span>
                           </>
                         )}
@@ -473,7 +522,7 @@ export function WorldElementCreationModal({
                           accept="image/png,image/jpeg,image/jpg"
                           onChange={(e) => handleImageUpload(e.target.files, index)}
                           className="hidden"
-                          disabled={isUploading || !canUpload}
+                          disabled={isUploading || !canUpload || isLoading}
                         />
                       </label>
                     )}
@@ -489,7 +538,7 @@ export function WorldElementCreationModal({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -501,12 +550,12 @@ export function WorldElementCreationModal({
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Creating...
+                  {isEditing ? 'Updating...' : 'Creating...'}
                 </>
               ) : (
                 <>
                   <Globe className="w-4 h-4" />
-                  Create Element
+                  {isEditing ? 'Update Element' : 'Create Element'}
                 </>
               )}
             </button>
