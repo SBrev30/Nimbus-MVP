@@ -19,9 +19,21 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedElement, setSelectedElement] = useState<WorldElement | null>(null);
+  
+  // Modal states
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  
+  // Selected elements
+  const [selectedElement, setSelectedElement] = useState<WorldElement | null>(null);
+  const [elementToEdit, setElementToEdit] = useState<WorldElement | null>(null);
+  const [elementToView, setElementToView] = useState<WorldElement | null>(null);
+
+  // Operation states
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const categories = [
     { id: 'all', label: 'All Elements', icon: Globe },
@@ -58,7 +70,7 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
     loadWorldElements();
   }, [projectId]);
 
-  const loadWorldElements = async () => {
+  const loadWorldElements = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -70,39 +82,93 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
 
   const handleCreateElement = useCallback(async (elementData: CreateWorldElementData) => {
     try {
+      setIsCreating(true);
+      setError(null);
       const newElement = await worldBuildingService.createWorldElement(elementData);
       setWorldElements(prev => [newElement, ...prev]);
-      setIsModalOpen(false);
+      setIsCreateModalOpen(false);
     } catch (error) {
       console.error('Error creating world element:', error);
+      setError('Failed to create world element. Please try again.');
       throw error; // Re-throw so modal can handle it
+    } finally {
+      setIsCreating(false);
     }
   }, []);
 
-  const handleDeleteElement = useCallback(async (elementId: string) => {
+  const handleUpdateElement = useCallback(async (elementData: CreateWorldElementData) => {
+    if (!elementToEdit) return;
+    
     try {
+      setIsUpdating(true);
+      setError(null);
+      const updatedElement = await worldBuildingService.updateWorldElement(elementToEdit.id, elementData);
+      setWorldElements(prev => prev.map(element => 
+        element.id === elementToEdit.id ? updatedElement : element
+      ));
+      setIsEditModalOpen(false);
+      setElementToEdit(null);
+    } catch (error) {
+      console.error('Error updating world element:', error);
+      setError('Failed to update world element. Please try again.');
+      throw error; // Re-throw so modal can handle it
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [elementToEdit]);
+
+  const handleDeleteElement = useCallback(async (elementId: string) => {
+    if (isDeleting) return; // Prevent double-clicks
+    
+    try {
+      setIsDeleting(true);
+      setError(null);
       await worldBuildingService.deleteWorldElement(elementId);
       setWorldElements(prev => prev.filter(element => element.id !== elementId));
+      
+      // Close detail modal if the deleted element was being viewed
+      if (elementToView?.id === elementId) {
+        setIsDetailModalOpen(false);
+        setElementToView(null);
+      }
     } catch (error) {
       console.error('Error deleting world element:', error);
       setError('Failed to delete world element. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
-  }, []);
+  }, [isDeleting, elementToView]);
 
   const handleElementClick = useCallback((element: WorldElement) => {
-    setSelectedElement(element);
+    setElementToView(element);
     setIsDetailModalOpen(true);
   }, []);
 
-  const handleEditElement = useCallback((element: WorldElement) => {
-    // TODO: Implement edit functionality - for now just close detail modal
-    setIsDetailModalOpen(false);
-    setSelectedElement(null);
+  const handleViewElement = useCallback((e: React.MouseEvent, element: WorldElement) => {
+    e.stopPropagation();
+    setElementToView(element);
+    setIsDetailModalOpen(true);
   }, []);
+
+  const handleEditClick = useCallback((e: React.MouseEvent, element: WorldElement) => {
+    e.stopPropagation();
+    setElementToEdit(element);
+    setIsEditModalOpen(true);
+  }, []);
+
+  const handleDeleteClick = useCallback(async (e: React.MouseEvent, element: WorldElement) => {
+    e.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this world element? This action cannot be undone.')) {
+      return;
+    }
+    
+    await handleDeleteElement(element.id);
+  }, [handleDeleteElement]);
 
   // Helper functions
   const getCategoryIcon = (category: string) => {
@@ -141,7 +207,7 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
   const hasAnyActiveFilters = hasActiveFilters || activeCategory !== 'all';
 
   // Show error state
-  if (error) {
+  if (error && !isLoading) {
     return (
       <div className="h-screen bg-[#f2eee2] flex flex-col font-inter">
         <div className="bg-white border-b border-[#C6C5C5] p-6">
@@ -237,11 +303,12 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
                 Design locations, cultures, systems, and the rules that govern your story world. Create a rich, immersive setting for your narrative.
               </p>
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-semibold text-white"
+                onClick={() => setIsCreateModalOpen(true)}
+                disabled={isCreating}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-5 h-5" />
-                Create First Element
+                {isCreating ? 'Creating...' : 'Create First Element'}
               </button>
               
               {/* Tips */}
@@ -270,13 +337,15 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
           </div>
         </div>
 
-        {/* World Element Creation Modal */}
-        <WorldElementCreationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleCreateElement}
-          projectId={projectId}
-        />
+        {/* Create Modal */}
+        {isCreateModalOpen && (
+          <WorldElementCreationModal
+            isOpen={isCreateModalOpen}
+            onClose={() => !isCreating && setIsCreateModalOpen(false)}
+            onSave={handleCreateElement}
+            projectId={projectId}
+          />
+        )}
       </>
     );
   }
@@ -311,11 +380,12 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
             </div>
             
             <button 
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-semibold"
+              onClick={() => setIsCreateModalOpen(true)}
+              disabled={isCreating}
+              className="flex items-center gap-2 px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
-              New Element
+              {isCreating ? 'Creating...' : 'New Element'}
             </button>
           </div>
 
@@ -377,8 +447,9 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
                     </button>
                   ) : null}
                   <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium"
+                    onClick={() => setIsCreateModalOpen(true)}
+                    disabled={isCreating}
+                    className="px-4 py-2 bg-[#A5F7AC] hover:bg-[#A5F7AC]/80 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-4 h-4 inline mr-2" />
                     {hasAnyActiveFilters ? 'Create New Element' : 'Create First Element'}
@@ -402,36 +473,28 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleElementClick(element);
-                          }}
+                          onClick={(e) => handleViewElement(e, element)}
                           className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                           title="View element"
+                          disabled={isDeleting}
                         >
                           <Eye className="w-4 h-4 text-gray-600" />
                         </button>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditElement(element);
-                          }}
+                          onClick={(e) => handleEditClick(e, element)}
                           className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                           title="Edit element"
+                          disabled={isUpdating || isDeleting}
                         >
                           <Edit3 className="w-4 h-4 text-gray-600" />
                         </button>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm('Are you sure you want to delete this world element? This action cannot be undone.')) {
-                              handleDeleteElement(element.id);
-                            }
-                          }}
+                          onClick={(e) => handleDeleteClick(e, element)}
                           className="p-1.5 hover:bg-red-100 rounded transition-colors"
                           title="Delete element"
+                          disabled={isDeleting}
                         >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <Trash2 className={`w-4 h-4 ${isDeleting ? 'text-gray-400' : 'text-red-600'}`} />
                         </button>
                       </div>
                     </div>
@@ -480,24 +543,55 @@ export function WorldBuildingPage({ onBack, projectId }: WorldBuildingPageProps)
         </div>
       </div>
 
-      {/* Modals */}
-      <WorldElementCreationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleCreateElement}
-        projectId={projectId}
-      />
+      {/* Create Modal */}
+      {isCreateModalOpen && (
+        <WorldElementCreationModal
+          isOpen={isCreateModalOpen}
+          onClose={() => !isCreating && setIsCreateModalOpen(false)}
+          onSave={handleCreateElement}
+          projectId={projectId}
+        />
+      )}
 
-      <WorldElementDetailModal
-        element={selectedElement}
-        isOpen={isDetailModalOpen}
-        onClose={() => {
-          setIsDetailModalOpen(false);
-          setSelectedElement(null);
-        }}
-        onEdit={handleEditElement}
-        onDelete={handleDeleteElement}
-      />
+      {/* Edit Modal */}
+      {isEditModalOpen && elementToEdit && (
+        <WorldElementCreationModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            if (!isUpdating) {
+              setIsEditModalOpen(false);
+              setElementToEdit(null);
+            }
+          }}
+          onSave={handleUpdateElement}
+          projectId={projectId}
+          initialData={elementToEdit}
+          isEditing={true}
+        />
+      )}
+
+      {/* Detail Modal */}
+      {isDetailModalOpen && elementToView && (
+        <WorldElementDetailModal
+          element={elementToView}
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setElementToView(null);
+          }}
+          onEdit={(element) => {
+            setElementToEdit(element);
+            setIsDetailModalOpen(false);
+            setElementToView(null);
+            setIsEditModalOpen(true);
+          }}
+          onDelete={(elementId) => {
+            setIsDetailModalOpen(false);
+            setElementToView(null);
+            handleDeleteElement(elementId);
+          }}
+        />
+      )}
     </>
   );
 }
