@@ -395,14 +395,47 @@ function AppContent() {
           </ErrorBoundary>
         );
 
-      case 'plot':
+    case 'plot':
         return (
           <ErrorBoundary>
             <div className="flex-1 pr-[20px]">
-              <PlotPage 
-                onBack={handleBackToPlanning} 
-                projectId={currentProject?.id ?? ''}
-              />
+              {currentProject ? (
+                <PlotPage 
+                  onBack={handleBackToPlanning} 
+                  projectId={currentProject.id}
+                />
+              ) : (
+                <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
+                    <p className="text-gray-600 mb-6">Please select a project to access plot development tools.</p>
+// In src/routes/App.tsx, alongside your other callbacks at the top of the component:
+import { useCallback, useState } from 'react';
+…
+const [activeView, setActiveView] = useState<'write' | 'plot' | 'projects'>('write');
+const handleNavigateToWriteFromProject = useCallback(() => setActiveView('write'), []);
+
+// Navigate back to Plot Development
+const handleBackToPlot = useCallback(() => setActiveView('plot'), []);
+
+…
+
+// In the switch (or conditional) where you render the ProjectsPage:
+case 'projects':
+  return (
+    <ProjectsPage
+      onBack={handleBackToPlot}
+      onNavigateToWrite={handleNavigateToWriteFromProject}
+    />
+  );
+                  </div>
+                </div>
+              )}
             </div>
           </ErrorBoundary>
         );
