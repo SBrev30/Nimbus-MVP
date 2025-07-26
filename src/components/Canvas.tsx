@@ -32,6 +32,7 @@ import { intelligentAIService } from '../services/intelligentAIService';
 // Import enhanced components
 import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
 import { CharacterPopup } from './canvas/CharacterPopup';
+import { Integration } from './Integration'; // Add Integration component
 
 // Import node types from index file - these should include enhanced versions
 import {
@@ -98,6 +99,9 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   const [aiAnalysisResults, setAiAnalysisResults] = useState<AIAnalysisResult[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  
+  // ADD: Integration modal state
+  const [showIntegrationsModal, setShowIntegrationsModal] = useState(false);
   
   const userId = user?.id || null;
   
@@ -170,6 +174,12 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     loadCanvasData();
   }, [loadData, setNodes, setEdges]);
 
+  // ADD: Handle opening integrations modal
+  const handleOpenIntegrations = useCallback(() => {
+    setShowIntegrationsModal(true);
+    setShowAIPanel(false); // Close AI panel
+  }, []);
+
   const handleNodeDataChange = useCallback((nodeId: string, newData: any) => {
     console.log('🔄 Node data change for:', nodeId, newData);
     setNodes((nds) =>
@@ -188,19 +198,19 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     const enhancedTypes: NodeTypes = {};
     
     // Always use the enhanced character node with planning integration
-enhancedTypes.character = (props: any) => {
-  console.log('🎭 Rendering CharacterNode with props:', props.id);
-  return (
-    <CharacterNode
-      {...props}
-      projectId={projectId} // ADD THIS LINE
-      onDataChange={(newData: any) => {
-        console.log('📝 CharacterNode data change:', props.id, newData);
-        handleNodeDataChange(props.id, newData);
-      }}
-    />
-  );
-};
+    enhancedTypes.character = (props: any) => {
+      console.log('🎭 Rendering CharacterNode with props:', props.id);
+      return (
+        <CharacterNode
+          {...props}
+          projectId={projectId} // ADD THIS LINE
+          onDataChange={(newData: any) => {
+            console.log('📝 CharacterNode data change:', props.id, newData);
+            handleNodeDataChange(props.id, newData);
+          }}
+        />
+      );
+    };
     
     // Add enhanced plot node with proper handlers
     enhancedTypes.plot = (props: any) => {
@@ -229,7 +239,7 @@ enhancedTypes.character = (props: any) => {
     enhancedTypes.research = ResearchNode;
     
     return enhancedTypes;
-  }, [handleNodeDataChange]);
+  }, [handleNodeDataChange, projectId]);
 
   const createNode = useCallback((type: string) => {
     if (!reactFlowInstance) return;
@@ -620,7 +630,7 @@ enhancedTypes.character = (props: any) => {
           </div>
         )}
 
-        {/* AI Analysis Panel */}
+        {/* AI Analysis Panel - UPDATED with onOpenIntegrations prop */}
         {showAIPanel && (
           <AIAnalysisPanel
             isOpen={showAIPanel}
@@ -628,6 +638,7 @@ enhancedTypes.character = (props: any) => {
             results={aiAnalysisResults}
             isAnalyzing={isAnalyzing}
             onApplySuggestion={handleApplySuggestion}
+            onOpenIntegrations={handleOpenIntegrations} // ADD THIS LINE
           />
         )}
       </div>
@@ -656,6 +667,15 @@ enhancedTypes.character = (props: any) => {
         edgeCount={edges.length}
         hasChanges={hasChanges}
       />
+
+      {/* Integration Modal */}
+      {showIntegrationsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col">
+            <Integration onBack={() => setShowIntegrationsModal(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
