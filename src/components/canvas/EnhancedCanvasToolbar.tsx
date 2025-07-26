@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { 
   User, BookOpen, MapPin, Lightbulb, Zap, Calendar, FileText,
-  Save, Upload, Sparkles, Cloud, CloudOff, Brain, Trash2,
-  Download
+  RefreshCw, Upload, Cloud, CloudOff, Brain, Trash2,
+  Download, ArrowLeft, ChevronDown, ChevronUp, PanelRightClose,
+  Plus, Sparkles
 } from 'lucide-react';
 
 interface EnhancedCanvasToolbarProps {
   onCreateNode: (type: string) => void;
   onTemplate: (templateId: string) => void;
-  onSave: () => void;
+  onSync: () => void;
   onLoad: () => void;
   onLoadSample: (sampleId: string) => void;
   onClear: () => void;
+  onBack: () => void;
   onExport?: (format: string) => void;
-  lastSaved: Date | null;
-  isSaving: boolean;
+  lastSynced: Date | null;
+  isSyncing: boolean;
   selectedNodes: string[];
   onAnalyzeAI: () => void;
   isAnalyzing: boolean;
@@ -25,18 +27,47 @@ interface EnhancedCanvasToolbarProps {
   hasNodes: boolean;
   nodeCount?: number;
   edgeCount?: number;
+  hasChanges?: boolean;
 }
+
+// Enhanced Tooltip Component
+const Tooltip = ({ content, children, position = 'left' }: { 
+  content: string; 
+  children: React.ReactNode;
+  position?: 'right' | 'left' | 'top' | 'bottom';
+}) => {
+  const positionClasses = {
+    right: 'left-16 top-1/2 transform -translate-y-1/2',
+    left: 'right-16 top-1/2 transform -translate-y-1/2',
+    top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
+    bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-2'
+  };
+
+  return (
+    <div className="relative group">
+      {children}
+      <div className={`absolute ${positionClasses[position]} px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[300] whitespace-nowrap shadow-lg`}>
+        {content}
+        {/* Arrow for tooltip */}
+        {position === 'left' && (
+          <div className="absolute left-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
   onCreateNode,
   onTemplate,
-  onSave,
+  onSync,
   onLoad,
   onLoadSample,
   onClear,
+  onBack,
   onExport,
-  lastSaved,
-  isSaving,
+  lastSynced,
+  isSyncing,
   selectedNodes,
   onAnalyzeAI,
   isAnalyzing,
@@ -46,285 +77,350 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
   onModeChange,
   hasNodes,
   nodeCount = 0,
-  edgeCount = 0
+  edgeCount = 0,
+  hasChanges = false
 }) => {
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [showSamples, setShowSamples] = useState(false);
-  const [showExportMenu, setShowExportMenu] = useState(false);
+  // Toolbar collapse state
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  
+  // Accordion sections state
+  const [expandedSections, setExpandedSections] = useState<string[]>(['elements']);
 
-  const nodeTypes = [
-    { type: 'character', icon: User, label: 'Character', color: 'bg-blue-100 text-blue-700' },
-    { type: 'chapter', icon: BookOpen, label: 'Chapter', color: 'bg-green-100 text-green-700' },
-    { type: 'location', icon: MapPin, label: 'Location', color: 'bg-purple-100 text-purple-700' },
-    { type: 'idea', icon: Lightbulb, label: 'Idea', color: 'bg-yellow-100 text-yellow-700' },
-    { type: 'plot', icon: Zap, label: 'Plot Point', color: 'bg-red-100 text-red-700' },
-    { type: 'timeline', icon: Calendar, label: 'Timeline', color: 'bg-indigo-100 text-indigo-700' },
-    { type: 'note', icon: FileText, label: 'Note', color: 'bg-gray-100 text-gray-700' }
-  ];
-
-  const templates = [
-    { id: 'three-act', name: 'Three-Act Structure', description: 'Classic storytelling structure' },
-    { id: 'heroes-journey', name: "Hero's Journey", description: 'Monomyth story structure' },
-    { id: 'character-web', name: 'Character Relationship Web', description: 'Character connections' },
-    { id: 'world-building', name: 'World Building Map', description: 'Fantasy/sci-fi world structure' }
-  ];
-
-  const samples = [
-    { id: 'mystery-plot', name: 'Mystery Plot Example', description: 'Sample detective story structure' },
-    { id: 'fantasy-world', name: 'Fantasy World', description: 'Example fantasy world map' },
-    { id: 'character-arcs', name: 'Character Development', description: 'Sample character growth arcs' }
-  ];
-
-  const canvasModes = [
-    { id: 'explore', name: 'Explore', icon: Sparkles, description: 'Free exploration mode' },
-    { id: 'master', name: 'Master', icon: Brain, description: 'AI-generated master view' }
-  ];
-
-  const formatLastSaved = (date: Date | null) => {
-    if (!date) return 'Never saved';
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} min ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return date.toLocaleDateString();
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionId) 
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
+    );
   };
 
+  const isSectionExpanded = (sectionId: string) => expandedSections.includes(sectionId);
+
+  const nodeTypes = [
+    { type: 'character', label: 'Character', icon: User, color: 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100' },
+    { type: 'plot', label: 'Plot', icon: BookOpen, color: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100' },
+    { type: 'location', label: 'Location', icon: MapPin, color: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100' },
+    { type: 'theme', label: 'Theme', icon: Lightbulb, color: 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100' },
+    { type: 'conflict', label: 'Conflict', icon: Zap, color: 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' },
+    { type: 'timeline', label: 'Timeline', icon: Calendar, color: 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100' },
+    { type: 'research', label: 'Research', icon: FileText, color: 'bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100' },
+  ];
+
+  // Use IDs that actually exist in templates.ts
+  const templates = [
+    { id: 'heroJourney', title: 'Hero\'s Journey', description: 'Classic monomyth structure' },
+    { id: 'threeAct', title: 'Three-Act Structure', description: 'Setup, confrontation, resolution' },
+    { id: 'mysteryStructure', title: 'Mystery Structure', description: 'Detective story template' },
+    { id: 'fantasyQuest', title: 'Fantasy Quest', description: 'Epic fantasy adventure' },
+  ];
+
+  // Use IDs that actually exist in sampleStories.ts
+  const sampleStories = [
+    { id: 'mysteryNovel', title: 'Lighthouse Mystery', description: 'Detective mystery story' },
+    { id: 'fantasyEpic', title: 'Shattered Crown', description: 'Fantasy epic adventure' },
+    { id: 'sciFiThriller', title: 'Neural Echo', description: 'Sci-fi consciousness thriller' },
+  ];
+
+  // Get sync status indicator
+  const getSyncStatusIndicator = () => {
+    if (isSyncing) {
+      return { icon: RefreshCw, color: 'text-blue-600', label: 'Syncing...', spinning: true };
+    }
+    if (hasChanges) {
+      return { icon: RefreshCw, color: 'text-orange-600', label: 'Changes pending', spinning: false };
+    }
+    if (syncStatus === 'synced') {
+      return { icon: Cloud, color: 'text-green-600', label: 'Synced', spinning: false };
+    }
+    if (syncStatus === 'error') {
+      return { icon: CloudOff, color: 'text-red-600', label: 'Sync error', spinning: false };
+    }
+    return { icon: Cloud, color: 'text-gray-400', label: 'Ready', spinning: false };
+  };
+
+  const statusIndicator = getSyncStatusIndicator();
+  const StatusIcon = statusIndicator.icon;
+
+  // Accordion Section Component
+  const AccordionSection = ({ 
+    id, 
+    title, 
+    children, 
+    icon: Icon 
+  }: { 
+    id: string; 
+    title: string; 
+    children: React.ReactNode;
+    icon?: React.ComponentType<{ className?: string }>;
+  }) => {
+    const isExpanded = isSectionExpanded(id);
+    
+    return (
+      <div className="border-b border-gray-100 last:border-b-0">
+        <button
+          onClick={() => toggleSection(id)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150"
+        >
+          <div className="flex items-center space-x-2">
+            {Icon && <Icon className="w-4 h-4 text-gray-600" />}
+            <span className="font-medium text-gray-900 text-sm">{title}</span>
+          </div>
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4 text-gray-400" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          )}
+        </button>
+        
+        {isExpanded && (
+          <div className="px-4 pb-4">
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (isCollapsed) {
+    return (
+      <div className="h-full flex flex-col bg-white border-l border-gray-200 w-16">
+        {/* Collapsed Header */}
+        <div className="p-2 border-b border-gray-200 flex flex-col items-center space-y-2">
+          <Tooltip content="Back to main view">
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          </Tooltip>
+          
+          <Tooltip content={statusIndicator.label}>
+            <div className="p-2">
+              <StatusIcon 
+                className={`w-4 h-4 ${statusIndicator.color} ${statusIndicator.spinning ? 'animate-spin' : ''}`} 
+              />
+            </div>
+          </Tooltip>
+        </div>
+
+        {/* Collapsed Quick Actions */}
+        <div className="flex-1 py-2">
+          <div className="space-y-1 px-2">
+            {nodeTypes.slice(0, 4).map(({ type, label, icon: Icon }) => (
+              <Tooltip key={type} content={`Add ${label}`}>
+                <button
+                  onClick={() => onCreateNode(type)}
+                  className="w-full p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-gray-600 mx-auto" />
+                </button>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
+
+        {/* Collapsed Footer */}
+        <div className="p-2 border-t border-gray-200 space-y-1">
+          <Tooltip content="Sync with Planning">
+            <button
+              onClick={onSync}
+              disabled={isSyncing}
+              className="w-full p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 text-gray-600 mx-auto ${isSyncing ? 'animate-spin' : ''}`} />
+            </button>
+          </Tooltip>
+          
+          <Tooltip content="Expand Toolbar">
+            <button 
+              onClick={() => setIsCollapsed(false)}
+              className="w-full p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <PanelRightClose className="w-4 h-4 text-gray-600 mx-auto rotate-180" />
+            </button>
+          </Tooltip>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white border-b border-gray-200 p-4">
-      <div className="flex items-center justify-between">
-        {/* Left Section - Node Creation */}
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1 mr-4">
-            {nodeTypes.map(({ type, icon: Icon, label, color }) => (
+    <div className="h-full flex flex-col bg-white border-l border-gray-200 w-80">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Back to main view"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
+          </button>
+          
+          <div className="flex items-center space-x-2">
+            <StatusIcon 
+              className={`w-4 h-4 ${statusIndicator.color} ${statusIndicator.spinning ? 'animate-spin' : ''}`} 
+            />
+            <span className="text-xs text-gray-500">{statusIndicator.label}</span>
+          </div>
+        </div>
+
+        {/* Canvas Stats */}
+        {hasNodes && (
+          <div className="flex items-center justify-between text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+            <span>{nodeCount} elements</span>
+            <span>{edgeCount} connections</span>
+            <span className="capitalize">{canvasMode}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Accordion Content */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Elements Section */}
+        <AccordionSection id="elements" title="Story Elements" icon={Plus}>
+          <div className="grid grid-cols-2 gap-2">
+            {nodeTypes.map(({ type, label, icon: Icon, color }) => (
               <button
                 key={type}
                 onClick={() => onCreateNode(type)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105 ${color}`}
-                title={`Add ${label}`}
+                className={`p-3 border rounded-lg transition-colors ${color}`}
               >
-                <Icon className="w-4 h-4" />
-                <span className="hidden lg:inline">{label}</span>
+                <Icon className="w-4 h-4 mx-auto mb-1" />
+                <span className="text-xs font-medium block">{label}</span>
               </button>
             ))}
           </div>
+        </AccordionSection>
 
-          {/* Divider */}
-          <div className="h-8 w-px bg-gray-300 mx-2" />
-
-          {/* Templates & Samples */}
-          <div className="relative">
-            <button
-              onClick={() => setShowTemplates(!showTemplates)}
-              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Templates</span>
-            </button>
-            
-            {showTemplates && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                <div className="p-2">
-                  {templates.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => {
-                        onTemplate(template.id);
-                        setShowTemplates(false);
-                      }}
-                      className="w-full text-left p-3 hover:bg-gray-50 rounded-lg"
-                    >
-                      <div className="font-medium text-gray-900">{template.name}</div>
-                      <div className="text-sm text-gray-600">{template.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => setShowSamples(!showSamples)}
-              className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FileText className="w-4 h-4" />
-              <span>Samples</span>
-            </button>
-            
-            {showSamples && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                <div className="p-2">
-                  {samples.map((sample) => (
-                    <button
-                      key={sample.id}
-                      onClick={() => {
-                        onLoadSample(sample.id);
-                        setShowSamples(false);
-                      }}
-                      className="w-full text-left p-3 hover:bg-gray-50 rounded-lg"
-                    >
-                      <div className="font-medium text-gray-900">{sample.name}</div>
-                      <div className="text-sm text-gray-600">{sample.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Center Section - Canvas Mode & Stats */}
-        <div className="flex items-center space-x-4">
-          {/* Canvas Mode Selector */}
-          <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-            {canvasModes.map(({ id, name, icon: Icon, description }) => (
+        {/* Templates Section */}
+        <AccordionSection id="templates" title="Story Templates" icon={Sparkles}>
+          <div className="space-y-2">
+            {templates.map((template) => (
               <button
-                key={id}
-                onClick={() => onModeChange(id)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                  canvasMode === id
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-                title={description}
+                key={template.id}
+                onClick={() => onTemplate(template.id)}
+                className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <Icon className="w-4 h-4" />
-                <span>{name}</span>
+                <div className="font-medium text-sm">{template.title}</div>
+                <div className="text-xs text-gray-600 mt-1">{template.description}</div>
               </button>
             ))}
           </div>
+        </AccordionSection>
 
-          {/* Canvas Stats */}
-          {hasNodes && (
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>{nodeCount} nodes</span>
-              <span>{edgeCount} connections</span>
-              {selectedNodes.length > 0 && (
-                <span className="text-blue-600">{selectedNodes.length} selected</span>
-              )}
+        {/* Sample Stories Section */}
+        <AccordionSection id="samples" title="Sample Stories" icon={BookOpen}>
+          {!hasNodes ? (
+            <div className="space-y-2">
+              {sampleStories.map((sample) => (
+                <button
+                  key={sample.id}
+                  onClick={() => onLoadSample(sample.id)}
+                  className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="font-medium text-sm">{sample.title}</div>
+                  <div className="text-xs text-gray-600 mt-1">{sample.description}</div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              <p className="text-sm mb-2">Clear canvas to load samples</p>
+              <button
+                onClick={onClear}
+                className="text-xs text-red-600 hover:text-red-700 px-3 py-1 border border-red-200 rounded hover:bg-red-50 transition-colors"
+              >
+                Clear Canvas
+              </button>
             </div>
           )}
-        </div>
+        </AccordionSection>
 
-        {/* Right Section - Actions & Status */}
-        <div className="flex items-center space-x-2">
-          {/* AI Analysis */}
+        {/* AI Tools Section */}
+        <AccordionSection id="ai" title="AI Analysis" icon={Brain}>
           <button
             onClick={onAnalyzeAI}
             disabled={isAnalyzing || !hasNodes}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              isAnalyzing
-                ? 'bg-purple-100 text-purple-700'
-                : hasNodes
-                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
+            className="w-full flex items-center justify-center gap-2 p-3 bg-purple-50 border border-purple-200 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Brain className={`w-4 h-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
-            <span>{isAnalyzing ? 'Analyzing...' : 'AI Analysis'}</span>
+            <span className="text-sm font-medium">
+              {isAnalyzing ? 'Analyzing...' : 'Analyze Story'}
+            </span>
           </button>
-
-          {/* Divider */}
-          <div className="h-8 w-px bg-gray-300 mx-2" />
-
-          {/* File Operations */}
-          <button
-            onClick={onSave}
-            disabled={isSaving}
-            className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Save canvas"
-          >
-            <Save className={`w-4 h-4 ${isSaving ? 'animate-pulse' : ''}`} />
-            <span className="hidden lg:inline">{isSaving ? 'Saving...' : 'Save'}</span>
-          </button>
-
-          <button
-            onClick={onLoad}
-            className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Load canvas"
-          >
-            <Upload className="w-4 h-4" />
-            <span className="hidden lg:inline">Load</span>
-          </button>
-
-          {/* Export Menu */}
-          {onExport && (
-            <div className="relative">
-              <button
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                <span className="hidden lg:inline">Export</span>
-              </button>
-              
-              {showExportMenu && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                  <div className="p-2">
-                    {['PNG', 'SVG', 'PDF', 'JSON'].map((format) => (
-                      <button
-                        key={format}
-                        onClick={() => {
-                          onExport(format.toLowerCase());
-                          setShowExportMenu(false);
-                        }}
-                        className="w-full text-left p-2 hover:bg-gray-50 rounded-lg text-sm"
-                      >
-                        Export as {format}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+          {!hasNodes && (
+            <p className="text-xs text-gray-500 text-center mt-2">
+              Add elements to enable analysis
+            </p>
           )}
-
-          {/* Clear Canvas */}
-          {hasNodes && (
-            <button
-              onClick={onClear}
-              className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-              title="Clear canvas"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span className="hidden lg:inline">Clear</span>
-            </button>
-          )}
-
-          {/* Sync Status */}
-          <div className="flex items-center space-x-2">
-            {isOnline ? (
-              <Cloud className="w-4 h-4 text-green-600" title="Online" />
-            ) : (
-              <CloudOff className="w-4 h-4 text-red-600" title="Offline" />
-            )}
-            
-            <div className="text-xs text-gray-500">
-              <div>Last saved: {formatLastSaved(lastSaved)}</div>
-              {syncStatus && (
-                <div className="text-xs text-gray-400">{syncStatus}</div>
-              )}
-            </div>
-          </div>
-        </div>
+        </AccordionSection>
       </div>
 
-      {/* AI Analysis Results */}
-      {isAnalyzing && (
-        <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <Brain className="w-5 h-5 text-purple-600 animate-pulse" />
-            <span className="text-purple-700 font-medium">Analyzing your story structure...</span>
-          </div>
-          <div className="mt-2 text-sm text-purple-600">
-            Looking for plot holes, character inconsistencies, and narrative gaps.
-          </div>
+      {/* Footer Actions */}
+      <div className="border-t border-gray-200 p-4 space-y-3">
+        {/* Primary Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={onSync}
+            disabled={isSyncing}
+            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-colors disabled:opacity-50 ${
+              hasChanges 
+                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                : 'bg-green-100 text-green-700 hover:bg-green-200'
+            }`}
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span className="text-sm">{isSyncing ? 'Syncing...' : 'Sync'}</span>
+          </button>
+          <button
+            onClick={onLoad}
+            className="flex items-center justify-center gap-2 py-2 px-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+            <span className="text-sm">Load</span>
+          </button>
         </div>
-      )}
+
+        {/* Secondary Actions */}
+        {hasNodes && (
+          <div className="flex gap-2">
+            {onExport && (
+              <button
+                onClick={() => onExport('json')}
+                className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 bg-gray-50 text-gray-600 rounded text-xs hover:bg-gray-100 transition-colors"
+              >
+                <Download className="w-3 h-3" />
+                Export
+              </button>
+            )}
+            <button
+              onClick={onClear}
+              className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 bg-red-50 text-red-600 rounded text-xs hover:bg-red-100 transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+              Clear
+            </button>
+          </div>
+        )}
+
+        {/* Collapse Button */}
+        <button 
+          onClick={() => setIsCollapsed(true)}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+        >
+          <PanelRightClose className="w-4 h-4" />
+          <span className="text-sm font-medium">Collapse</span>
+        </button>
+
+        {/* Status Footer */}
+        {lastSynced && (
+          <div className="text-xs text-gray-400 text-center">
+            Last synced: {lastSynced.toLocaleTimeString()}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
