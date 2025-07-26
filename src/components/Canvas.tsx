@@ -188,18 +188,19 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     const enhancedTypes: NodeTypes = {};
     
     // Always use the enhanced character node with planning integration
-    enhancedTypes.character = (props: any) => {
-      console.log('🎭 Rendering CharacterNode with props:', props.id);
-      return (
-        <CharacterNode
-          {...props}
-          onDataChange={(newData: any) => {
-            console.log('📝 CharacterNode data change:', props.id, newData);
-            handleNodeDataChange(props.id, newData);
-          }}
-        />
-      );
-    };
+enhancedTypes.character = (props: any) => {
+  console.log('🎭 Rendering CharacterNode with props:', props.id);
+  return (
+    <CharacterNode
+      {...props}
+      projectId={projectId} // ADD THIS LINE
+      onDataChange={(newData: any) => {
+        console.log('📝 CharacterNode data change:', props.id, newData);
+        handleNodeDataChange(props.id, newData);
+      }}
+    />
+  );
+};
     
     // Add enhanced plot node with proper handlers
     enhancedTypes.plot = (props: any) => {
