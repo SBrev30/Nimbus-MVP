@@ -345,10 +345,10 @@ export const useCanvasPlanningData = (projectId?: string) => {
               event_type,
               tension_level,
               chapter_id,
-              order_in_thread
+              order_index
             `)
             .eq('plot_thread_id', thread.id)
-            .order('order_in_thread');
+            .order('order_index');
 
           if (eventsError) {
             console.warn(`Failed to load events for thread ${thread.id}:`, eventsError);
@@ -399,7 +399,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
             event_type: event.event_type,
             tension_level: event.tension_level,
             chapter_reference: event.chapter_id,
-            order_index: event.order_in_thread
+            order_index: event.order_index
           })),
           fromPlanning: true,
           created_at: thread.created_at,
