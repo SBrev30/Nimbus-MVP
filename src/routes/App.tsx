@@ -414,12 +414,25 @@ function AppContent() {
                     </div>
                     <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
                     <p className="text-gray-600 mb-6">Please select a project to access plot development tools.</p>
-                    <button
-                      onClick={() => setActiveView('projects')}
-                      className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-medium"
-                    >
-                      Go to Projects
-                    </button>
+// In src/routes/App.tsx, alongside your other callbacks at the top of the component:
+import { useCallback, useState } from 'react';
+…
+const [activeView, setActiveView] = useState<'write' | 'plot' | 'projects'>('write');
+const handleNavigateToWriteFromProject = useCallback(() => setActiveView('write'), []);
+
+// Navigate back to Plot Development
+const handleBackToPlot = useCallback(() => setActiveView('plot'), []);
+
+…
+
+// In the switch (or conditional) where you render the ProjectsPage:
+case 'projects':
+  return (
+    <ProjectsPage
+      onBack={handleBackToPlot}
+      onNavigateToWrite={handleNavigateToWriteFromProject}
+    />
+  );
                   </div>
                 </div>
               )}
