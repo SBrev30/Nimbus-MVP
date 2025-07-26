@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Brain, TrendingUp, Users, Zap, AlertTriangle, CheckCircle, Clock, Lightbulb } from 'lucide-react';
+import { X, Brain, TrendingUp, Users, Zap, AlertTriangle, CheckCircle, Clock, Lightbulb, Settings, Key, ExternalLink } from 'lucide-react';
 import { AIAnalysisResult, StoryCoherenceResult, RelationshipSuggestion, CharacterArcAnalysis } from '../../services/intelligentAIService';
 
 interface AIAnalysisPanelProps {
@@ -8,6 +8,7 @@ interface AIAnalysisPanelProps {
   results: AIAnalysisResult[];
   isAnalyzing: boolean;
   onApplySuggestion: (suggestionId: string, data: any) => void;
+  onOpenIntegrations?: () => void; // Add callback to open integrations
 }
 
 export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
@@ -15,10 +16,45 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
   onClose,
   results,
   isAnalyzing,
-  onApplySuggestion
+  onApplySuggestion,
+  onOpenIntegrations
 }) => {
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [hasApiKey, setHasApiKey] = useState(false);
+
+  // Check for API key in integrations
+  useEffect(() => {
+    const checkApiKey = () => {
+      const integrations = localStorage.getItem('integrations');
+      if (integrations) {
+        try {
+          const parsed = JSON.parse(integrations);
+          const anthropicIntegration = parsed.find((int: any) => 
+            int.name === 'Anthropic Claude' && 
+            int.status === 'connected' && 
+            int.config?.apiKey
+          );
+          setHasApiKey(!!anthropicIntegration);
+        } catch (error) {
+          console.error('Error checking API key:', error);
+        }
+      }
+      
+      // Also check environment variable
+      const envApiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+      if (envApiKey && envApiKey.length > 0) {
+        setHasApiKey(true);
+      }
+    };
+
+    checkApiKey();
+    
+    // Re-check when panel opens
+    if (isOpen) {
+      checkApiKey();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (results.length > 0 && activeTab === 'overview') {
@@ -50,7 +86,73 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
     }
   };
 
+  // API Key Setup Notice Component
+  const ApiKeySetupNotice = () => (
+    <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
+      <div className="flex items-start gap-4">
+        <div className="flex-shrink-0">
+          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <Key className="w-6 h-6 text-blue-600" />
+          </div>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            🚀 Enable AI Analysis
+          </h3>
+          <p className="text-gray-700 mb-4">
+            To unlock powerful AI-driven story analysis, you'll need to connect your Anthropic Claude API key. 
+            This enables real-time character analysis, story coherence checking, and intelligent suggestions.
+          </p>
+          
+          <div className="space-y-3">
+            <div className="bg-white border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">1</span>
+                Get Your API Key
+              </h4>
+              <p className="text-sm text-gray-600 mb-2">
+                Visit <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">
+                  Anthropic Console <ExternalLink className="w-3 h-3" />
+                </a> to create an account and get your API key
+              </p>
+            </div>
+            
+            <div className="bg-white border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">2</span>
+                Connect in Settings
+              </h4>
+              <p className="text-sm text-gray-600 mb-3">
+                Add your API key in the Integrations page to enable AI analysis
+              </p>
+              {onOpenIntegrations && (
+                <button
+                  onClick={onOpenIntegrations}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
+                >
+                  <Settings className="w-4 h-4" />
+                  Open Integrations
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800">
+              <strong>💡 Pro Tip:</strong> Your API key is stored securely in your browser and never sent to our servers. 
+              Start with just a few dollars in credits - AI analysis typically costs only pennies per analysis.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderOverview = () => {
+    if (!hasApiKey) {
+      return <ApiKeySetupNotice />;
+    }
+
     const successfulResults = getSuccessfulResults();
     const totalRecommendations = successfulResults.reduce((acc, r) => acc + (r.recommendations?.length || 0), 0);
     const avgConfidence = successfulResults.length > 0 
@@ -81,6 +183,13 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
             <Lightbulb className="w-5 h-5 text-yellow-500" />
             Quick Insights
           </h3>
+          
+          {successfulResults.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p>No analysis results yet. Click "Analyze Story" to get AI insights!</p>
+            </div>
+          )}
           
           {successfulResults.map((result, index) => (
             <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
@@ -113,6 +222,10 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
   };
 
   const renderCharacterAnalysis = () => {
+    if (!hasApiKey) {
+      return <ApiKeySetupNotice />;
+    }
+
     const characterResults = results.filter(r => r.type === 'character' && r.success);
     
     return (
@@ -166,6 +279,10 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
   };
 
   const renderStoryCoherence = () => {
+    if (!hasApiKey) {
+      return <ApiKeySetupNotice />;
+    }
+
     const coherenceResult = results.find(r => r.type === 'story-coherence' && r.success);
     
     if (!coherenceResult) {
@@ -270,6 +387,10 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
   };
 
   const renderRelationships = () => {
+    if (!hasApiKey) {
+      return <ApiKeySetupNotice />;
+    }
+
     const relationshipResult = results.find(r => r.type === 'relationships' && r.success);
     
     if (!relationshipResult || !relationshipResult.data.length) {
@@ -323,6 +444,10 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
   };
 
   const renderCharacterArcs = () => {
+    if (!hasApiKey) {
+      return <ApiKeySetupNotice />;
+    }
+
     const arcResult = results.find(r => r.type === 'character-arcs' && r.success);
     
     if (!arcResult || !arcResult.data.length) {
@@ -429,6 +554,12 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
                 <span className="text-sm text-blue-600">Analyzing...</span>
               </div>
             )}
+            {hasApiKey && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                <CheckCircle className="w-3 h-3" />
+                AI Enabled
+              </div>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -465,6 +596,8 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
                 <p className="text-gray-600">Analyzing your story elements...</p>
               </div>
             </div>
+          ) : results.length === 0 && !hasApiKey ? (
+            <ApiKeySetupNotice />
           ) : results.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -485,10 +618,18 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
         <div className="border-t border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              {results.filter(r => r.success).length} of {results.length} analyses completed
+              {hasApiKey ? (
+                <>
+                  {results.filter(r => r.success).length} of {results.length} analyses completed
+                </>
+              ) : (
+                <>
+                  🔑 Connect your Anthropic API key to enable AI analysis
+                </>
+              )}
             </div>
             <div className="flex items-center gap-2">
-              {results.length > 0 && (
+              {results.length > 0 && hasApiKey && (
                 <div className="text-sm text-gray-500">
                   Processing time: {Math.max(...results.map(r => r.processingTime))}ms
                 </div>
