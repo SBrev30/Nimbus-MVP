@@ -12,6 +12,7 @@ import { Search } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { AppDataProvider } from '../contexts/AppDataContext';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { LandingPage } from '../components/landing-page';
@@ -768,9 +769,10 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <AppDataProvider>
+        <AppContent />
+      </AppDataProvider>
     </ThemeProvider>
   );
 }
-
 export default App;
