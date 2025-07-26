@@ -102,7 +102,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   const userId = user?.id || null;
   
   // Add planning data hook for debugging
-  const planningData = useCanvasPlanningData();
+  const planningData = useCanvasPlanningData(projectId);
   
   const reactFlowInstance = useReactFlow();
   const viewport = reactFlowInstance?.getViewport() || { x: 0, y: 0, zoom: 1 };
