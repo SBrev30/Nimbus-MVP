@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   User, BookOpen, MapPin, Lightbulb, Zap, Calendar, FileText,
   RefreshCw, Upload, Cloud, CloudOff, Brain, Trash2,
-  Download, ArrowLeft, ChevronDown, ChevronUp, PanelRightClose,
+  Download, ChevronDown, ChevronUp, PanelRightClose,
   Plus, Sparkles
 } from 'lucide-react';
 
@@ -114,11 +114,10 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
     { id: 'fantasyQuest', title: 'Fantasy Quest', description: 'Epic fantasy adventure' },
   ];
 
-  // Use IDs that actually exist in sampleStories.ts
+  // UPDATED: Remove Neural Echo (sciFiThriller) sample story
   const sampleStories = [
     { id: 'mysteryNovel', title: 'Lighthouse Mystery', description: 'Detective mystery story' },
     { id: 'fantasyEpic', title: 'Shattered Crown', description: 'Fantasy epic adventure' },
-    { id: 'sciFiThriller', title: 'Neural Echo', description: 'Sci-fi consciousness thriller' },
   ];
 
   // Get sync status indicator
@@ -184,17 +183,8 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
   if (isCollapsed) {
     return (
       <div className="h-full flex flex-col bg-white border-l border-gray-200 w-16">
-        {/* Collapsed Header */}
+        {/* Collapsed Header - REMOVED back button arrow */}
         <div className="p-2 border-b border-gray-200 flex flex-col items-center space-y-2">
-          <Tooltip content="Back to main view">
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-          </Tooltip>
-          
           <Tooltip content={statusIndicator.label}>
             <div className="p-2">
               <StatusIcon 
@@ -222,15 +212,18 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
 
         {/* Collapsed Footer */}
         <div className="p-2 border-t border-gray-200 space-y-1">
-          <Tooltip content="Sync with Planning">
-            <button
-              onClick={onSync}
-              disabled={isSyncing}
-              className="w-full p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 text-gray-600 mx-auto ${isSyncing ? 'animate-spin' : ''}`} />
-            </button>
-          </Tooltip>
+          {/* UPDATED: Only show sync button when there are changes or sync is needed */}
+          {hasChanges && (
+            <Tooltip content="Sync with Planning">
+              <button
+                onClick={onSync}
+                disabled={isSyncing}
+                className="w-full p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 text-gray-600 mx-auto ${isSyncing ? 'animate-spin' : ''}`} />
+              </button>
+            </Tooltip>
+          )}
           
           <Tooltip content="Expand Toolbar">
             <button 
@@ -247,17 +240,9 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-white border-l border-gray-200 w-80">
-      {/* Header */}
+      {/* Header - REMOVED back button with arrow */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-3">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Back to main view"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          
           <div className="flex items-center space-x-2">
             <StatusIcon 
               className={`w-4 h-4 ${statusIndicator.color} ${statusIndicator.spinning ? 'animate-spin' : ''}`} 
@@ -362,18 +347,23 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
       <div className="border-t border-gray-200 p-4 space-y-3">
         {/* Primary Actions */}
         <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={onSync}
-            disabled={isSyncing}
-            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-colors disabled:opacity-50 ${
-              hasChanges 
-                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
-                : 'bg-green-100 text-green-700 hover:bg-green-200'
-            }`}
-          >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span className="text-sm">{isSyncing ? 'Syncing...' : 'Sync'}</span>
-          </button>
+          {/* UPDATED: Only show sync button when there are actual changes */}
+          {hasChanges ? (
+            <button
+              onClick={onSync}
+              disabled={isSyncing}
+              className="flex items-center justify-center gap-2 py-2 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="text-sm">{isSyncing ? 'Syncing...' : 'Sync'}</span>
+            </button>
+          ) : (
+            <div className="flex items-center justify-center gap-2 py-2 px-3 bg-green-100 text-green-700 rounded-lg">
+              <Cloud className="w-4 h-4" />
+              <span className="text-sm">Synced</span>
+            </div>
+          )}
+          
           <button
             onClick={onLoad}
             className="flex items-center justify-center gap-2 py-2 px-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
