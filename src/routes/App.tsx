@@ -427,32 +427,6 @@ function AppContent() {
           </ErrorBoundary>
         );
         
-// In src/routes/App.tsx, alongside your other callbacks at the top of the component:
-import { useCallback, useState } from 'react';
-…
-const [activeView, setActiveView] = useState<'write' | 'plot' | 'projects'>('write');
-const handleNavigateToWriteFromProject = useCallback(() => setActiveView('write'), []);
-
-// Navigate back to Plot Development
-const handleBackToPlot = useCallback(() => setActiveView('plot'), []);
-
-…
-
-// In the switch (or conditional) where you render the ProjectsPage:
-case 'projects':
-  return (
-    <ProjectsPage
-      onBack={handleBackToPlot}
-      onNavigateToWrite={handleNavigateToWriteFromProject}
-    />
-  );
-                  </div>
-                </div>
-              )}
-            </div>
-          </ErrorBoundary>
-        );
-
       case 'characters':
         return (
           <ErrorBoundary>
