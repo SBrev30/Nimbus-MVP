@@ -395,7 +395,7 @@ function AppContent() {
           </ErrorBoundary>
         );
 
-    case 'plot':
+   case 'plot':
         return (
           <ErrorBoundary>
             <div className="flex-1 pr-[20px]">
@@ -414,6 +414,19 @@ function AppContent() {
                     </div>
                     <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
                     <p className="text-gray-600 mb-6">Please select a project to access plot development tools.</p>
+                    <button
+                      onClick={() => setActiveView('projects')}
+                      className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-medium"
+                    >
+                      Go to Projects
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ErrorBoundary>
+        );
+        
 // In src/routes/App.tsx, alongside your other callbacks at the top of the component:
 import { useCallback, useState } from 'react';
 …
