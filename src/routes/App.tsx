@@ -17,7 +17,7 @@ import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { LandingPage } from '../components/landing-page';
 import { chapterService } from '../services/chapterService';
-import { ProfilePage } from '../components/settings/ProfilePage';
+import { ProfilePage } from '../components/ProfilePage';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
