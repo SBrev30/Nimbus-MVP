@@ -22,7 +22,7 @@ import { chapterService } from '../services/chapterService';
 interface EditorProps {
   content: EditorContent;
   onChange: (content: EditorContent) => void;
-  selectedChapter?: { id: string; title: string; number: number } | null;
+  selectedChapter?: { id: string; title: string; number?: number } | null;
   isLoading?: boolean;
   className?: string;
 }
@@ -172,8 +172,10 @@ export const Editor: React.FC<EditorProps> = ({
   className = ''
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
-  const [title, setTitle] = useState(content.title);
-  const [editorContent, setEditorContent] = useState(content.content);
+  
+  // FIX 1: Use stable state that doesn't flicker
+  const [localTitle, setLocalTitle] = useState(content.title);
+  const [localContent, setLocalContent] = useState(content.content);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Enhanced editor state
@@ -181,6 +183,9 @@ export const Editor: React.FC<EditorProps> = ({
   const [currentFontSize, setCurrentFontSize] = useState(16);
   const [currentAlignment, setCurrentAlignment] = useState('left');
   const [showWordCount, setShowWordCount] = useState(true);
+  
+  // FIX 2: Get chapter number from the service or derive it
+  const [chapterNumber, setChapterNumber] = useState<number | null>(null);
   
   // Helper function to get text content safely
   function getTextContent(): string {
@@ -193,13 +198,13 @@ export const Editor: React.FC<EditorProps> = ({
   // Enhanced hooks
   const { words, characters, charactersNoSpaces, readingTime } = useWordCount(getTextContent());
   const { state: undoState, setState: setUndoState, undo, redo, canUndo, canRedo } = useUndo({
-    title,
-    content: editorContent
+    title: localTitle,
+    content: localContent
   });
 
   // Enhanced auto-save with database integration
   const { lastSaved, isSaving, saveError, cloudSyncStatus } = useUnifiedAutoSave(
-    { title, content: editorContent, wordCount: words, lastSaved: new Date() },
+    { title: localTitle, content: localContent, wordCount: words, lastSaved: new Date() },
     selectedChapter?.id || 'default', // Use chapter ID as key
     {
       localKey: `chapter-${selectedChapter?.id || 'default'}`,
@@ -224,6 +229,43 @@ export const Editor: React.FC<EditorProps> = ({
       }
     }
   );
+
+  // FIX 3: Fetch chapter details when selectedChapter changes
+  useEffect(() => {
+    const fetchChapterDetails = async () => {
+      if (selectedChapter?.id) {
+        try {
+          const chapter = await chapterService.getChapter(selectedChapter.id);
+          if (chapter) {
+            setChapterNumber(chapter.orderIndex || null);
+          }
+        } catch (error) {
+          console.error('Error fetching chapter details:', error);
+          setChapterNumber(null);
+        }
+      } else {
+        setChapterNumber(null);
+      }
+    };
+
+    fetchChapterDetails();
+  }, [selectedChapter?.id]);
+
+  // FIX 4: Only update local state when external content actually changes
+  useEffect(() => {
+    if (content.title !== localTitle) {
+      setLocalTitle(content.title);
+    }
+  }, [content.title]);
+
+  useEffect(() => {
+    if (content.content !== localContent) {
+      setLocalContent(content.content);
+      if (editorRef.current && editorRef.current.innerHTML !== content.content) {
+        editorRef.current.innerHTML = content.content;
+      }
+    }
+  }, [content.content]);
 
   // Keyboard shortcuts
   useKeyboard({
@@ -258,36 +300,36 @@ export const Editor: React.FC<EditorProps> = ({
       const newContent = editorRef.current.innerHTML;
       const textContent = getTextContent();
       
-      setEditorContent(newContent);
-      setUndoState({ title, content: newContent });
+      setLocalContent(newContent);
+      setUndoState({ title: localTitle, content: newContent });
       setHasUnsavedChanges(true);
       
       onChange({
-        title,
+        title: localTitle,
         content: newContent,
         wordCount: textContent.trim() === '' ? 0 : textContent.trim().split(/\s+/).length,
         lastSaved: new Date(),
       });
     }
-  }, [title, onChange, setUndoState]);
+  }, [localTitle, onChange, setUndoState]);
 
   const handleTitleChange = useCallback((newTitle: string) => {
-    setTitle(newTitle);
-    setUndoState({ title: newTitle, content: editorContent });
+    setLocalTitle(newTitle);
+    setUndoState({ title: newTitle, content: localContent });
     setHasUnsavedChanges(true);
     
     onChange({
       title: newTitle,
-      content: editorContent,
+      content: localContent,
       wordCount: words,
       lastSaved: new Date(),
     });
-  }, [editorContent, words, onChange, setUndoState]);
+  }, [localContent, words, onChange, setUndoState]);
 
   const handleSave = useCallback(async () => {
     const currentContent = {
-      title,
-      content: editorContent,
+      title: localTitle,
+      content: localContent,
       wordCount: words,
       lastSaved: new Date()
     };
@@ -300,8 +342,8 @@ export const Editor: React.FC<EditorProps> = ({
     if (selectedChapter?.id) {
       try {
         await chapterService.updateChapter(selectedChapter.id, {
-          title,
-          content: editorContent,
+          title: localTitle,
+          content: localContent,
           wordCount: words
         });
       } catch (error) {
@@ -309,7 +351,7 @@ export const Editor: React.FC<EditorProps> = ({
         // Could show a user notification here
       }
     }
-  }, [title, editorContent, words, onChange, selectedChapter?.id]);
+  }, [localTitle, localContent, words, onChange, selectedChapter?.id]);
 
   const formatText = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -337,27 +379,16 @@ export const Editor: React.FC<EditorProps> = ({
 
   // Restore undo state when undoing/redoing
   useEffect(() => {
-    if (undoState.title !== title) {
-      setTitle(undoState.title);
+    if (undoState.title !== localTitle) {
+      setLocalTitle(undoState.title);
     }
-    if (undoState.content !== editorContent) {
-      setEditorContent(undoState.content);
+    if (undoState.content !== localContent) {
+      setLocalContent(undoState.content);
       if (editorRef.current) {
         editorRef.current.innerHTML = undoState.content;
       }
     }
-  }, [undoState, title, editorContent]);
-
-  // Update editor content when external content changes
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== content.content) {
-      editorRef.current.innerHTML = content.content;
-      setEditorContent(content.content);
-    }
-    if (content.title !== title) {
-      setTitle(content.title);
-    }
-  }, [content.content, content.title, title]);
+  }, [undoState]);
 
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
@@ -501,13 +532,13 @@ export const Editor: React.FC<EditorProps> = ({
       {/* Editor Container - Full width since NotesPanel is handled by App.tsx */}
       <div className="flex-1 flex overflow-hidden">
         <div className="w-full h-full bg-white mx-3 md:mx-6 mb-3 md:mb-6 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* Chapter Info */}
+          {/* FIX 5: Chapter Info - Better display logic */}
           {selectedChapter?.title && (
             <div className="px-4 md:px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-2">
               <div className="flex items-center space-x-3">
                 <FileText className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-700">
-                  Chapter {selectedChapter?.number || 'Unknown'}: {selectedChapter.title}
+                  {chapterNumber ? `Chapter ${chapterNumber}` : 'Chapter'}: {selectedChapter.title}
                 </span>
               </div>
               {showWordCount && (
@@ -533,10 +564,10 @@ export const Editor: React.FC<EditorProps> = ({
             ) : (
               <div className="px-4 md:px-10 pt-6 md:pt-10 pb-20 md:pb-32">
                 <div className="max-w-[803px] mx-auto">
-                  {/* Title Input */}
+                  {/* FIX 6: Title Input - More stable */}
                   <input
                     type="text"
-                    value={title}
+                    value={localTitle}
                     onChange={(e) => handleTitleChange(e.target.value)}
                     className="text-2xl md:text-4xl font-semibold text-black text-center mb-8 md:mb-16 font-inter w-full bg-transparent border-none outline-none cursor-text"
                     placeholder="Chapter Title"
