@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Lock, Mail, Calendar, Shield, Eye, EyeOff, AlertCircle, CheckCircle, Save } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 interface ProfilePageProps {
   activeView: string;
