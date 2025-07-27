@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 export interface CanvasCharacterData {
   id: string;
   name: string;
-  role: 'protagonist' | 'antagonist' | 'supporting' | 'other';
+  role: 'protagonist' | 'antagonist' | 'supporting' | 'minor'; // ✅ FIXED: Changed 'other' to 'minor'
   description: string;
   age?: number;
   occupation?: string;
@@ -17,7 +17,7 @@ export interface CanvasCharacterData {
   traits?: string[];
   relationships?: Array<{
     characterId: string;
-    type: 'family' | 'friend' | 'enemy' | 'romantic' | 'other';
+    type: 'family' | 'friend' | 'enemy' | 'romantic' | 'minor';
     description: string;
   }>;
   completeness_score?: number;
@@ -85,16 +85,18 @@ export interface CanvasLocationData {
 interface PlanningData {
   planningCharacters: CanvasCharacterData[];
   planningPlots: CanvasPlotData[];
-  plotThreads: CanvasPlotThreadData[]; // NEW: Plot threads for enhanced canvas integration
+  plotThreads: CanvasPlotThreadData[];
   planningLocations: CanvasLocationData[];
+  characterRelationships: any[]; // ✅ ADDED: For auto-connections
 }
 
 export const useCanvasPlanningData = (projectId?: string) => {
   const [planningData, setPlanningData] = useState<PlanningData>({
     planningCharacters: [],
     planningPlots: [],
-    plotThreads: [], // NEW
-    planningLocations: []
+    plotThreads: [],
+    planningLocations: [],
+    characterRelationships: [] // ✅ ADDED
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,23 +200,33 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       console.log('Characters loaded from database:', characters?.length || 0);
 
-      const formattedCharacters: CanvasCharacterData[] = (characters || []).map(char => ({
-        id: char.id,
-        name: char.name || '',
-        role: char.role || 'supporting',
-        description: char.description || '',
-        age: char.age,
-        occupation: char.occupation || '',
-        motivation: char.motivation || '',
-        backstory: char.backstory || '',
-        appearance: char.appearance || '',
-        personality: char.personality || '',
-        fantasyClass: char.fantasy_class || '',
-        traits: char.traits || [],
-        relationships: char.relationships || [],
-        completeness_score: calculateCharacterCompleteness(char),
-        fromPlanning: true
-      }));
+      const formattedCharacters: CanvasCharacterData[] = (characters || []).map(char => {
+        // ✅ SAFE ROLE MAPPING: Ensure role is valid for database constraint
+        let role: 'protagonist' | 'antagonist' | 'supporting' | 'minor' = 'minor';
+        if (['protagonist', 'antagonist', 'supporting', 'minor'].includes(char.role)) {
+          role = char.role;
+        } else {
+          console.warn(`Invalid role "${char.role}" for character ${char.name}, defaulting to 'minor'`);
+        }
+
+        return {
+          id: char.id,
+          name: char.name || '',
+          role: role, // ✅ SAFE: Always valid database role
+          description: char.description || '',
+          age: char.age,
+          occupation: char.occupation || '',
+          motivation: char.motivation || '',
+          backstory: char.backstory || '',
+          appearance: char.appearance || '',
+          personality: char.personality || '',
+          fantasyClass: char.fantasy_class || '',
+          traits: char.traits || [],
+          relationships: char.relationships || [],
+          completeness_score: calculateCharacterCompleteness(char),
+          fromPlanning: true
+        };
+      });
 
       console.log('Formatted characters:', formattedCharacters.length);
 
@@ -231,6 +243,47 @@ export const useCanvasPlanningData = (projectId?: string) => {
       setLoading(false);
     }
   }, [getCurrentUserAndProject, calculateCharacterCompleteness]);
+
+  // ✅ ADDED: Load character relationships for auto-connections
+  const loadCharacterRelationships = useCallback(async () => {
+    try {
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
+      if (!user) return;
+
+      let query = supabase
+        .from('character_relationships')
+        .select(`
+          id,
+          character_id,
+          related_character_id,
+          relationship_type,
+          description,
+          strength
+        `)
+        .eq('user_id', user.id);
+
+      if (finalProjectId) {
+        query = query.eq('project_id', finalProjectId);
+      }
+
+      const { data: relationships, error } = await query;
+
+      if (error) {
+        console.warn('Error loading character relationships:', error);
+        return;
+      }
+
+      console.log('Character relationships loaded:', relationships?.length || 0);
+
+      setPlanningData(prev => ({
+        ...prev,
+        characterRelationships: relationships || []
+      }));
+
+    } catch (err) {
+      console.warn('Failed to load character relationships:', err);
+    }
+  }, [getCurrentUserAndProject]);
 
   // Fetch plots from planning pages (original plots from chapters)
   const loadPlots = useCallback(async () => {
@@ -287,7 +340,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject]);
 
-  // NEW: Fetch plot threads from planning pages (enhanced plot management)
+  // Fetch plot threads from planning pages (enhanced plot management)
   const loadPlotThreads = useCallback(async () => {
     try {
       console.log('Loading plot threads from planning...');
@@ -480,14 +533,15 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject]);
 
-  // Load all planning data (updated to include plot threads)
+  // Load all planning data (updated to include character relationships)
   const loadAllPlanningData = useCallback(async () => {
     setLoading(true);
     try {
       await Promise.all([
         loadCharacters(),
+        loadCharacterRelationships(), // ✅ ADDED
         loadPlots(),
-        loadPlotThreads(), // NEW
+        loadPlotThreads(),
         loadLocations()
       ]);
     } catch (err) {
@@ -496,7 +550,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [loadCharacters, loadPlots, loadPlotThreads, loadLocations]);
+  }, [loadCharacters, loadCharacterRelationships, loadPlots, loadPlotThreads, loadLocations]);
 
   // Refresh functions
   const refreshCharacters = useCallback(() => {
@@ -507,7 +561,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
     return loadPlots();
   }, [loadPlots]);
 
-  // NEW: Refresh plot threads
   const refreshPlotThreads = useCallback(() => {
     return loadPlotThreads();
   }, [loadPlotThreads]);
@@ -543,7 +596,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
     );
   }, [planningData.planningPlots]);
 
-  // NEW: Search plot threads
   const searchPlotThreads = useCallback((query: string): CanvasPlotThreadData[] => {
     if (!query.trim()) return planningData.plotThreads;
     
@@ -577,7 +629,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     return planningData.planningPlots.find(plot => plot.id === id) || null;
   }, [planningData.planningPlots]);
 
-  // NEW: Get plot thread by ID
+  // Get plot thread by ID
   const getPlotThreadById = useCallback((id: string): CanvasPlotThreadData | null => {
     return planningData.plotThreads.find(thread => thread.id === id) || null;
   }, [planningData.plotThreads]);
@@ -627,7 +679,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject, refreshCharacters]);
 
-  // NEW: Sync plot thread data back to planning
+  // Sync plot thread data back to planning
   const syncPlotThreadToPlanning = useCallback(async (threadData: CanvasPlotThreadData): Promise<boolean> => {
     try {
       const { user } = await getCurrentUserAndProject();
@@ -673,11 +725,15 @@ export const useCanvasPlanningData = (projectId?: string) => {
       const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return null;
 
+      // ✅ SAFE ROLE VALIDATION: Ensure role is valid before creating
+      const validRoles = ['protagonist', 'antagonist', 'supporting', 'minor'];
+      const role = validRoles.includes(characterData.role || '') ? characterData.role : 'minor';
+
       const { data, error } = await supabase
         .from('characters')
         .insert({
           name: characterData.name || 'New Character',
-          role: characterData.role || 'supporting',
+          role: role, // ✅ SAFE: Always valid database role
           description: characterData.description || '',
           age: characterData.age,
           occupation: characterData.occupation,
@@ -732,9 +788,10 @@ export const useCanvasPlanningData = (projectId?: string) => {
     // Data
     planningCharacters: planningData.planningCharacters,
     planningPlots: planningData.planningPlots,
-    plotThreads: planningData.plotThreads, // NEW: Enhanced plot threads
-    plotPoints: planningData.plotThreads, // NEW: Alias for backward compatibility
+    plotThreads: planningData.plotThreads,
+    plotPoints: planningData.plotThreads, // Alias for backward compatibility
     planningLocations: planningData.planningLocations,
+    characterRelationships: planningData.characterRelationships, // ✅ ADDED: For auto-connections
     
     // State
     loading,
@@ -743,32 +800,32 @@ export const useCanvasPlanningData = (projectId?: string) => {
     // Refresh functions
     refreshCharacters,
     refreshPlots,
-    refreshPlotThreads, // NEW
+    refreshPlotThreads,
     refreshLocations,
     refresh: refreshAll,
     
     // Search functions
     searchCharacters,
     searchPlots,
-    searchPlotThreads, // NEW
+    searchPlotThreads,
     searchLocations,
     
     // Getters
     getCharacterById,
     getPlotById,
-    getPlotThreadById, // NEW
+    getPlotThreadById,
     getLocationById,
     
     // Sync functions
     syncCharacterToPlanning,
-    syncPlotThreadToPlanning, // NEW
+    syncPlotThreadToPlanning,
     createCharacterInPlanning,
     
     // Stats (updated to include plot threads)
     stats: {
       characterCount: planningData.planningCharacters.length,
       plotCount: planningData.planningPlots.length,
-      plotThreadCount: planningData.plotThreads.length, // NEW
+      plotThreadCount: planningData.plotThreads.length,
       locationCount: planningData.planningLocations.length,
       totalItems: planningData.planningCharacters.length + planningData.planningPlots.length + planningData.plotThreads.length + planningData.planningLocations.length
     }
