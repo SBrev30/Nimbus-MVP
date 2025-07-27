@@ -1,18 +1,9 @@
-// src/components/integration/PostImportNavigation.tsx - UPDATED
+// src/components/integration/PostImportNavigation.tsx - OPTIMIZED
 
 import React from 'react';
 import { 
-  Users, 
-  BookOpen, 
-  Globe, 
-  FileText, 
-  ArrowRight, 
-  CheckCircle,
-  ExternalLink,
-  Target,
-  Zap,
-  Library,
-  FolderOpen
+  Users, BookOpen, Globe, FileText, ArrowRight, CheckCircle,
+  Target, Zap, Library, FolderOpen
 } from 'lucide-react';
 import { ImportResult } from '../../services/enhanced-supabase-import-service';
 
@@ -20,7 +11,7 @@ interface PostImportNavigationProps {
   importResult: ImportResult;
   onNavigateToPlanning: (page: 'characters' | 'plot' | 'world-building' | 'outline') => void;
   onNavigateToCanvas: () => void;
-  onNavigateToLibrary?: () => void; // NEW: Library navigation
+  onNavigateToLibrary?: () => void;
   onClose: () => void;
 }
 
@@ -32,118 +23,63 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
   onClose
 }) => {
   const { imported, planningPageDistribution } = importResult;
-  const totalImported = imported.characters + imported.plotThreads + imported.chapters + 
-                       imported.locations + imported.worldElements + imported.outlineNodes;
+  const totalImported = Object.values(imported).reduce((sum, count) => sum + count, 0);
 
+  // Planning page configuration
   const planningPages = [
     {
       id: 'characters' as const,
-      title: 'Characters Page',
-      description: 'Manage your imported characters with detailed profiles',
+      title: 'Characters',
       icon: Users,
       color: 'bg-blue-50 border-blue-200 text-blue-700',
       iconColor: 'text-blue-600',
       count: imported.characters,
-      features: [
-        'Role-based organization with visual indicators',
-        'Completeness scoring for character development',
-        'Canvas integration via atom button dropdown',
-        'Search and filter by role, name, or traits'
-      ],
-      distribution: planningPageDistribution.charactersPage,
-      nextSteps: [
-        'Review character roles and adjust if needed',
-        'Complete missing character details (motivation, personality)',
-        'Add character relationships and connections',
-        'Link characters to plot threads and locations'
-      ]
+      distribution: planningPageDistribution.charactersPage
     },
     {
       id: 'plot' as const,
       title: 'Plot Development',
-      description: 'Track your story\'s plot threads and narrative structure',
       icon: BookOpen,
       color: 'bg-purple-50 border-purple-200 text-purple-700',
       iconColor: 'text-purple-600',
       count: imported.plotThreads,
-      features: [
-        'Plot thread management with tension curves',
-        'Progress tracking with completion percentages',
-        'Type-based filtering (main, subplot, character arc)',
-        'Connected character relationship mapping'
-      ],
-      distribution: planningPageDistribution.plotPage,
-      nextSteps: [
-        'Review plot thread types and adjust categories',
-        'Set up tension curves for dramatic pacing',
-        'Connect plot threads to relevant characters',
-        'Add detailed plot events and milestones'
-      ]
+      distribution: planningPageDistribution.plotPage
     },
     {
       id: 'world-building' as const,
       title: 'World Building',
-      description: 'Explore your story\'s locations and world elements',
       icon: Globe,
       color: 'bg-green-50 border-green-200 text-green-700',
       iconColor: 'text-green-600',
       count: imported.worldElements + imported.locations,
-      features: [
-        'Category-based organization (location, culture, technology)',
-        'Rich detail views with geography and cultural data',
-        'Image support for visual world building',
-        'Connection mapping between world elements'
-      ],
-      distribution: planningPageDistribution.worldBuildingPage,
-      nextSteps: [
-        'Review world element categories and reorganize',
-        'Add images and visual references',
-        'Expand cultural and geographic details',
-        'Map connections between locations and characters'
-      ]
+      distribution: planningPageDistribution.worldBuildingPage
     },
     {
       id: 'outline' as const,
       title: 'Story Outline',
-      description: 'Navigate your hierarchical story structure',
       icon: FileText,
       color: 'bg-orange-50 border-orange-200 text-orange-700',
       iconColor: 'text-orange-600',
       count: imported.outlineNodes + imported.chapters,
-      features: [
-        'Hierarchical act/chapter/scene structure',
-        'Word count tracking with targets',
-        'Status progression from planned to published',
-        'Character appearance tracking per chapter'
-      ],
-      distribution: planningPageDistribution.outlinePage,
-      nextSteps: [
-        'Review chapter organization and structure',
-        'Set word count targets for each chapter',
-        'Add scene breakdowns within chapters',
-        'Track character appearances and arcs'
-      ]
+      distribution: planningPageDistribution.outlinePage
     }
-  ];
+  ].filter(page => page.count > 0);
 
-  const getRecommendedStartingPage = () => {
-    const counts = [
-      { page: 'characters', count: imported.characters },
-      { page: 'plot', count: imported.plotThreads },
-      { page: 'world-building', count: imported.worldElements + imported.locations },
-      { page: 'outline', count: imported.outlineNodes + imported.chapters }
-    ];
-    
-    return counts.reduce((max, current) => 
-      current.count > max.count ? current : max
-    ).page;
-  };
+  const recommendedPage = planningPages.reduce((max, current) => 
+    current.count > max.count ? current : max
+  );
 
-  const recommendedPage = getRecommendedStartingPage();
+  // Summary stats for display
+  const summaryStats = [
+    { label: 'Characters', count: imported.characters, color: 'text-blue-600' },
+    { label: 'Plot Threads', count: imported.plotThreads, color: 'text-purple-600' },
+    { label: 'World Elements', count: imported.worldElements + imported.locations, color: 'text-green-600' },
+    { label: 'Outline Items', count: imported.outlineNodes + imported.chapters, color: 'text-orange-600' }
+  ].filter(stat => stat.count > 0);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
         <div className="p-6">
           {/* Header */}
           <div className="text-center mb-6">
@@ -163,34 +99,12 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-gray-900 mb-3">Import Summary</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {imported.characters > 0 && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{imported.characters}</div>
-                  <div className="text-sm text-gray-600">Characters</div>
+              {summaryStats.map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <div className={`text-2xl font-bold ${stat.color}`}>{stat.count}</div>
+                  <div className="text-sm text-gray-600">{stat.label}</div>
                 </div>
-              )}
-              {imported.plotThreads > 0 && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{imported.plotThreads}</div>
-                  <div className="text-sm text-gray-600">Plot Threads</div>
-                </div>
-              )}
-              {(imported.worldElements + imported.locations) > 0 && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {imported.worldElements + imported.locations}
-                  </div>
-                  <div className="text-sm text-gray-600">World Elements</div>
-                </div>
-              )}
-              {(imported.outlineNodes + imported.chapters) > 0 && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {imported.outlineNodes + imported.chapters}
-                  </div>
-                  <div className="text-sm text-gray-600">Outline Items</div>
-                </div>
-              )}
+              ))}
             </div>
           </div>
 
@@ -199,11 +113,11 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
             <h3 className="font-semibold text-gray-900 mb-3">Quick Actions</h3>
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => onNavigateToPlanning(recommendedPage as any)}
+                onClick={() => onNavigateToPlanning(recommendedPage.id)}
                 className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] text-white rounded-lg hover:bg-[#ff4e00]/80 transition-colors"
               >
                 <Target className="w-4 h-4" />
-                Start with {planningPages.find(p => p.id === recommendedPage)?.title}
+                Start with {recommendedPage.title}
                 <span className="text-xs bg-white/20 px-2 py-1 rounded">Recommended</span>
               </button>
               
@@ -215,7 +129,6 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
                 Visualize on Canvas
               </button>
 
-              {/* NEW: Library Navigation */}
               {onNavigateToLibrary && imported.chapters > 0 && (
                 <button
                   onClick={onNavigateToLibrary}
@@ -227,7 +140,6 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
                 </button>
               )}
 
-              {/* NEW: Projects Page Navigation */}
               {onNavigateToLibrary && (
                 <button
                   onClick={onNavigateToLibrary}
@@ -253,46 +165,42 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
                   {imported.characters > 0 && <li>• {imported.characters} characters → Characters planning page</li>}
                   {imported.plotThreads > 0 && <li>• {imported.plotThreads} plot threads → Plot planning page</li>}
                   {imported.chapters > 0 && <li>• {imported.chapters} chapters → Outline planning page & Library</li>}
-                  {(imported.locations + imported.worldElements) > 0 && <li>• {imported.locations + imported.worldElements} locations/world elements → World Building page</li>}
+                  {(imported.locations + imported.worldElements) > 0 && (
+                    <li>• {imported.locations + imported.worldElements} locations/world elements → World Building page</li>
+                  )}
                 </ul>
               </div>
             </div>
           </div>
 
           {/* Planning Pages Overview */}
-          <div className="space-y-4">
+          <div className="space-y-4 mb-6">
             <h3 className="font-semibold text-gray-900">Your Content Distribution</h3>
             
-            {planningPages.filter(page => page.count > 0).map((page) => (
+            {planningPages.map((page) => (
               <div key={page.id} className={`border rounded-lg p-4 ${page.color}`}>
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-white rounded-lg">
                       <page.icon className={`w-5 h-5 ${page.iconColor}`} />
                     </div>
                     <div>
                       <h4 className="font-semibold">{page.title}</h4>
-                      <p className="text-sm opacity-80">{page.description}</p>
+                      <p className="text-sm opacity-80">{page.count} items imported</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="text-lg font-bold">{page.count}</div>
-                      <div className="text-xs opacity-70">items</div>
-                    </div>
-                    <button
-                      onClick={() => onNavigateToPlanning(page.id)}
-                      className="flex items-center gap-1 px-3 py-1 bg-white text-gray-700 rounded hover:bg-gray-50 transition-colors text-sm"
-                    >
-                      View
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => onNavigateToPlanning(page.id)}
+                    className="flex items-center gap-1 px-3 py-1 bg-white text-gray-700 rounded hover:bg-gray-50 transition-colors text-sm"
+                  >
+                    View
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
                 </div>
 
                 {/* Distribution Info */}
                 {page.distribution.length > 0 && (
-                  <div className="mb-3">
+                  <div className="mt-3">
                     <div className="text-sm font-medium mb-1">What was imported:</div>
                     <ul className="text-xs space-y-1 opacity-90">
                       {page.distribution.map((item, index) => (
@@ -304,45 +212,12 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
                     </ul>
                   </div>
                 )}
-
-                {/* Features */}
-                <div className="mb-3">
-                  <div className="text-sm font-medium mb-1">Available features:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {page.features.slice(0, 3).map((feature, index) => (
-                      <span key={index} className="text-xs bg-white/50 px-2 py-1 rounded">
-                        {feature}
-                      </span>
-                    ))}
-                    {page.features.length > 3 && (
-                      <span className="text-xs bg-white/30 px-2 py-1 rounded">
-                        +{page.features.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Next Steps */}
-                <details className="group">
-                  <summary className="text-sm font-medium cursor-pointer hover:opacity-80 flex items-center gap-2">
-                    Recommended next steps
-                    <ArrowRight className="w-3 h-3 transition-transform group-open:rotate-90" />
-                  </summary>
-                  <ul className="mt-2 text-xs space-y-1 opacity-90 pl-4">
-                    {page.nextSteps.map((step, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="w-1 h-1 bg-current rounded-full mt-2 flex-shrink-0"></span>
-                        {step}
-                      </li>
-                    ))}
-                  </ul>
-                </details>
               </div>
             ))}
           </div>
 
           {/* Footer Actions */}
-          <div className="flex justify-between items-center pt-6 mt-6 border-t border-gray-200">
+          <div className="flex justify-between items-center pt-6 border-t border-gray-200">
             <div className="text-sm text-gray-500">
               Your imported project: <strong>{importResult.projectId}</strong>
             </div>
@@ -354,7 +229,7 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
                 Close
               </button>
               <button
-                onClick={() => onNavigateToPlanning(recommendedPage as any)}
+                onClick={() => onNavigateToPlanning(recommendedPage.id)}
                 className="px-4 py-2 bg-[#ff4e00] text-white rounded-lg hover:bg-[#ff4e00]/80 transition-colors"
               >
                 Get Started
@@ -364,4 +239,5 @@ export const PostImportNavigation: React.FC<PostImportNavigationProps> = ({
         </div>
       </div>
     </div>
+  );
 };
