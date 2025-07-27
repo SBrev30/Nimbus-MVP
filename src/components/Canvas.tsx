@@ -24,11 +24,13 @@ import './Canvas.css';
 import { useAuth } from '../contexts/AuthContext';
 import { useCanvasPlanningData } from '../hooks/useCanvasPlanningData';
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
+import { useCanvasConnections } from '../hooks/useCanvasConnections';
 
 // Import enhanced components
 import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
 import { CharacterPopup } from './canvas/CharacterPopup';
 import { Integration } from './Integration'; // Add Integration component
+import { ConnectionControls } from './canvas/connection-controls';
 
 // Import node types from index file - these should include enhanced versions
 import {
@@ -74,12 +76,28 @@ interface CanvasProps {
   onBack?: () => void;
 }
 
+// ReactFlow Edge interface with auto-connection data
+interface ReactFlowEdge extends Edge {
+  id: string;
+  source: string;
+  target: string;
+  animated?: boolean;
+  style?: {
+    stroke: string;
+    strokeWidth: number;
+    strokeDasharray?: string;
+  };
+  label?: string;
+  data?: any; // For auto-connection metadata
+}
+
 // Main Canvas Flow Component
 const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   const { user } = useAuth();
    
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [userEdges, setUserEdges] = useState<ReactFlowEdge[]>([]); // Separate user-created edges
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'pending'>('synced');
   const [canvasMode, setCanvasMode] = useState('explore');
   
@@ -100,6 +118,27 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     viewport,
     lastModified: Date.now()
   }), [nodes, edges, viewport]);
+
+  // Add the auto-connections hook
+  const {
+    connectionSettings,
+    autoEdges,
+    connectionInsights,
+    toggleConnectionType,
+    refreshConnections
+  } = useCanvasConnections(
+    {
+      planningCharacters: planningData.planningCharacters,
+      planningLocations: planningData.planningLocations || [],
+      characterRelationships: planningData.characterRelationships || []
+    },
+    nodes
+  );
+
+  // Combine user edges and auto edges
+  const combinedEdges = useMemo(() => {
+    return [...userEdges, ...autoEdges];
+  }, [userEdges, autoEdges]);
 
   const {
     lastSaved,
@@ -135,10 +174,12 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     console.log('Canvas: Planning data updated:', {
       characters: planningData.planningCharacters.length,
       plotThreads: planningData.plotThreads.length, // NEW: Debug plot threads
+      characterRelationships: planningData.characterRelationships?.length || 0,
+      autoEdgesCount: autoEdges.length,
       loading: planningData.loading,
       error: planningData.error
     });
-  }, [planningData.planningCharacters, planningData.plotThreads, planningData.loading, planningData.error]);
+  }, [planningData.planningCharacters, planningData.plotThreads, planningData.characterRelationships, autoEdges.length, planningData.loading, planningData.error]);
 
   useEffect(() => {
     const loadCanvasData = async () => {
@@ -146,7 +187,9 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         const savedData = await loadData();
         if (savedData?.nodes && savedData?.edges) {
           setNodes(savedData.nodes);
-          setEdges(savedData.edges);
+          // Separate user edges from auto edges when loading
+          const savedUserEdges = savedData.edges.filter((edge: any) => !edge.data?.source || edge.data.source === 'user_created');
+          setUserEdges(savedUserEdges);
           setHasChanges(false);
         }
       } catch (error) {
@@ -155,7 +198,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     };
 
     loadCanvasData();
-  }, [loadData, setNodes, setEdges]);
+  }, [loadData, setNodes]);
 
   // ADD: Handle opening integrations modal
   const handleOpenIntegrations = useCallback(() => {
@@ -301,6 +344,10 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
       );
       
       setNodes(updatedNodes);
+      
+      // Refresh auto-connections after sync
+      refreshConnections();
+      
       await forceSave();
       
       setSyncStatus('synced');
@@ -311,7 +358,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
       console.error('❌ Sync failed:', error);
       setSyncStatus('error');
     }
-  }, [planningData, nodes, forceSave, setNodes]);
+  }, [planningData, nodes, forceSave, setNodes, refreshConnections]);
 
   const loadTemplate = useCallback((templateId: string) => {
     try {
@@ -323,7 +370,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
       }
 
       setNodes([]);
-      setEdges([]);
+      setUserEdges([]);
       
       const nodeIdMap = new Map<string, string>();
       
@@ -345,13 +392,14 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
           ...edge,
           id: uuidv4(),
           source: newSourceId,
-          target: newTargetId
+          target: newTargetId,
+          data: { source: 'user_created' }
         };
       });
       
       setTimeout(() => {
         setNodes(newNodes);
-        setEdges(newEdges);
+        setUserEdges(newEdges);
         
         setTimeout(() => {
           if (reactFlowInstance) {
@@ -363,7 +411,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     } catch (error) {
       console.error('Error loading template:', error);
     }
-  }, [setNodes, setEdges, reactFlowInstance]);
+  }, [setNodes, reactFlowInstance]);
 
   const loadSample = useCallback((sampleId: string) => {
     try {
@@ -389,12 +437,13 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
           ...edge,
           id: uuidv4(),
           source: newSourceId,
-          target: newTargetId
+          target: newTargetId,
+          data: { source: 'user_created' }
         };
       });
 
       setNodes(newNodes);
-      setEdges(newEdges);
+      setUserEdges(newEdges);
       
       setTimeout(() => {
         if (reactFlowInstance) {
@@ -404,16 +453,21 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     } catch (error) {
       console.error('Error loading sample data:', error);
     }
-  }, [setNodes, setEdges, reactFlowInstance]);
+  }, [setNodes, reactFlowInstance]);
 
+  // Updated onConnect to only affect user edges
   const onConnect = useCallback((params: Connection) => {
-    setEdges((eds) => addEdge({ 
-      ...params, 
+    const newEdge: ReactFlowEdge = {
+      id: uuidv4(),
+      source: params.source!,
+      target: params.target!,
       type: 'smoothstep',
       animated: true,
-      style: { stroke: '#6366F1', strokeWidth: 2 }
-    }, eds));
-  }, [setEdges]);
+      style: { stroke: '#6366F1', strokeWidth: 2 },
+      data: { source: 'user_created' }
+    };
+    setUserEdges((eds) => [...eds, newEdge]);
+  }, []);
 
   const handleLoad = useCallback(() => {
     const input = document.createElement('input');
@@ -428,7 +482,9 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
             const data = JSON.parse(e.target?.result as string);
             if (data?.nodes && Array.isArray(data.nodes) && data?.edges && Array.isArray(data.edges)) {
               setNodes(data.nodes);
-              setEdges(data.edges);
+              // Separate user edges when loading
+              const loadedUserEdges = data.edges.filter((edge: any) => !edge.data?.source || edge.data.source === 'user_created');
+              setUserEdges(loadedUserEdges);
               if (data.viewport && reactFlowInstance) {
                 reactFlowInstance.setViewport(data.viewport);
               }
@@ -444,24 +500,26 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
       }
     };
     input.click();
-  }, [setNodes, setEdges, reactFlowInstance]);
+  }, [setNodes, reactFlowInstance]);
 
   const clearCanvas = useCallback(() => {
     setNodes([]);
-    setEdges([]);
+    setUserEdges([]);
     setHasChanges(false);
-  }, [setNodes, setEdges]);
+  }, [setNodes]);
 
   const handleExport = useCallback((format: string) => {
     const exportData = {
       nodes,
-      edges,
+      edges: combinedEdges, // Export all edges (user + auto)
       viewport: reactFlowInstance?.getViewport(),
       metadata: {
         projectId,
         exportedAt: new Date().toISOString(),
         nodeCount: nodes.length,
-        edgeCount: edges.length
+        edgeCount: combinedEdges.length,
+        userEdgeCount: userEdges.length,
+        autoEdgeCount: autoEdges.length
       }
     };
 
@@ -481,7 +539,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
       default:
         console.log(`Export format ${format} not yet implemented`);
     }
-  }, [nodes, edges, reactFlowInstance, projectId]);
+  }, [nodes, combinedEdges, userEdges.length, autoEdges.length, reactFlowInstance, projectId]);
 
   return (
     <div className="h-screen bg-gray-50 flex">
@@ -498,11 +556,36 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
           </button>
         )}
 
+        {/* Connection Controls */}
+        {nodes.length > 0 && (
+          <ConnectionControls
+            settings={connectionSettings}
+            onToggle={toggleConnectionType}
+            connectionCounts={{
+              relationships: autoEdges.filter(e => e.data?.type === 'relationship').length,
+              locations: autoEdges.filter(e => e.data?.type === 'location').length,
+              plots: 0 // TODO: Implement plot connections
+            }}
+          />
+        )}
+
         <ReactFlow
           nodes={nodes}
-          edges={edges}
+          edges={combinedEdges}
           onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onEdgesChange={(changes) => {
+            // Only apply edge changes to user-created edges
+            const userEdgeChanges = changes.filter(change => 
+              userEdges.some(edge => edge.id === change.id)
+            );
+            if (userEdgeChanges.length > 0) {
+              // Apply changes to userEdges
+              const updatedUserEdges = userEdges.filter(edge => 
+                !userEdgeChanges.some(change => change.id === edge.id && change.type === 'remove')
+              );
+              setUserEdges(updatedUserEdges);
+            }
+          }}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           connectionLineType={ConnectionLineType.SmoothStep}
@@ -540,7 +623,8 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
               <div className="text-sm text-gray-500 space-y-1">
                 <p>• Add story elements from the sidebar</p>
                 <p>• Link nodes to Planning data with the ⚛ button</p>
-                <p>• Connect elements with drag-and-drop</p>
+                <p>• Character relationships appear automatically</p>
+                <p>• Use connection controls to toggle relationship visibility</p>
                 <p>• Use templates and samples to get started</p>
               </div>
             </div>
@@ -567,7 +651,7 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         onModeChange={setCanvasMode}
         hasNodes={nodes.length > 0}
         nodeCount={nodes.length}
-        edgeCount={edges.length}
+        edgeCount={combinedEdges.length}
         hasChanges={hasChanges}
       />
 
