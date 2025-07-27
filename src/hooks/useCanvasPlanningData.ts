@@ -244,12 +244,13 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject, calculateCharacterCompleteness]);
 
-  // ✅ ADDED: Load character relationships for auto-connections
+  // ✅ FIXED: Load character relationships for auto-connections
   const loadCharacterRelationships = useCallback(async () => {
     try {
       const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return;
 
+      // ✅ FIX: Remove user_id filter since the table doesn't have this column
       let query = supabase
         .from('character_relationships')
         .select(`
@@ -259,9 +260,9 @@ export const useCanvasPlanningData = (projectId?: string) => {
           relationship_type,
           description,
           strength
-        `)
-        .eq('user_id', user.id);
+        `);
 
+      // Only filter by project_id since that's what the table has
       if (finalProjectId) {
         query = query.eq('project_id', finalProjectId);
       }
