@@ -162,43 +162,64 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
-  useEffect(() => {
-    setHasChanges(true);
-    if (nodes.length === 0 && edges.length === 0) {
-      setHasChanges(false);
+ useEffect(() => {
+  setHasChanges(true);
+  if (nodes.length === 0 && edges.length === 0) {
+    setHasChanges(false);
+  }
+}, [nodes, edges]);
+
+// ✅ ADD THIS NEW useEffect HERE - Cleanup Old Canvas Data
+useEffect(() => {
+  // Clean up nodes with invalid roles
+  const updatedNodes = nodes.map(node => {
+    if (node.type === 'character' && node.data.role === 'other') {
+      console.log(`🔧 Fixing invalid role 'other' to 'minor' for character: ${node.data.name}`);
+      return {
+        ...node,
+        data: { ...node.data, role: 'minor' }
+      };
     }
-  }, [nodes, edges]);
+    return node;
+  });
+  
+  // Only update if changes were made
+  const hasInvalidRoles = updatedNodes.some((node, i) => node !== nodes[i]);
+  if (hasInvalidRoles) {
+    console.log('🔧 Cleaning up character nodes with invalid roles');
+    setNodes(updatedNodes);
+  }
+}, [nodes, setNodes]);
 
-  // Debug planning data
-  useEffect(() => {
-    console.log('Canvas: Planning data updated:', {
-      characters: planningData.planningCharacters.length,
-      plotThreads: planningData.plotThreads.length, // NEW: Debug plot threads
-      characterRelationships: planningData.characterRelationships?.length || 0,
-      autoEdgesCount: autoEdges.length,
-      loading: planningData.loading,
-      error: planningData.error
-    });
-  }, [planningData.planningCharacters, planningData.plotThreads, planningData.characterRelationships, autoEdges.length, planningData.loading, planningData.error]);
+// Debug planning data
+useEffect(() => {
+  console.log('Canvas: Planning data updated:', {
+    characters: planningData.planningCharacters.length,
+    plotThreads: planningData.plotThreads.length, // NEW: Debug plot threads
+    characterRelationships: planningData.characterRelationships?.length || 0,
+    autoEdgesCount: autoEdges.length,
+    loading: planningData.loading,
+    error: planningData.error
+  });
+}, [planningData.planningCharacters, planningData.plotThreads, planningData.characterRelationships, autoEdges.length, planningData.loading, planningData.error]);
 
-  useEffect(() => {
-    const loadCanvasData = async () => {
-      try {
-        const savedData = await loadData();
-        if (savedData?.nodes && savedData?.edges) {
-          setNodes(savedData.nodes);
-          // Separate user edges from auto edges when loading
-          const savedUserEdges = savedData.edges.filter((edge: any) => !edge.data?.source || edge.data.source === 'user_created');
-          setUserEdges(savedUserEdges);
-          setHasChanges(false);
-        }
-      } catch (error) {
-        console.error('Failed to load canvas data:', error);
+useEffect(() => {
+  const loadCanvasData = async () => {
+    try {
+      const savedData = await loadData();
+      if (savedData?.nodes && savedData?.edges) {
+        setNodes(savedData.nodes);
+        // Separate user edges from auto edges when loading
+        const savedUserEdges = savedData.edges.filter((edge: any) => !edge.data?.source || edge.data.source === 'user_created');
+        setUserEdges(savedUserEdges);
+        setHasChanges(false);
       }
-    };
-
-    loadCanvasData();
-  }, [loadData, setNodes]);
+    } catch (error) {
+      console.error('Failed to load canvas data:', error);
+    }
+  };
+  loadCanvasData();
+}, [loadData, setNodes]);
 
   // ADD: Handle opening integrations modal
   const handleOpenIntegrations = useCallback(() => {
