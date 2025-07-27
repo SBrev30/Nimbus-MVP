@@ -14,6 +14,7 @@ import {
   HelpCircle,
   PanelLeftClose
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 // Nimbus Note Logo Component
 const NimbusLogo = ({ isCollapsed }: { isCollapsed: boolean }) => {
@@ -223,6 +224,7 @@ const menuItems: MenuItem[] = [
     icon: Settings,
     hasDropdown: true,
     subItems: [
+      { id: 'profile', label: 'Profile' },
       { id: 'history', label: 'History' },
       { id: 'integrations', label: 'Integrations' }
     ]
@@ -250,6 +252,7 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
   const [expandedItems, setExpandedItems] = useState<string[]>(['planning', 'settings']);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
@@ -289,6 +292,30 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
     setActiveDropdown(null); // Close dropdown after selection
     if (onViewChange) {
       onViewChange(view);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+        // Handle error - could show a toast notification
+      } else {
+        // Redirect to login page or refresh the page
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Unexpected error during sign out:', error);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
+  const handleProfileClick = () => {
+    if (onViewChange) {
+      onViewChange('profile');
     }
   };
 
@@ -466,13 +493,24 @@ export default function EnhancedNimbusSidebar({ activeView = 'dashboard', onView
               {!isCollapsed && (
                 <div className="flex space-x-1">
                   <Tooltip content="Profile">
-                    <button className="p-1 hover:bg-[#e8ddc1] rounded transition-colors duration-150">
+                    <button 
+                      onClick={handleProfileClick}
+                      className="p-1 hover:bg-[#e8ddc1] rounded transition-colors duration-150"
+                    >
                       <User className="w-4 h-4 text-gray-400" />
                     </button>
                   </Tooltip>
                   <Tooltip content="Sign Out">
-                    <button className="p-1 hover:bg-[#e8ddc1] rounded transition-colors duration-150">
-                      <LogOut className="w-4 h-4 text-gray-400" />
+                    <button 
+                      onClick={handleSignOut}
+                      disabled={isSigningOut}
+                      className="p-1 hover:bg-red-50 hover:text-red-600 rounded transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSigningOut ? (
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <LogOut className="w-4 h-4 text-gray-400" />
+                      )}
                     </button>
                   </Tooltip>
                 </div>
