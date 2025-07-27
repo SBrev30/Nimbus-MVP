@@ -264,6 +264,7 @@ useEffect(() => {
       return (
         <PlotNode
           {...props}
+          projectId={projectId} 
           onDataChange={(newData: any) => {
             console.log('📝 PlotNode data change:', props.id, newData);
             handleNodeDataChange(props.id, newData);
