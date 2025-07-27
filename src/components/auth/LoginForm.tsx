@@ -23,7 +23,7 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white p-8 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Sign In to WritersBlock</h2>
+        <h2 className="text-2xl font-bold text-center mb-6">Sign In to Nimbus Note</h2>
         
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
