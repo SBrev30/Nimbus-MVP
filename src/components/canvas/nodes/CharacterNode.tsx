@@ -36,6 +36,7 @@ interface CharacterNodeProps extends BaseCanvasComponentProps {
   onDataChange?: (field: string, value: any) => void; // HOC provides this format
   onEdit?: () => void;
   onDelete?: () => void;
+  projectId?: string; // ✅ ADD: Accept projectId prop
 }
 
 const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
@@ -46,7 +47,8 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   hasChanges,
   onDataChange,
   onEdit,
-  onDelete
+  onDelete,
+  projectId // ✅ ADD: Accept projectId prop
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -55,11 +57,14 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     
   const dropdownRef = useRef<HTMLDivElement>(null);
   const atomButtonRef = useRef<HTMLButtonElement>(null);
-  const { planningCharacters, loading, refreshCharacters, error: planningError } = useCanvasPlanningData();
+  
+  // ✅ FIX: Pass projectId to the hook to filter characters correctly
+  const { planningCharacters, loading, refreshCharacters, error: planningError } = useCanvasPlanningData(projectId);
 
   // Debug planning data
   useEffect(() => {
     console.log('🐛 CharacterNode Debug Info:', {
+      projectId,
       planningCharactersCount: planningCharacters.length,
       loading,
       planningError,
@@ -67,7 +72,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       nodeData: data,
       onDataChangeAvailable: !!onDataChange
     });
-  }, [planningCharacters, loading, planningError, showDropdown, data, onDataChange]);
+  }, [projectId, planningCharacters, loading, planningError, showDropdown, data, onDataChange]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -146,15 +151,16 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     event.preventDefault();
     
     console.log('🔽 Dropdown toggle clicked, current state:', showDropdown);
+    console.log('🔽 Using projectId:', projectId);
     setShowDropdown(!showDropdown);
     setSearchQuery('');
     
     // If opening dropdown, refresh characters
     if (!showDropdown) {
-      console.log('🔄 Refreshing characters on dropdown open');
+      console.log('🔄 Refreshing characters on dropdown open with projectId:', projectId);
       refreshCharacters();
     }
-  }, [showDropdown, refreshCharacters]);
+  }, [showDropdown, refreshCharacters, projectId]);
 
   const handleNodeClick = (event: React.MouseEvent) => {
     // Don't handle node clicks if dropdown is open
@@ -333,7 +339,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
               <option value="protagonist">Protagonist</option>
               <option value="antagonist">Antagonist</option>
               <option value="supporting">Supporting</option>
-              <option value="minor">Mther</option>
+              <option value="minor">Minor</option>
             </select>
             <textarea
               value={data.description || ''}
@@ -429,7 +435,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Manually refreshing characters...');
+                console.log('🔄 Manually refreshing characters with projectId:', projectId);
                 refreshCharacters();
               }}
               onMouseDown={(e) => e.stopPropagation()}
