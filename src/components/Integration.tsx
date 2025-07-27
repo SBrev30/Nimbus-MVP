@@ -1,4 +1,4 @@
-// src/components/Integration.tsx
+// src/components/Integration.tsx - UPDATED
 
 import React, { useState, useCallback } from 'react';
 import { 
@@ -21,6 +21,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface IntegrationProps {
   onBack: () => void;
+  // ADD: Navigation callbacks to parent component
+  onNavigateToPlanning?: (page: 'characters' | 'plot' | 'world-building' | 'outline', projectId: string) => void;
+  onNavigateToCanvas?: (projectId: string) => void;
+  onNavigateToLibrary?: (projectId: string) => void;
+  onNavigateToProjects?: () => void;
 }
 
 type Step = 'connect' | 'preview' | 'importing' | 'success' | 'error';
@@ -35,7 +40,13 @@ interface IntegrationState {
   error: string | null;
 }
 
-export default function Integration({ onBack }: IntegrationProps) {
+export default function Integration({ 
+  onBack, 
+  onNavigateToPlanning,
+  onNavigateToCanvas,
+  onNavigateToLibrary,
+  onNavigateToProjects
+}: IntegrationProps) {
   const { user } = useAuth();
   
   const [state, setState] = useState<IntegrationState>({
@@ -155,42 +166,43 @@ export default function Integration({ onBack }: IntegrationProps) {
     }));
   };
 
+  // UPDATED: Real navigation functions
   const handleNavigateToPlanning = (page: 'characters' | 'plot' | 'world-building' | 'outline') => {
-    // This would be implemented by the parent component
-    console.log('Navigate to planning page:', page);
-    // Close the integration and navigate
-    onBack();
+    const projectId = state.importResult?.projectId;
+    if (projectId && onNavigateToPlanning) {
+      onNavigateToPlanning(page, projectId);
+    } else if (projectId) {
+      // Fallback: navigate to planning page with project in URL
+      window.location.href = `/planning/${page}?project=${projectId}`;
+    }
+    onBack(); // Close integration
   };
 
   const handleNavigateToCanvas = () => {
-    // This would be implemented by the parent component
-    console.log('Navigate to canvas');
-    onBack();
+    const projectId = state.importResult?.projectId;
+    if (projectId && onNavigateToCanvas) {
+      onNavigateToCanvas(projectId);
+    } else if (projectId) {
+      // Fallback: navigate to canvas with project in URL
+      window.location.href = `/canvas?project=${projectId}`;
+    }
+    onBack(); // Close integration
   };
 
-  const getStepIcon = (stepName: Step, currentStep: Step) => {
-    const steps = ['connect', 'preview', 'importing', 'success'];
-    const currentIndex = steps.indexOf(currentStep);
-    const stepIndex = steps.indexOf(stepName);
-    
-    if (stepIndex < currentIndex) {
-      return <CheckCircle className="w-5 h-5 text-green-600" />;
-    } else if (stepIndex === currentIndex) {
-      return <div className="w-5 h-5 rounded-full bg-blue-600"></div>;
+  const handleNavigateToLibrary = () => {
+    const projectId = state.importResult?.projectId;
+    if (projectId && onNavigateToLibrary) {
+      onNavigateToLibrary(projectId);
+    } else if (onNavigateToProjects) {
+      onNavigateToProjects();
     } else {
-      return <div className="w-5 h-5 rounded-full bg-gray-300"></div>;
+      // Fallback: navigate to projects
+      window.location.href = '/projects';
     }
+    onBack(); // Close integration
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'character': return <Users className="w-5 h-5 text-blue-600" />;
-      case 'plot': return <BookOpen className="w-5 h-5 text-purple-600" />;
-      case 'chapter': return <FileText className="w-5 h-5 text-orange-600" />;
-      case 'location': return <Globe className="w-5 h-5 text-green-600" />;
-      default: return <Database className="w-5 h-5 text-gray-600" />;
-    }
-  };
+  // ... rest of the component remains the same until renderStepContent
 
   const renderStepContent = () => {
     switch (state.step) {
@@ -229,8 +241,7 @@ export default function Integration({ onBack }: IntegrationProps) {
                 <textarea
                   value={state.databaseUrls}
                   onChange={(e) => setState(prev => ({ ...prev, databaseUrls: e.target.value }))}
-                  placeholder={`https://notion.so/your-database-url-1
-https://notion.so/your-database-url-2`}
+                  placeholder={`https://notion.so/your-database-url-1\nhttps://notion.so/your-database-url-2`}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -352,6 +363,7 @@ https://notion.so/your-database-url-2`}
               importResult={state.importResult}
               onNavigateToPlanning={handleNavigateToPlanning}
               onNavigateToCanvas={handleNavigateToCanvas}
+              onNavigateToLibrary={handleNavigateToLibrary}
               onClose={onBack}
             />
           );
@@ -392,6 +404,16 @@ https://notion.so/your-database-url-2`}
 
       default:
         return null;
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'character': return <Users className="w-5 h-5 text-blue-600" />;
+      case 'plot': return <BookOpen className="w-5 h-5 text-purple-600" />;
+      case 'chapter': return <FileText className="w-5 h-5 text-orange-600" />;
+      case 'location': return <Globe className="w-5 h-5 text-green-600" />;
+      default: return <Database className="w-5 h-5 text-gray-600" />;
     }
   };
 
@@ -483,4 +505,18 @@ https://notion.so/your-database-url-2`}
       </div>
     </div>
   );
+
+  function getStepIcon(stepName: Step, currentStep: Step) {
+    const steps = ['connect', 'preview', 'importing', 'success'];
+    const currentIndex = steps.indexOf(currentStep);
+    const stepIndex = steps.indexOf(stepName);
+    
+    if (stepIndex < currentIndex) {
+      return <CheckCircle className="w-5 h-5 text-green-600" />;
+    } else if (stepIndex === currentIndex) {
+      return <div className="w-5 h-5 rounded-full bg-blue-600"></div>;
+    } else {
+      return <div className="w-5 h-5 rounded-full bg-gray-300"></div>;
+    }
+  }
 }
