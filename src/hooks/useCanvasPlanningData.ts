@@ -17,7 +17,7 @@ export interface CanvasCharacterData {
   traits?: string[];
   relationships?: Array<{
     characterId: string;
-    type: 'family' | 'friend' | 'enemy' | 'romantic' | 'minor';
+    type: 'family' | 'friend' | 'enemy' | 'romantic' | 'other';
     description: string;
   }>;
   completeness_score?: number;
@@ -254,8 +254,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
         .from('character_relationships')
         .select(`
           id,
-          character_id,
-          related_character_id,
+          character_a_id,
+          character_b_id,
           relationship_type,
           description,
           strength
@@ -275,9 +275,19 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       console.log('Character relationships loaded:', relationships?.length || 0);
 
+      // Transform the data to match expected format for auto-connections
+      const transformedRelationships = (relationships || []).map(rel => ({
+        id: rel.id,
+        character_id: rel.character_a_id, // Map character_a_id to character_id
+        related_character_id: rel.character_b_id, // Map character_b_id to related_character_id
+        relationship_type: rel.relationship_type,
+        description: rel.description,
+        strength: rel.strength
+      }));
+
       setPlanningData(prev => ({
         ...prev,
-        characterRelationships: relationships || []
+        characterRelationships: transformedRelationships
       }));
 
     } catch (err) {
