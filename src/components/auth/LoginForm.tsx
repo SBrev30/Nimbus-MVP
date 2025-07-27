@@ -71,8 +71,7 @@ export function LoginForm() {
       <div className="bg-white p-8 rounded-lg shadow-md">
         <div className="text-center mb-6">
           <NimbusLogo />
-          <h2 className="text-2xl font-bold mt-4">Sign In</h2>
-        </div>
+                  </div>
         
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
