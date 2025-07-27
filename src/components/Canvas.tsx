@@ -25,10 +25,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCanvasPlanningData } from '../hooks/useCanvasPlanningData';
 import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 
-// Import AI components and services
-import { AIAnalysisPanel } from './canvas/AIAnalysisPanel';
-import { intelligentAIService } from '../services/intelligentAIService';
-
 // Import enhanced components
 import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
 import { CharacterPopup } from './canvas/CharacterPopup';
@@ -67,15 +63,6 @@ import { sampleStories } from '../data/sampleStories';
 // Icons
 import { ArrowLeft } from 'lucide-react';
 
-// Define AIAnalysisResult interface
-interface AIAnalysisResult {
-  type: 'conflict' | 'suggestion' | 'question' | 'error';
-  title: string;
-  description: string;
-  severity: 'low' | 'medium' | 'high';
-  nodeId?: string;
-}
-
 // Enhanced TypeScript interfaces
 interface NodeProps<T = any> {
   data: T;
@@ -95,10 +82,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'pending'>('synced');
   const [canvasMode, setCanvasMode] = useState('explore');
-  
-  const [aiAnalysisResults, setAiAnalysisResults] = useState<AIAnalysisResult[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showAIPanel, setShowAIPanel] = useState(false);
   
   // ADD: Integration modal state
   const [showIntegrationsModal, setShowIntegrationsModal] = useState(false);
@@ -177,7 +160,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   // ADD: Handle opening integrations modal
   const handleOpenIntegrations = useCallback(() => {
     setShowIntegrationsModal(true);
-    setShowAIPanel(false); // Close AI panel
   }, []);
 
   const handleNodeDataChange = useCallback((nodeId: string, newData: any) => {
@@ -257,60 +239,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     console.log('🆕 Creating new node:', type, id);
     setNodes((nds) => [...nds, newNode]);
   }, [reactFlowInstance, setNodes]);
-
-  const handleAIAnalysis = useCallback(async () => {
-    if (!nodes.length) return;
-    
-    setIsAnalyzing(true);
-    setShowAIPanel(true);
-    
-    try {
-      const results: AIAnalysisResult[] = [];
-      
-      const characterNodes = nodes.filter(n => n.type === 'character');
-      if (characterNodes.length > 0) {
-        for (const node of characterNodes) {
-          try {
-            const result = await intelligentAIService.analyzeCharacterNode(node.data);
-            results.push(result);
-          } catch (error) {
-            console.error('Character analysis failed:', error);
-            results.push({
-              type: 'error',
-              title: `Failed to analyze ${node.data.name || 'character'}`,
-              description: 'An error occurred during AI analysis. Please try again.',
-              severity: 'high',
-              nodeId: node.id
-            });
-          }
-        }
-      }
-      
-      if (nodes.length > 3) {
-        try {
-          const coherenceResult = await intelligentAIService.analyzeStoryCoherence(nodes, edges);
-          results.push(coherenceResult);
-        } catch (error) {
-          console.error('Story coherence analysis failed:', error);
-        }
-      }
-      
-      if (characterNodes.length > 1) {
-        try {
-          const relationshipResult = await intelligentAIService.suggestRelationships(characterNodes);
-          results.push(relationshipResult);
-        } catch (error) {
-          console.error('Relationship analysis failed:', error);
-        }
-      }
-      
-      setAiAnalysisResults(results);
-    } catch (error) {
-      console.error('AI Analysis failed:', error);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }, [nodes, edges]);
 
   // UPDATED: Enhanced sync handler with plot thread support
   const handleSync = useCallback(async () => {
@@ -522,7 +450,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     setNodes([]);
     setEdges([]);
     setHasChanges(false);
-    setAiAnalysisResults([]);
   }, [setNodes, setEdges]);
 
   const handleExport = useCallback((format: string) => {
@@ -555,16 +482,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         console.log(`Export format ${format} not yet implemented`);
     }
   }, [nodes, edges, reactFlowInstance, projectId]);
-
-  const handleApplySuggestion = useCallback((suggestionId: string, data: any) => {
-    console.log('Applying suggestion:', suggestionId, data);
-    
-    if (suggestionId.startsWith('relationship-')) {
-      // Create edge between characters based on AI suggestion
-      const suggestion = data;
-      // Find character nodes and create connection
-    }
-  }, []);
 
   return (
     <div className="h-screen bg-gray-50 flex">
@@ -618,28 +535,16 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
                 Enhanced Story Canvas
               </h3>
               <p className="text-gray-600 mb-4">
-                Create and organize your story visually. Sync with your Planning Pages and use AI analysis to improve your narrative.
+                Create and organize your story visually. Sync with your Planning Pages for seamless story development.
               </p>
               <div className="text-sm text-gray-500 space-y-1">
                 <p>• Add story elements from the sidebar</p>
                 <p>• Link nodes to Planning data with the ⚛ button</p>
-                <p>• Use AI analysis for story insights</p>
                 <p>• Connect elements with drag-and-drop</p>
+                <p>• Use templates and samples to get started</p>
               </div>
             </div>
           </div>
-        )}
-
-        {/* AI Analysis Panel - UPDATED with onOpenIntegrations prop */}
-        {showAIPanel && (
-          <AIAnalysisPanel
-            isOpen={showAIPanel}
-            onClose={() => setShowAIPanel(false)}
-            results={aiAnalysisResults}
-            isAnalyzing={isAnalyzing}
-            onApplySuggestion={handleApplySuggestion}
-            onOpenIntegrations={handleOpenIntegrations} // ADD THIS LINE
-          />
         )}
       </div>
 
@@ -656,8 +561,6 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
         lastSynced={lastSynced}
         isSyncing={isSaving || syncStatus === 'syncing'}
         selectedNodes={[]} // TODO: Implement selection tracking
-        onAnalyzeAI={handleAIAnalysis}
-        isAnalyzing={isAnalyzing}
         syncStatus={syncStatus}
         isOnline={isOnline}
         canvasMode={canvasMode}
