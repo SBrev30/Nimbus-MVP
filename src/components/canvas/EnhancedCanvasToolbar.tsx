@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   User, BookOpen, MapPin, Lightbulb, Zap, Calendar, FileText,
-  RefreshCw, Upload, Cloud, CloudOff, Brain, Trash2,
+  RefreshCw, Upload, Cloud, CloudOff, Trash2,
   Download, ArrowLeft, ChevronDown, ChevronUp, PanelRightClose,
   Plus, Sparkles
 } from 'lucide-react';
@@ -18,8 +18,6 @@ interface EnhancedCanvasToolbarProps {
   lastSynced: Date | null;
   isSyncing: boolean;
   selectedNodes: string[];
-  onAnalyzeAI: () => void;
-  isAnalyzing: boolean;
   syncStatus: string;
   isOnline: boolean;
   canvasMode: string;
@@ -69,8 +67,6 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
   lastSynced,
   isSyncing,
   selectedNodes,
-  onAnalyzeAI,
-  isAnalyzing,
   syncStatus,
   isOnline,
   canvasMode,
@@ -335,25 +331,6 @@ export const EnhancedCanvasToolbar: React.FC<EnhancedCanvasToolbarProps> = ({
                 Clear Canvas
               </button>
             </div>
-          )}
-        </AccordionSection>
-
-        {/* AI Tools Section */}
-        <AccordionSection id="ai" title="AI Analysis" icon={Brain}>
-          <button
-            onClick={onAnalyzeAI}
-            disabled={isAnalyzing || !hasNodes}
-            className="w-full flex items-center justify-center gap-2 p-3 bg-purple-50 border border-purple-200 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Brain className={`w-4 h-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
-            <span className="text-sm font-medium">
-              {isAnalyzing ? 'Analyzing...' : 'Analyze Story'}
-            </span>
-          </button>
-          {!hasNodes && (
-            <p className="text-xs text-gray-500 text-center mt-2">
-              Add elements to enable analysis
-            </p>
           )}
         </AccordionSection>
       </div>
