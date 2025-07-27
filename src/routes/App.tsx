@@ -17,6 +17,7 @@ import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { LandingPage } from '../components/landing-page';
 import { chapterService } from '../services/chapterService';
+import { ProfilePage } from '../components/settings/ProfilePage';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -518,7 +519,14 @@ function AppContent() {
   );
       
       // Settings pages
-      case 'integrations':
+case 'profile':
+        return (
+          <ErrorBoundary>
+            <ProfilePage activeView={activeView} onNavigate={handleViewChange} />
+          </ErrorBoundary>
+        );      
+
+case 'integrations':
         return (
           <ErrorBoundary>
             <Suspense fallback={<LoadingSpinner message="Loading Integration Settings..." />}>
@@ -623,6 +631,12 @@ function AppContent() {
                 <button
                   onClick={() => setActiveView('history')}
                   className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
+                 >
+                  Profile
+                </button>
+                <button
+                  onClick={() => setActiveView('history')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
                 >
                   Change History
                 </button>
