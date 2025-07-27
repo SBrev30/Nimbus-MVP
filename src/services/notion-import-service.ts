@@ -63,15 +63,30 @@ export class NotionImportService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(`Notion API error: ${error.message || response.statusText}`);
+      const error = await response.json().catch(() => ({ 
+        message: `HTTP ${response.status}: ${response.statusText}` 
+      }));
+      
+      if (response.status === 401) {
+        throw new Error('Invalid Notion token. Please check your integration token.');
+      } else if (response.status === 403) {
+        throw new Error('Access denied. Make sure your databases are shared with the integration.');
+      } else if (response.status === 404) {
+        throw new Error('Database not found. Please check your database URLs.');
+      } else {
+        throw new Error(error.message || `Notion API error: ${response.status}`);
+      }
     }
 
     return response.json();
   }
 
   async getDatabase(databaseId: string): Promise<NotionDatabase> {
-    return this.makeRequest(`/databases/${databaseId}`);
+    try {
+      return await this.makeRequest(`/databases/${databaseId}`);
+    } catch (error) {
+      throw new Error(`Failed to access database ${databaseId}: ${error.message}`);
+    }
   }
 
   async queryDatabase(databaseId: string, startCursor?: string): Promise<NotionQueryResponse> {
@@ -83,10 +98,14 @@ export class NotionImportService {
       body.start_cursor = startCursor;
     }
 
-    return this.makeRequest(`/databases/${databaseId}/query`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
+    try {
+      return await this.makeRequest(`/databases/${databaseId}/query`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      throw new Error(`Failed to query database ${databaseId}: ${error.message}`);
+    }
   }
 
   async getAllDatabaseRecords(databaseId: string): Promise<NotionPage[]> {
@@ -111,7 +130,7 @@ export class NotionImportService {
       case 'title':
         return property.title?.[0]?.plain_text || '';
       case 'rich_text':
-        return property.rich_text?.[0]?.plain_text || '';
+        return property.rich_text?.map((t: any) => t.plain_text).join('') || '';
       case 'number':
         return property.number;
       case 'select':
@@ -130,12 +149,20 @@ export class NotionImportService {
         return property.phone_number;
       case 'relation':
         return property.relation?.map((item: any) => item.id) || [];
+      case 'people':
+        return property.people?.map((person: any) => person.name || person.id) || [];
+      case 'files':
+        return property.files?.map((file: any) => file.name || file.file?.url) || [];
       case 'created_time':
       case 'last_edited_time':
         return property[property.type];
       case 'created_by':
       case 'last_edited_by':
         return property[property.type]?.name || '';
+      case 'formula':
+        return this.extractPropertyValue(property.formula);
+      case 'rollup':
+        return property.rollup?.array?.map((item: any) => this.extractPropertyValue(item)) || [];
       default:
         return property;
     }
@@ -145,27 +172,40 @@ export class NotionImportService {
     const nameL = name.toLowerCase();
     const propKeys = Object.keys(properties).map(k => k.toLowerCase());
     
-    // Character detection
+    // Character detection - prioritize specific character indicators
     if (nameL.includes('character') || 
-        propKeys.some(k => k.includes('role') || k.includes('age') || k.includes('race') || k.includes('abilities'))) {
+        propKeys.some(k => 
+          k.includes('role') || k.includes('age') || k.includes('race') || 
+          k.includes('abilities') || k.includes('class') || k.includes('trait')
+        )) {
       return 'character';
     }
     
     // Plot detection
-    if (nameL.includes('plot') || 
-        propKeys.some(k => k.includes('storyline') || k.includes('outline') || k.includes('progress'))) {
+    if (nameL.includes('plot') || nameL.includes('story') ||
+        propKeys.some(k => 
+          k.includes('storyline') || k.includes('outline') || k.includes('progress') ||
+          k.includes('arc') || k.includes('narrative')
+        )) {
       return 'plot';
     }
     
     // Chapter detection
-    if (nameL.includes('chapter') || 
-        propKeys.some(k => k.includes('chapter') || k.includes('word count') || k.includes('title chapter'))) {
+    if (nameL.includes('chapter') || nameL.includes('scene') ||
+        propKeys.some(k => 
+          k.includes('chapter') || k.includes('word count') || k.includes('title chapter') ||
+          k.includes('scene') || k.includes('manuscript')
+        )) {
       return 'chapter';
     }
     
     // Location detection
     if (nameL.includes('location') || nameL.includes('world') || nameL.includes('place') ||
-        propKeys.some(k => k.includes('geography') || k.includes('culture') || k.includes('location'))) {
+        nameL.includes('setting') || nameL.includes('geography') ||
+        propKeys.some(k => 
+          k.includes('geography') || k.includes('culture') || k.includes('location') ||
+          k.includes('climate') || k.includes('population') || k.includes('setting')
+        )) {
       return 'location';
     }
     
@@ -175,6 +215,7 @@ export class NotionImportService {
   private mapNotionRecordToImported(page: NotionPage, dbType: ImportedDatabase['type']): ImportedRecord {
     const properties: Record<string, any> = {};
     let name = 'Untitled';
+    let content = '';
 
     // Extract all properties
     Object.entries(page.properties).forEach(([key, value]) => {
@@ -185,12 +226,19 @@ export class NotionImportService {
       if (value.type === 'title' || key.toLowerCase().includes('name') || key.toLowerCase().includes('title')) {
         name = extractedValue || name;
       }
+      
+      // Extract content for description
+      if (key.toLowerCase().includes('content') || key.toLowerCase().includes('description') || 
+          key.toLowerCase().includes('note') || key.toLowerCase().includes('detail')) {
+        content = extractedValue || content;
+      }
     });
 
     return {
       id: page.id,
       name,
       properties,
+      content,
       type: dbType,
     };
   }
@@ -217,22 +265,28 @@ export class NotionImportService {
       };
     } catch (error) {
       console.error(`Failed to import database ${databaseId}:`, error);
-      throw error;
+      throw new Error(`Database import failed: ${error.message}`);
     }
   }
 
   async importFromMultipleDatabases(databaseUrls: string[]): Promise<ImportedDatabase[]> {
     const databaseIds = databaseUrls.map(url => this.extractDatabaseIdFromUrl(url));
     const databases: ImportedDatabase[] = [];
+    const errors: string[] = [];
 
     for (const databaseId of databaseIds) {
       try {
         const database = await this.importFromDatabase(databaseId);
         databases.push(database);
       } catch (error) {
-        console.error(`Failed to import database ${databaseId}:`, error);
-        // Continue with other databases even if one fails
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`Failed to import database ${databaseId}:`, errorMessage);
+        errors.push(`Database ${databaseId}: ${errorMessage}`);
       }
+    }
+
+    if (databases.length === 0 && errors.length > 0) {
+      throw new Error(`All database imports failed:\n${errors.join('\n')}`);
     }
 
     return databases;
@@ -279,8 +333,8 @@ export class DatabaseMapper {
       project_id: projectId,
       name: record.name,
       role: this.mapNotionRoleToApp(props.Role || props.Type || ''),
-      age: props.Age || props['Age '] || '',
-      description: props.content || '',
+      age: this.extractAge(props.Age || props['Age '] || ''),
+      description: record.content || props.Description || '',
       // Map specific character fields
       race: Array.isArray(props.Race || props['Race ']) 
         ? (props.Race || props['Race '])[0] 
@@ -304,7 +358,7 @@ export class DatabaseMapper {
       id: `${projectId}-plot-${record.id}`,
       project_id: projectId,
       name: record.name,
-      description: props.content || '',
+      description: record.content || props.Description || '',
       progress: props.Progress || '',
       storyline: props.Storyline || '',
       stats: props.Stats || '',
@@ -334,18 +388,18 @@ export class DatabaseMapper {
   private static mapNotionRoleToApp(notionRole: string): string {
     const roleMap: Record<string, string> = {
       'Main Character': 'protagonist',
-      'Secondary Character': 'secondary', 
+      'Secondary Character': 'supporting', 
       'Minor Character': 'minor',
-      'Supported Character': 'secondary',
+      'Supported Character': 'supporting',
       'Protagonist': 'protagonist',
       'Antagonist': 'antagonist',
-      'Deuteragonist': 'secondary',
-      'Tertagonists': 'secondary',
-      'Foil Character': 'secondary',
-      'Confidant': 'secondary',
-      'Love Interest': 'secondary',
+      'Deuteragonist': 'supporting',
+      'Tertagonists': 'supporting',
+      'Foil Character': 'supporting',
+      'Confidant': 'supporting',
+      'Love Interest': 'supporting',
     };
-    return roleMap[notionRole] || 'other';
+    return roleMap[notionRole] || 'minor';
   }
 
   private static mapNotionStatusToApp(notionStatus: string): string {
@@ -357,5 +411,11 @@ export class DatabaseMapper {
       'Done': 'completed',
     };
     return statusMap[notionStatus] || 'not_started';
+  }
+
+  private static extractAge(ageStr: string): number | undefined {
+    if (!ageStr) return undefined;
+    const match = ageStr.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : undefined;
   }
 }
