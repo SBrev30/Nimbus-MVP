@@ -3,7 +3,7 @@ import { Handle, Position } from 'reactflow';
 import { BaseCanvasNode, withCanvasComponent, BaseCanvasComponentProps } from '../core/BaseCanvasComponent';
 import { useCanvasPlanningData } from '../../../hooks/useCanvasPlanningData';
 import { CharacterPopup } from '../CharacterPopup';
-import { User, Heart, Atom, ChevronDown, X, Search, Link, Edit } from 'lucide-react';
+import { User, Heart, Atom, ChevronDown, X, Search, Edit } from 'lucide-react';
 
 export interface CharacterNodeData {
   name: string;
@@ -34,7 +34,6 @@ interface CharacterNodeProps extends BaseCanvasComponentProps {
   isEditing?: boolean;
   hasChanges?: boolean;
   onDataChange?: (field: string, value: any) => void; // HOC provides this format
-  onConnect?: (nodeId: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -46,7 +45,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   isEditing,
   hasChanges,
   onDataChange,
-  onConnect,
   onEdit,
   onDelete
 }) => {
@@ -54,8 +52,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   const [showPopup, setShowPopup] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [searchQuery, setSearchQuery] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false);
-  
+    
   const dropdownRef = useRef<HTMLDivElement>(null);
   const atomButtonRef = useRef<HTMLButtonElement>(null);
   const { planningCharacters, loading, refreshCharacters, error: planningError } = useCanvasPlanningData();
@@ -165,12 +162,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       return;
     }
     
-    if (isConnecting) {
-      // Cancel connection mode
-      setIsConnecting(false);
-      return;
-    }
-
     if (data.fromPlanning && !isEditing) {
       const rect = event.currentTarget.getBoundingClientRect();
       setPopupPosition({
@@ -190,20 +181,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
       onDataChange('planningId', undefined);
     }
   }, [onDataChange]);
-
-  const handleConnectButtonClick = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    event.preventDefault();
-    
-    console.log('🔗 Connect button clicked for character:', data.name);
-    
-    if (onConnect) {
-      setIsConnecting(true);
-      onConnect(id);
-    } else {
-      console.warn('⚠️ onConnect handler not available');
-    }
-  }, [onConnect, id, data.name]);
 
   const calculateCompleteness = useCallback(() => {
     const requiredFields = ['name', 'role', 'description'];
@@ -259,10 +236,10 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
     <>
       <div 
         className={`rounded-lg p-3 min-w-[200px] max-w-[280px] shadow-sm relative transition-all hover:shadow-md ${
-          isConnecting ? 'ring-2 ring-blue-400 bg-blue-50' : ''
-        } ${selected ? 'ring-2 ring-purple-400 ring-offset-2' : ''} ${getRoleColor(data.role)}`}
+          selected ? 'ring-2 ring-purple-400 ring-offset-2' : ''
+        } ${getRoleColor(data.role)}`}
         onClick={handleNodeClick}
-        style={{ cursor: isConnecting ? 'crosshair' : 'pointer' }}
+        style={{ cursor: 'pointer' }}
       >
         <Handle type="target" position={Position.Top} className="w-2 h-2" />
         
@@ -400,19 +377,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
 
         {/* Action Buttons */}
         <div className="character-actions mt-3 flex gap-2">
-          <button 
-            onClick={handleConnectButtonClick}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
-              isConnecting 
-                ? 'bg-blue-200 text-blue-800' 
-                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-            }`}
-            title={isConnecting ? 'Click another node to connect' : 'Create connection'}
-          >
-            <Link size={10} />
-            {isConnecting ? 'Connecting...' : 'Connect'}
-          </button>
-
           {data.fromPlanning && onEdit && (
             <button 
               onClick={(e) => {
