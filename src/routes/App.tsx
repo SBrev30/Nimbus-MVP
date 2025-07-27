@@ -106,11 +106,13 @@ function AppContent() {
   const [activeView, setActiveView] = useState('write');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
-  const [currentChapter, setCurrentChapter] = useState<{ id: string; title: string } | null>(null);
+  
+  // FIX: Updated currentChapter type to include number
+  const [currentChapter, setCurrentChapter] = useState<{ id: string; title: string; number?: number } | null>(null);
   const [editorLoading, setEditorLoading] = useState(false);
   const [showAuthPage, setShowAuthPage] = useState(false);
   
-  // Add project state for plot management - THIS IS THE KEY FIX
+  // Add project state for plot management
   const [currentProject, setCurrentProject] = useState<{ id: string; title: string } | null>(null);
   
   // Editor content state
@@ -174,11 +176,12 @@ function AppContent() {
     }
   }, []);
 
+  // FIX: Updated handleSelectChapter to include chapter number
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
     setEditorLoading(true);
-    setCurrentChapter({ id: chapterId, title: chapterTitle });
     setActiveView('editor');
 
+    // Save current chapter content before switching
     if (currentChapter) {
       setChapterContents(prev => ({
         ...prev,
@@ -186,9 +189,17 @@ function AppContent() {
       }));
     }
 
+    // Fetch full chapter details to get the orderIndex (chapter number)
     chapterService.getChapter(chapterId)
       .then(chapter => {
         if (chapter) {
+          // Set chapter with number included - THIS IS THE KEY FIX
+          setCurrentChapter({ 
+            id: chapterId, 
+            title: chapter.title,
+            number: chapter.orderIndex // This fixes "Chapter Unknown"
+          });
+          
           const chapterContent = {
             title: chapter.title,
             content: chapter.content || '<p>Start writing your chapter here...</p>',
@@ -202,6 +213,13 @@ function AppContent() {
             [chapterId]: chapterContent
           }));
         } else {
+          // Fallback if chapter not found
+          setCurrentChapter({ 
+            id: chapterId, 
+            title: chapterTitle,
+            number: undefined // No number available
+          });
+          
           const existingContent = chapterContents[chapterId];
           const fallbackContent = existingContent || {
             title: chapterTitle,
@@ -215,6 +233,13 @@ function AppContent() {
       })
       .catch(error => {
         console.error('Error fetching chapter:', error);
+        
+        // Set chapter without number on error
+        setCurrentChapter({ 
+          id: chapterId, 
+          title: chapterTitle,
+          number: undefined
+        });
         
         const existingContent = chapterContents[chapterId];
         const fallbackContent = existingContent || {
@@ -617,7 +642,7 @@ function AppContent() {
             </div>
           </div>
         );
-
+        
       case 'help':
         return (
           <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
