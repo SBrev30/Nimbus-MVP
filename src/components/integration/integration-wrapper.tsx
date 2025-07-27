@@ -2,7 +2,7 @@
 
 import React, { Suspense } from 'react';
 import { IntegrationErrorBoundary } from './integration-error-boundary';
-import Integration from './Integration';
+import Integration from '../Integration';
 
 // Loading component for the integration page
 function IntegrationLoading() {
