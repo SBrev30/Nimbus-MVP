@@ -29,7 +29,7 @@ import { useCanvasConnections } from '../hooks/useCanvasConnections';
 // Import enhanced components
 import { EnhancedCanvasToolbar } from './canvas/toolbar/EnhancedCanvasToolbar';
 import { CharacterPopup } from './canvas/CharacterPopup';
-import { Integration } from './Integration';
+import Integration from './Integration';
 import { ConnectionControls } from './canvas/connection-controls';
 
 // Import node types from index file
