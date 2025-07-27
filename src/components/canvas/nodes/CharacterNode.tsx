@@ -7,7 +7,7 @@ import { User, Heart, Atom, ChevronDown, X, Search, Edit } from 'lucide-react';
 
 export interface CharacterNodeData {
   name: string;
-  role: 'protagonist' | 'antagonist' | 'supporting' | 'other';
+  role: 'protagonist' | 'antagonist' | 'supporting' | 'minor';
   description: string;
   age?: number;
   occupation?: string;
@@ -24,7 +24,7 @@ export interface CharacterNodeData {
   fantasyClass?: string;
   relationships?: Array<{
     characterId: string;
-    type: 'family' | 'friend' | 'enemy' | 'romantic' | 'other';
+    type: 'family' | 'friend' | 'enemy' | 'romantic' | 'minor';
     description: string;
   }>;
 }
@@ -333,7 +333,7 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
               <option value="protagonist">Protagonist</option>
               <option value="antagonist">Antagonist</option>
               <option value="supporting">Supporting</option>
-              <option value="other">Other</option>
+              <option value="minor">Mther</option>
             </select>
             <textarea
               value={data.description || ''}
@@ -543,7 +543,7 @@ export const CharacterNode = withCanvasComponent(CharacterNodeComponent);
 // Default data for new character nodes
 export const defaultCharacterData: CharacterNodeData = {
   name: '',
-  role: 'other',
+  role: 'minor',
   description: '',
   relationships: [],
   fromPlanning: false
