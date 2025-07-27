@@ -185,10 +185,10 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       // Add project filter if projectId exists, otherwise include characters with null project_id
       if (finalProjectId) {
-        query = query.or(`project_id.eq.${finalProjectId},project_id.is.null`);
-      } else {
-        query = query.is('project_id', null);
-      }
+  query = query.eq('project_id', finalProjectId);
+} else {
+  query = query.is('project_id', null);
+}
 
       console.log('Executing characters query...');
       
@@ -510,10 +510,10 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       // Add project filter if projectId exists, otherwise include locations with null project_id
       if (finalProjectId) {
-        query = query.or(`project_id.eq.${finalProjectId},project_id.is.null`);
-      } else {
-        query = query.is('project_id', null);
-      }
+  query = query.eq('project_id', finalProjectId);
+} else {
+  query = query.is('project_id', null);
+}
 
       const { data: locations, error: locationsError } = await query.order('name');
 
