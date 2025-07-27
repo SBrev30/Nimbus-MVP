@@ -162,65 +162,65 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
- useEffect(() => {
-  setHasChanges(true);
-  if (nodes.length === 0 && edges.length === 0) {
-    setHasChanges(false);
-  }
-}, [nodes, edges]);
-
-// Cleanup Old Canvas Data
-useEffect(() => {
-  // Clean up nodes with invalid roles
-  const updatedNodes = nodes.map(node => {
-    if (node.type === 'character' && node.data.role === 'other') {
-      console.log(`🔧 Fixing invalid role 'other' to 'minor' for character: ${node.data.name}`);
-      return {
-        ...node,
-        data: { ...node.data, role: 'minor' }
-      };
+  useEffect(() => {
+    setHasChanges(true);
+    if (nodes.length === 0 && edges.length === 0) {
+      setHasChanges(false);
     }
-    return node;
-  });
-  
-  // Only update if changes were made
-  const hasInvalidRoles = updatedNodes.some((node, i) => node !== nodes[i]);
-  if (hasInvalidRoles) {
-    console.log('🔧 Cleaning up character nodes with invalid roles');
-    setNodes(updatedNodes);
-  }
-}, [nodes, setNodes]);
+  }, [nodes, edges]);
 
-// Debug planning data
-useEffect(() => {
-  console.log('Canvas: Planning data updated:', {
-    characters: planningData.planningCharacters.length,
-    plotThreads: planningData.plotThreads.length,
-    locations: planningData.planningLocations.length,
-    characterRelationships: planningData.characterRelationships?.length || 0,
-    autoEdgesCount: autoEdges.length,
-    loading: planningData.loading,
-    error: planningData.error
-  });
-}, [planningData.planningCharacters, planningData.plotThreads, planningData.planningLocations, planningData.characterRelationships, autoEdges.length, planningData.loading, planningData.error]);
-
-useEffect(() => {
-  const loadCanvasData = async () => {
-    try {
-      const savedData = await loadData();
-      if (savedData?.nodes && savedData?.edges) {
-        setNodes(savedData.nodes);
-        // Separate user edges from auto edges when loading
-        const savedUserEdges = savedData.edges.filter((edge: any) => !edge.data?.source || edge.data.source === 'user_created');
-        setUserEdges(savedUserEdges);
-        setHasChanges(false);
+  // Cleanup Old Canvas Data
+  useEffect(() => {
+    // Clean up nodes with invalid roles
+    const updatedNodes = nodes.map(node => {
+      if (node.type === 'character' && node.data.role === 'other') {
+        console.log(`🔧 Fixing invalid role 'other' to 'minor' for character: ${node.data.name}`);
+        return {
+          ...node,
+          data: { ...node.data, role: 'minor' }
+        };
       }
-    } catch (error) {
-      console.error('Failed to load canvas data:', error);
+      return node;
+    });
+    
+    // Only update if changes were made
+    const hasInvalidRoles = updatedNodes.some((node, i) => node !== nodes[i]);
+    if (hasInvalidRoles) {
+      console.log('🔧 Cleaning up character nodes with invalid roles');
+      setNodes(updatedNodes);
     }
-  };
-  loadCanvasData();
-}, [loadData, setNodes]);
+  }, [nodes, setNodes]);
+
+  // Debug planning data
+  useEffect(() => {
+    console.log('Canvas: Planning data updated:', {
+      characters: planningData.planningCharacters.length,
+      plotThreads: planningData.plotThreads.length,
+      locations: planningData.planningLocations.length,
+      characterRelationships: planningData.characterRelationships?.length || 0,
+      autoEdgesCount: autoEdges.length,
+      loading: planningData.loading,
+      error: planningData.error
+    });
+  }, [planningData.planningCharacters, planningData.plotThreads, planningData.planningLocations, planningData.characterRelationships, autoEdges.length, planningData.loading, planningData.error]);
+
+  useEffect(() => {
+    const loadCanvasData = async () => {
+      try {
+        const savedData = await loadData();
+        if (savedData?.nodes && savedData?.edges) {
+          setNodes(savedData.nodes);
+          // Separate user edges from auto edges when loading
+          const savedUserEdges = savedData.edges.filter((edge: any) => !edge.data?.source || edge.data.source === 'user_created');
+          setUserEdges(savedUserEdges);
+          setHasChanges(false);
+        }
+      } catch (error) {
+        console.error('Failed to load canvas data:', error);
+      }
+    };
+    loadCanvasData();
+  }, [loadData, setNodes]);
 
   // Handle opening integrations modal
   const handleOpenIntegrations = useCallback(() => {
@@ -242,10 +242,10 @@ useEffect(() => {
   const nodeTypes: NodeTypes = useMemo(() => {
     console.log('🎨 Registering ALL node types with enhanced handlers');
     
-    const enhancedTypes: NodeTypes = {};
+    const nodeTypeRegistry: NodeTypes = {};
     
     // ✅ PLANNING INTEGRATION NODES - Pass projectId for planning data access
-    enhancedTypes.character = (props: any) => {
+    nodeTypeRegistry.character = (props: any) => {
       console.log('🎭 Rendering CharacterNode with planning integration:', props.id);
       return (
         <CharacterNode
@@ -259,7 +259,7 @@ useEffect(() => {
       );
     };
     
-    enhancedTypes.plot = (props: any) => {
+    nodeTypeRegistry.plot = (props: any) => {
       console.log('📖 Rendering PlotNode with planning integration:', props.id);
       return (
         <PlotNode
@@ -273,7 +273,7 @@ useEffect(() => {
       );
     };
     
-    enhancedTypes.location = (props: any) => {
+    nodeTypeRegistry.location = (props: any) => {
       console.log('🗺️ Rendering LocationNode with planning integration:', props.id);
       return (
         <LocationNode
@@ -288,7 +288,7 @@ useEffect(() => {
     };
     
     // ✅ BASIC NODES - Standard implementation without planning integration
-    enhancedTypes.theme = (props: any) => {
+    nodeTypeRegistry.theme = (props: any) => {
       console.log('🎨 Rendering ThemeNode (basic):', props.id);
       return (
         <ThemeNode
@@ -301,7 +301,7 @@ useEffect(() => {
       );
     };
     
-    enhancedTypes.conflict = (props: any) => {
+    nodeTypeRegistry.conflict = (props: any) => {
       console.log('⚔️ Rendering ConflictNode (basic):', props.id);
       return (
         <ConflictNode
@@ -314,7 +314,7 @@ useEffect(() => {
       );
     };
     
-    enhancedTypes.timeline = (props: any) => {
+    nodeTypeRegistry.timeline = (props: any) => {
       console.log('📅 Rendering TimelineNode (basic):', props.id);
       return (
         <TimelineNode
@@ -327,7 +327,7 @@ useEffect(() => {
       );
     };
     
-    enhancedTypes.research = (props: any) => {
+    nodeTypeRegistry.research = (props: any) => {
       console.log('📚 Rendering ResearchNode (basic):', props.id);
       return (
         <ResearchNode
@@ -340,7 +340,7 @@ useEffect(() => {
       );
     };
     
-    return enhancedTypes;
+    return nodeTypeRegistry;
   }, [handleNodeDataChange, projectId]);
 
   const createNode = useCallback((type: string) => {
