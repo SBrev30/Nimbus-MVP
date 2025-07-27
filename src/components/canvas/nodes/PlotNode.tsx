@@ -9,7 +9,6 @@ import {
   X,
   Search,
   Atom,
-  Brain,
   Edit
 } from 'lucide-react';
 import { BaseCanvasComponentProps, withCanvasComponent } from '../core/BaseCanvasComponent';
@@ -46,7 +45,6 @@ interface PlotNodeProps extends BaseCanvasComponentProps {
   isEditing?: boolean;
   hasChanges?: boolean;
   onDataChange?: (field: string, value: any) => void; // HOC provides this format
-  onAnalyzeAI?: (plotId: string) => void;
   onConnect?: (nodeId: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -59,7 +57,6 @@ const PlotNodeComponent: React.FC<PlotNodeProps> = ({
   isEditing,
   hasChanges,
   onDataChange,
-  onAnalyzeAI,
   onConnect,
   onEdit,
   onDelete
@@ -470,20 +467,6 @@ const PlotNodeComponent: React.FC<PlotNodeProps> = ({
 
           {/* Action Buttons */}
           <div className="flex gap-2 mt-3">
-            {onAnalyzeAI && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAnalyzeAI(id);
-                }}
-                className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
-                title="AI Analyze Plot"
-              >
-                <Brain size={10} />
-                AI
-              </button>
-            )}
-            
             <button 
               onClick={handleConnectButtonClick}
               className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
