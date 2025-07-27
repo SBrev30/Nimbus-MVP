@@ -3,7 +3,7 @@ import { Handle, Position } from 'reactflow';
 import { BaseCanvasNode, withCanvasComponent, BaseCanvasComponentProps } from '../core/BaseCanvasComponent';
 import { useCanvasPlanningData } from '../../../hooks/useCanvasPlanningData';
 import { CharacterPopup } from '../CharacterPopup';
-import { User, Heart, Brain, Atom, ChevronDown, X, Search, Link, Edit } from 'lucide-react';
+import { User, Heart, Atom, ChevronDown, X, Search, Link, Edit } from 'lucide-react';
 
 export interface CharacterNodeData {
   name: string;
@@ -34,7 +34,6 @@ interface CharacterNodeProps extends BaseCanvasComponentProps {
   isEditing?: boolean;
   hasChanges?: boolean;
   onDataChange?: (field: string, value: any) => void; // HOC provides this format
-  onAnalyzeAI?: (characterId: string) => void;
   onConnect?: (nodeId: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -47,7 +46,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
   isEditing,
   hasChanges,
   onDataChange,
-  onAnalyzeAI,
   onConnect,
   onEdit,
   onDelete
@@ -402,20 +400,6 @@ const CharacterNodeComponent: React.FC<CharacterNodeProps> = ({
 
         {/* Action Buttons */}
         <div className="character-actions mt-3 flex gap-2">
-          {onAnalyzeAI && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAnalyzeAI(id);
-              }}
-              className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
-              title="AI Analyze Character"
-            >
-              <Brain size={10} />
-              AI
-            </button>
-          )}
-          
           <button 
             onClick={handleConnectButtonClick}
             className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
