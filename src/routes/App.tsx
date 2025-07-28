@@ -42,6 +42,7 @@ import { OutlinePage } from '../components/planning/OutlinePage';
 import { PlotPage } from '../components/planning/plot-page';
 import { CharactersPage } from '../components/planning/CharactersPage';
 import { WorldBuildingPage } from '../components/planning/WorldBuildingPage';
+import { Library } from '../components/Library';
 
 // Import help components
 import { HelpTopicsPage } from '../components/help/HelpTopicsPage';
@@ -302,24 +303,64 @@ function AppContent() {
   }, []);
 
   // Navigation handlers
-  const handleBackToSettings = useCallback(() => setActiveView('settings'), []);
-  const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
-  const handleBackToWrite = useCallback(() => setActiveView('write'), []);
-  const handleBackToProjects = useCallback(() => {
-    if (currentChapter) {
-      setChapterContents(prev => ({
-        ...prev,
-        [currentChapter.id]: editorContent
-      }));
-    }
-    setCurrentChapter(null);
-    setActiveView('projects');
-  }, [currentChapter, editorContent, setChapterContents]);
+const handleBackToSettings = useCallback(() => setActiveView('settings'), []);
+const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
+const handleBackToWrite = useCallback(() => setActiveView('write'), []);
+const handleBackToProjects = useCallback(() => {
+  if (currentChapter) {
+    setChapterContents(prev => ({
+      ...prev,
+      [currentChapter.id]: editorContent
+    }));
+  }
+  setCurrentChapter(null);
+  setActiveView('projects');
+}, [currentChapter, editorContent, setChapterContents]);
 
-  // Lazy component wrappers with providers
-  const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
-    <Integration onBack={onBack} />
-  ), []);
+// Integration navigation handlers
+const handleIntegrationNavigateToPlanning = useCallback((page: 'characters' | 'plot' | 'world-building' | 'outline', projectId: string) => {
+  console.log(`Navigating to ${page} with project ${projectId}`);
+  // Set the current project with imported data
+  setCurrentProject({ 
+    id: projectId, 
+    title: `Notion Import - ${new Date().toLocaleDateString()}` 
+  });
+  // Navigate to the planning page
+  setActiveView(page);
+}, []);
+
+const handleIntegrationNavigateToCanvas = useCallback((projectId: string) => {
+  console.log(`Navigating to canvas with project ${projectId}`);
+  // Set the current project
+  setCurrentProject({ 
+    id: projectId, 
+    title: `Notion Import - ${new Date().toLocaleDateString()}` 
+  });
+  // Navigate to canvas
+  setActiveView('canvas');
+}, []);
+
+const handleIntegrationNavigateToLibrary = useCallback((projectId: string) => {
+  console.log(`Navigating to library with project ${projectId}`);
+  // Set the current project
+  setCurrentProject({ 
+    id: projectId, 
+    title: `Notion Import - ${new Date().toLocaleDateString()}` 
+  });
+  // Navigate to dashboard which now shows Library with project context
+  setActiveView('dashboard');
+}, []);
+
+// Lazy component wrappers with providers
+const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
+  <Integration 
+    onBack={onBack}
+    onNavigateToPlanning={handleIntegrationNavigateToPlanning}
+    onNavigateToCanvas={handleIntegrationNavigateToCanvas}
+    onNavigateToLibrary={handleIntegrationNavigateToLibrary}
+    onNavigateToProjects={() => setActiveView('projects')}
+  />
+), [handleIntegrationNavigateToPlanning, handleIntegrationNavigateToCanvas, handleIntegrationNavigateToLibrary]);
 
   const HistoryPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
     <History onBack={onBack} />
@@ -398,22 +439,30 @@ function AppContent() {
         );
       
       case 'dashboard':
-        return (
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading Project Dashboard..." />}>
-              <KanbanApp />
-            </Suspense>
-          </ErrorBoundary>
-        );
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingSpinner message="Loading Project Dashboard..." />}>
+        {currentProject ? (
+          <Library projectId={currentProject.id} />
+        ) : (
+          <KanbanApp />
+        )}
+      </Suspense>
+    </ErrorBoundary>
+  );
 
       case 'files':
-        return (
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading Files..." />}>
-              <Files onBack={handleBackToWrite} />
-            </Suspense>
-          </ErrorBoundary>
-        );
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingSpinner message="Loading Files..." />}>
+        {currentProject ? (
+          <Library projectId={currentProject.id} />
+        ) : (
+          <Files onBack={handleBackToWrite} />
+        )}
+      </Suspense>
+    </ErrorBoundary>
+  );
 
       // Planning pages
       case 'outline':
@@ -742,6 +791,9 @@ case 'integrations':
     handleBackToProjects,
     handleViewChange,
     handleSignOut,
+  handleIntegrationNavigateToPlanning,  // ADD THIS
+  handleIntegrationNavigateToCanvas,    // ADD THIS
+  handleIntegrationNavigateToLibrary,   // ADD THIS
     IntegrationPageWithProvider,
     HistoryPageWithProvider,
     editorLoading,
