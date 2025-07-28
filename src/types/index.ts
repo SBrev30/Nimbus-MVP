@@ -7,6 +7,11 @@ export interface Note {
   updatedAt: Date;
 }
 
+export interface DeletedNote extends Note {
+  deletedAt: Date;
+  deletedReason?: string;
+}
+
 export interface EditorContent {
   title: string;
   content: string;
