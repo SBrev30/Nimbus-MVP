@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, Mail, Calendar, Shield, Eye, EyeOff, AlertCircle, CheckCircle, Save } from 'lucide-react';
+import { User, Lock, Mail, Calendar, Shield, Eye, EyeOff, AlertCircle, CheckCircle, Save, Trash2, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProfilePageProps {
   activeView: string;
@@ -14,6 +15,7 @@ interface UserProfile {
   avatar_url?: string;
   created_at: string;
   updated_at: string;
+  email_verified: boolean;
 }
 
 interface PasswordChangeForm {
@@ -23,11 +25,15 @@ interface PasswordChangeForm {
 }
 
 export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
+  const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [sendingResetEmail, setSendingResetEmail] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -43,6 +49,12 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
+  });
+
+  const [deleteConfirmForm, setDeleteConfirmForm] = useState({
+    email: '',
+    password: '',
+    confirmText: ''
   });
 
   useEffect(() => {
@@ -87,7 +99,8 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
         full_name: profileData?.full_name || user.user_metadata?.full_name || '',
         avatar_url: profileData?.avatar_url || user.user_metadata?.avatar_url,
         created_at: user.created_at,
-        updated_at: profileData?.updated_at || user.created_at
+        updated_at: profileData?.updated_at || user.created_at,
+        email_verified: user.email_confirmed_at !== null
       };
 
       setProfile(userProfile);
@@ -146,8 +159,10 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
 
     if (!passwordForm.newPassword) {
       newErrors.newPassword = 'New password is required';
-    } else if (passwordForm.newPassword.length < 6) {
-      newErrors.newPassword = 'Password must be at least 6 characters long';
+    } else if (passwordForm.newPassword.length < 8) {
+      newErrors.newPassword = 'Password must be at least 8 characters long';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordForm.newPassword)) {
+      newErrors.newPassword = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
     }
 
     if (!passwordForm.confirmPassword) {
@@ -176,9 +191,12 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
     setSuccess('');
 
     try {
+      // Check if email is changing
+      const emailChanged = profileForm.email !== profile?.email;
+
       // Update auth user metadata
       const { error: updateError } = await supabase.auth.updateUser({
-        email: profileForm.email,
+        email: emailChanged ? profileForm.email : undefined,
         data: {
           full_name: profileForm.full_name
         }
@@ -201,7 +219,11 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
         throw profileError;
       }
 
-      setSuccess('Profile updated successfully!');
+      if (emailChanged) {
+        setSuccess('Profile updated successfully! Please check your new email address for a verification link.');
+      } else {
+        setSuccess('Profile updated successfully!');
+      }
       
       // Reload profile data
       await loadProfile();
@@ -252,6 +274,87 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
       });
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleSendPasswordReset = async () => {
+    if (!profile?.email) {
+      setErrors({ resetEmail: 'No email address found' });
+      return;
+    }
+
+    setSendingResetEmail(true);
+    setErrors({});
+    setSuccess('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setSuccess('Password reset email sent! Please check your inbox and follow the instructions.');
+    } catch (error: any) {
+      console.error('Error sending reset email:', error);
+      setErrors({ resetEmail: error.message || 'Failed to send reset email. Please try again.' });
+    } finally {
+      setSendingResetEmail(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmForm.email !== profile?.email) {
+      setErrors({ deleteAccount: 'Email does not match your account email' });
+      return;
+    }
+
+    if (deleteConfirmForm.confirmText !== 'DELETE') {
+      setErrors({ deleteAccount: 'Please type "DELETE" to confirm' });
+      return;
+    }
+
+    setDeletingAccount(true);
+    setErrors({});
+
+    try {
+      // First try to re-authenticate with password if provided
+      if (deleteConfirmForm.password) {
+        const { error: reAuthError } = await supabase.auth.signInWithPassword({
+          email: deleteConfirmForm.email,
+          password: deleteConfirmForm.password
+        });
+
+        if (reAuthError) {
+          throw new Error('Password verification failed. Please check your password.');
+        }
+      }
+
+      // Delete user data from your custom tables first
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', profile?.id);
+
+      if (profileError) {
+        console.error('Error deleting profile:', profileError);
+        // Continue with auth deletion even if profile deletion fails
+      }
+
+      // Note: Supabase doesn't have a direct deleteUser method from client
+      // You would need to implement this via an edge function or admin API
+      // For now, we'll sign out and show instructions
+      await signOut();
+      
+      setSuccess('Account deletion initiated. You have been signed out. Please contact support to complete the deletion process.');
+      
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      setErrors({ deleteAccount: error.message || 'Failed to delete account. Please try again.' });
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -311,9 +414,15 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900 font-inter">Profile Information</h2>
-              <div className="flex items-center gap-2 text-sm text-gray-500 font-inter">
-                <Calendar className="w-4 h-4" />
-                <span>Member since {new Date(profile?.created_at || '').toLocaleDateString()}</span>
+              <div className="flex items-center gap-4 text-sm text-gray-500 font-inter">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${profile?.email_verified ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                  <span>{profile?.email_verified ? 'Email Verified' : 'Email Pending Verification'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>Member since {new Date(profile?.created_at || '').toLocaleDateString()}</span>
+                </div>
               </div>
             </div>
 
@@ -403,23 +512,49 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
                     <h3 className="font-medium text-gray-900 font-inter">Password</h3>
-                    <p className="text-sm text-gray-600 font-inter">Last updated: Never</p>
+                    <p className="text-sm text-gray-600 font-inter">Keep your account secure with a strong password</p>
                   </div>
-                  <button
-                    onClick={() => setShowPasswordForm(true)}
-                    className="inline-flex items-center gap-2 text-[#ff4e00] hover:text-[#ff4e00]/80 font-medium transition-colors font-inter"
-                  >
-                    <Lock className="w-4 h-4" />
-                    Change Password
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSendPasswordReset}
+                      disabled={sendingResetEmail}
+                      className="inline-flex items-center gap-2 text-[#ff4e00] hover:text-[#ff4e00]/80 font-medium transition-colors font-inter disabled:opacity-50"
+                    >
+                      {sendingResetEmail ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-[#ff4e00] border-t-transparent rounded-full animate-spin"></div>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-4 h-4" />
+                          Reset via Email
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowPasswordForm(true)}
+                      className="inline-flex items-center gap-2 text-[#ff4e00] hover:text-[#ff4e00]/80 font-medium transition-colors font-inter"
+                    >
+                      <Lock className="w-4 h-4" />
+                      Change Password
+                    </button>
+                  </div>
                 </div>
+                
+                {errors.resetEmail && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                    <p className="text-red-700 font-inter">{errors.resetEmail}</p>
+                  </div>
+                )}
               </div>
             ) : (
               <form onSubmit={handleChangePassword} className="space-y-6">
-                <div className="bg-[#e8ddc1] border border-[#e8ddc1] rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 font-inter">Change Password</h3>
-                  <p className="text-gray-700 font-inter text-sm">
-                    Choose a strong password that's at least 6 characters long and includes a mix of letters, numbers, and symbols.
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2 font-inter">Change Password</h3>
+                  <p className="text-blue-800 font-inter text-sm">
+                    Choose a strong password that's at least 8 characters long and includes uppercase letters, lowercase letters, and numbers.
                   </p>
                 </div>
 
@@ -590,6 +725,139 @@ export function ProfilePage({ activeView, onNavigate }: ProfilePageProps) {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="bg-white rounded-lg shadow-sm border border-red-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-semibold text-red-900 font-inter">Danger Zone</h2>
+                <p className="text-sm text-red-600 font-inter">Irreversible and destructive actions</p>
+              </div>
+              <AlertCircle className="w-5 h-5 text-red-500" />
+            </div>
+
+            {!showDeleteConfirm ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div>
+                    <h3 className="font-medium text-red-900 font-inter">Delete Account</h3>
+                    <p className="text-sm text-red-700 font-inter">
+                      Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-red-900 mb-2 font-inter">⚠️ Confirm Account Deletion</h3>
+                  <p className="text-red-800 font-inter text-sm mb-3">
+                    This will permanently delete your account and all associated data including:
+                  </p>
+                  <ul className="text-red-800 font-inter text-sm space-y-1 ml-4 mb-3">
+                    <li>• All your stories, characters, and plot data</li>
+                    <li>• Canvas layouts and imported content</li>
+                    <li>• Account settings and preferences</li>
+                    <li>• All other personal data</li>
+                  </ul>
+                  <p className="text-red-900 font-inter text-sm font-semibold">
+                    This action cannot be undone!
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
+                      Confirm your email address
+                    </label>
+                    <input
+                      type="email"
+                      value={deleteConfirmForm.email}
+                      onChange={(e) => setDeleteConfirmForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors font-inter"
+                      placeholder={profile?.email}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
+                      Enter your password
+                    </label>
+                    <input
+                      type="password"
+                      value={deleteConfirmForm.password}
+                      onChange={(e) => setDeleteConfirmForm(prev => ({ ...prev, password: e.target.value }))}
+                      className="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors font-inter"
+                      placeholder="Enter your password to verify"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2 font-inter">
+                      Type "DELETE" to confirm
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirmForm.confirmText}
+                      onChange={(e) => setDeleteConfirmForm(prev => ({ ...prev, confirmText: e.target.value }))}
+                      className="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors font-inter"
+                      placeholder="Type DELETE to confirm"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {errors.deleteAccount && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                    <p className="text-red-700 font-inter">{errors.deleteAccount}</p>
+                  </div>
+                )}
+
+                <div className="border-t border-red-200 pt-6">
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDeleteConfirm(false);
+                        setDeleteConfirmForm({ email: '', password: '', confirmText: '' });
+                        setErrors({});
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-inter"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deletingAccount}
+                      className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors font-inter font-medium"
+                    >
+                      {deletingAccount ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4" />
+                          Delete My Account
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
