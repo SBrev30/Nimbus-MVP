@@ -8,6 +8,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
+  updatePassword: (password: string) => Promise<{ error: any }>;
   error: string | null;
 }
 
@@ -63,6 +65,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           setUser(session.user);
+          
+          // Create or update user profile
+          if (event === 'SIGNED_IN' || event === 'SIGNED_UP') {
+            try {
+              const { error: profileError } = await supabase
+                .from('user_profiles')
+                .upsert({
+                  id: session.user.id,
+                  full_name: session.user.user_metadata?.full_name || '',
+                  avatar_url: session.user.user_metadata?.avatar_url || null,
+                  updated_at: new Date().toISOString()
+                }, {
+                  onConflict: 'id'
+                });
+
+              if (profileError) {
+                console.error('Error upserting user profile:', profileError);
+              }
+            } catch (error) {
+              console.error('Error handling user profile:', error);
+            }
+          }
         } else {
           setUser(null);
         }
@@ -169,6 +193,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string) => {
+    setError(null);
+    
+    try {
+      if (!email || !email.trim()) {
+        throw new Error('Email address is required');
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) {
+        logSupabaseError(error, 'reset_password');
+        setError(getErrorMessage(error));
+        return { error };
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      logSupabaseError(error, 'reset_password_exception');
+      setError(error.message);
+      return { error };
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    setError(null);
+    
+    try {
+      if (!password || password.length < 8) {
+        throw new Error('Password must be at least 8 characters long');
+      }
+
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+        throw new Error('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) {
+        logSupabaseError(error, 'update_password');
+        setError(getErrorMessage(error));
+        return { error };
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      logSupabaseError(error, 'update_password_exception');
+      setError(error.message);
+      return { error };
+    }
+  };
+
   // Helper function to get user-friendly error messages
   const getErrorMessage = (error: any): string => {
     switch (error.code || error.message) {
@@ -184,10 +268,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return 'Password is too weak. Please choose a stronger password.';
       case 'user_already_exists':
         return 'An account with this email already exists. Try signing in instead.';
+      case 'user_not_found':
+        return 'No account found with this email address. Please check your email or sign up for a new account.';
+      case 'email_address_invalid':
+        return 'Please enter a valid email address.';
+      case 'rate_limit_exceeded':
+        return 'Too many password reset requests. Please wait before trying again.';
       case 'Database error saving new user':
       case 'unexpected_failure':
         return 'Database error occurred. Our team has been notified. Please try again in a few minutes.';
       default:
+        // Handle common auth error patterns
+        if (error.message?.includes('Invalid login credentials')) {
+          return 'Invalid email or password. Please check your credentials and try again.';
+        }
+        if (error.message?.includes('Email not confirmed')) {
+          return 'Please check your email and click the confirmation link before signing in.';
+        }
+        if (error.message?.includes('Password should be at least')) {
+          return 'Password must be at least 8 characters long.';
+        }
+        if (error.message?.includes('rate limit')) {
+          return 'Too many attempts. Please wait a few minutes before trying again.';
+        }
+        
         return error.message || 'An unexpected error occurred. Please try again.';
     }
   };
@@ -198,6 +302,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
     error,
   };
 
