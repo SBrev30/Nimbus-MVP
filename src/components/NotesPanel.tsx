@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Plus, ChevronRight, ChevronLeft, Trash2, MoreHorizontal, AlertCircle, Edit3 } from 'lucide-react';
 import { Note, NoteCategory } from '../types';
+import { useNotes } from '../hooks/use-notes';
 
 interface NotesPanelProps {
-  notes: Note[];
-  onAddNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  onEditNote: (id: string, note: Partial<Note>) => void;
-  onDeleteNote: (id: string) => void;
+  notes?: Note[]; // Legacy prop - now optional since we fetch from database
+  onAddNote?: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => void; // Legacy prop
+  onEditNote?: (id: string, note: Partial<Note>) => void; // Legacy prop
+  onDeleteNote?: (id: string) => void; // Legacy prop
   isCollapsed: boolean;
   onToggleCollapse?: () => void;
 }
@@ -19,87 +20,93 @@ const categories: { label: NoteCategory; active?: boolean }[] = [
   { label: 'Misc' },
 ];
 
-// Sample notes data organized by category
-const sampleNotesByCategory = {
-  All: [
-    { id: '1', content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', date: 'Feb 8, 2021', highlighted: true },
-    { id: '2', content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed at arcu dui.', date: 'Feb 8, 2021' },
-    { id: '3', content: 'Character development notes for the protagonist.', date: 'Feb 7, 2021' },
-    { id: '4', content: 'Plot twist ideas for chapter 5.', date: 'Feb 6, 2021' },
-    { id: '5', content: 'Setting description for the ancient library.', date: 'Feb 5, 2021' },
-  ],
-  Person: [
-    { id: '1', content: 'Sarah Character Profile: Protagonist, age 28, journalist investigating mysterious occurrences.', date: 'Feb 8, 2021', highlighted: true },
-    { id: '2', content: 'Detective Morrison: Gruff exterior, haunted by past case failures.', date: 'Feb 7, 2021' },
-    { id: '3', content: 'Mrs. Henderson: Elderly witness with sharp memory and mysterious past.', date: 'Feb 6, 2021' },
-    { id: '4', content: 'Dr. Webb: Town physician hiding dark secrets about the incidents.', date: 'Feb 5, 2021' },
-    { id: '5', content: 'Tommy: Local teenager who may have witnessed something important.', date: 'Feb 4, 2021' },
-  ],
-  Place: [
-    { id: '1', content: 'The Old Oak Tree: Central location with mystical properties at forest edge.', date: 'Feb 8, 2021', highlighted: true },
-    { id: '2', content: 'Town Square: Where the mysterious events first began occurring.', date: 'Feb 7, 2021' },
-    { id: '3', content: 'Abandoned Mill: Eerie location on the outskirts, potential hideout.', date: 'Feb 6, 2021' },
-    { id: '4', content: 'Local Diner: Information hub where townspeople gather and gossip.', date: 'Feb 5, 2021' },
-    { id: '5', content: 'Cemetery: Ancient burial ground with unexplained phenomena.', date: 'Feb 4, 2021' },
-  ],
-  Plot: [
-    { id: '1', content: 'The Journal Mystery: Sarah discovers journal containing predictions about town events.', date: 'Feb 8, 2021', highlighted: true },
-    { id: '2', content: 'Missing persons pattern: Three disappearances follow lunar calendar.', date: 'Feb 7, 2021' },
-    { id: '3', content: 'Town conspiracy: Local officials covering up supernatural incidents.', date: 'Feb 6, 2021' },
-    { id: '4', content: 'Ancient curse: Town built on sacred indigenous burial ground.', date: 'Feb 5, 2021' },
-    { id: '5', content: 'Time loop theory: Events repeating in 50-year cycles.', date: 'Feb 4, 2021' },
-  ],
-  Misc: [
-    { id: '1', content: 'Research weather patterns for atmospheric storytelling.', date: 'Feb 8, 2021', highlighted: true },
-    { id: '2', content: 'Check historical records of town founding date.', date: 'Feb 7, 2021' },
-    { id: '3', content: 'Interview local folklore expert about regional legends.', date: 'Feb 6, 2021' },
-    { id: '4', content: 'Create timeline of mysterious events over past century.', date: 'Feb 5, 2021' },
-    { id: '5', content: 'Develop soundtrack playlist for writing mood.', date: 'Feb 4, 2021' },
-  ],
-};
-
 export function NotesPanel({ 
-  notes = [], // Default to empty array to prevent undefined errors
-  onAddNote, 
-  onEditNote, 
-  onDeleteNote, 
   isCollapsed, 
   onToggleCollapse 
 }: NotesPanelProps) {
-  const [activeCategory, setActiveCategory] = useState<NoteCategory>('Person');
+  const { 
+    notes: allNotes, 
+    loading, 
+    error, 
+    createNote, 
+    updateNote, 
+    deleteNote: deleteNoteFromDb 
+  } = useNotes();
+
+  const [activeCategory, setActiveCategory] = useState<NoteCategory>('All');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', category: 'Person' as const });
-  const [displayedNotes, setDisplayedNotes] = useState(sampleNotesByCategory.Person);
   const [scrollPercentage, setScrollPercentage] = useState(0);
+  const [editingNote, setEditingNote] = useState<string | null>(null);
+  const [editData, setEditData] = useState({ title: '', content: '' });
+  const [noteMenuOpen, setNoteMenuOpen] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<string | null>(null);
 
-  // Safely filter notes with null check
+  // Filter notes by active category
   const filteredNotes = React.useMemo(() => {
-    if (!notes || !Array.isArray(notes)) {
+    if (!allNotes || !Array.isArray(allNotes)) {
       return [];
     }
     
     return activeCategory === 'All' 
-      ? notes 
-      : notes.filter(note => note.category === activeCategory);
-  }, [notes, activeCategory]);
-
-  // Update displayed notes when category changes
-  useEffect(() => {
-    const categoryNotes = sampleNotesByCategory[activeCategory];
-    setDisplayedNotes(categoryNotes || []);
-  }, [activeCategory]);
+      ? allNotes 
+      : allNotes.filter(note => note.category === activeCategory);
+  }, [allNotes, activeCategory]);
 
   const handleCategoryChange = (category: NoteCategory) => {
     setActiveCategory(category);
-    // Reset scroll position when changing categories
     setScrollPercentage(0);
   };
 
-  const handleAddNote = () => {
-    if (newNote.title.trim() && onAddNote) {
-      onAddNote(newNote);
-      setNewNote({ title: '', content: '', category: activeCategory });
-      setIsAddingNote(false);
+  const handleAddNote = async () => {
+    if (newNote.title.trim() || newNote.content.trim()) {
+      try {
+        await createNote({
+          title: newNote.title.trim(),
+          content: newNote.content.trim(),
+          category: newNote.category as NoteCategory,
+        });
+        setNewNote({ title: '', content: '', category: activeCategory === 'All' ? 'Person' : activeCategory });
+        setIsAddingNote(false);
+      } catch (error) {
+        console.error('Failed to create note:', error);
+      }
+    }
+  };
+
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note.id);
+    setEditData({ title: note.title, content: note.content });
+    setNoteMenuOpen(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingNote && (editData.title.trim() || editData.content.trim())) {
+      try {
+        await updateNote(editingNote, {
+          title: editData.title.trim(),
+          content: editData.content.trim(),
+        });
+        setEditingNote(null);
+        setEditData({ title: '', content: '' });
+      } catch (error) {
+        console.error('Failed to update note:', error);
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingNote(null);
+    setEditData({ title: '', content: '' });
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNoteFromDb(noteId, 'Removed from notes panel');
+      setDeleteConfirmOpen(null);
+      setNoteMenuOpen(null);
+    } catch (error) {
+      console.error('Failed to delete note:', error);
     }
   };
 
@@ -113,6 +120,24 @@ export function NotesPanel({
   const handleToggleCollapse = () => {
     if (onToggleCollapse) {
       onToggleCollapse();
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return `${diffMinutes}m ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays}d ago`;
+    } else {
+      return date.toLocaleDateString();
     }
   };
 
@@ -132,7 +157,7 @@ export function NotesPanel({
   }
 
   const maxNotes = 25;
-  const currentNoteCount = displayedNotes?.length || 0;
+  const currentNoteCount = filteredNotes?.length || 0;
   const hasMaxNotes = currentNoteCount >= maxNotes;
 
   return (
@@ -144,8 +169,9 @@ export function NotesPanel({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsAddingNote(true)}
-              className="w-[14.66px] h-[14.66px] rounded-full bg-[#889096] flex items-center justify-center hover:bg-gray-600 transition-colors"
-              title="Add Note"
+              className="w-[14.66px] h-[14.66px] rounded-full bg-[#889096] flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={hasMaxNotes ? "Maximum notes reached" : "Add Note"}
+              disabled={hasMaxNotes}
             >
               <Plus className="w-3 h-3 text-white" />
             </button>
@@ -182,86 +208,213 @@ export function NotesPanel({
         className="flex-1 overflow-y-auto p-4 space-y-3"
         onScroll={handleScroll}
       >
-        {/* Add Note Form - when adding */}
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded p-3 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* Add Note Form */}
         {isAddingNote && (
-          <div className="bg-white p-4 rounded">
+          <div className="bg-white p-4 rounded border-2 border-[#e8ddc1]">
             <input
               type="text"
-              placeholder="What's on your mind?"
+              placeholder="Note title (optional)"
               value={newNote.title}
               onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
-              className="w-full text-xs text-black bg-transparent border-none outline-none mb-2 font-inter placeholder-gray-400"
+              className="w-full text-sm text-black bg-transparent border-none outline-none mb-2 font-inter placeholder-gray-400"
               autoFocus
             />
             <textarea
-              placeholder="Add your thoughts.."
+              placeholder="What's on your mind?"
               value={newNote.content}
               onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
-              className="w-full text-sm text-[#C6C5C5] bg-transparent border-none outline-none resize-none font-inter placeholder-gray-300"
-              rows={2}
+              className="w-full text-sm text-[#666] bg-transparent border-none outline-none resize-none font-inter placeholder-gray-400"
+              rows={3}
             />
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={handleAddNote}
-                className="text-xs bg-[#e8ddc1] hover:bg-[#e8ddc1]/80 px-3 py-1 rounded transition-colors font-inter"
+            <div className="flex items-center justify-between mt-3">
+              <select
+                value={newNote.category}
+                onChange={(e) => setNewNote({ ...newNote, category: e.target.value as NoteCategory })}
+                className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 font-inter"
               >
-                Save
-              </button>
-              <button
-                onClick={() => setIsAddingNote(false)}
-                className="text-xs text-gray-500 hover:text-gray-700 font-inter"
-              >
-                Cancel
-              </button>
+                <option value="Person">Person</option>
+                <option value="Place">Place</option>
+                <option value="Plot">Plot</option>
+                <option value="Misc">Misc</option>
+              </select>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddNote}
+                  className="text-xs bg-[#e8ddc1] hover:bg-[#e8ddc1]/80 px-3 py-1 rounded transition-colors font-inter"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAddingNote(false);
+                    setNewNote({ title: '', content: '', category: 'Person' });
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700 font-inter"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Display notes based on active category */}
-        {displayedNotes && displayedNotes.length > 0 ? (
-          displayedNotes.map((note, index) => (
-            <div 
-              key={note.id} 
-              className={`p-4 rounded ${
-                note.highlighted ? 'bg-[#e8ddc1]' : 'bg-[#FAF9F9]'
-              }`}
-            >
-              <p className={`text-sm mb-2 font-inter leading-relaxed ${
-                note.highlighted ? 'text-black' : 'text-[#898989]'
-              }`}>
-                {note.content}
-              </p>
-              <p className={`text-xs font-inter ${
-                note.highlighted ? 'text-[#090808]' : 'text-[#898989]'
-              }`}>
-                {note.date}
-              </p>
-            </div>
-          ))
-        ) : (
+        {/* Loading State */}
+        {loading && (
           <div className="text-center py-8">
-            <p className="text-sm text-[#889096] font-inter">
-              No notes in this category yet.
-            </p>
-            <button
-              onClick={() => setIsAddingNote(true)}
-              className="mt-2 text-xs text-[#e8ddc1] hover:underline font-inter"
-            >
-              Add your first note
-            </button>
+            <div className="w-6 h-6 border-2 border-[#889096] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <p className="text-sm text-[#889096] font-inter">Loading notes...</p>
           </div>
         )}
 
-        {/* Show message when max notes reached */}
+        {/* Empty State */}
+        {!loading && filteredNotes.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-sm text-[#889096] font-inter mb-3">
+              {activeCategory === 'All' ? 'No notes yet.' : `No ${activeCategory.toLowerCase()} notes yet.`}
+            </p>
+            {!hasMaxNotes && (
+              <button
+                onClick={() => setIsAddingNote(true)}
+                className="text-xs text-[#e8ddc1] hover:underline font-inter"
+              >
+                Add your first note
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Notes List */}
+        {!loading && filteredNotes.length > 0 && filteredNotes.map((note) => (
+          <div key={note.id} className="relative">
+            {editingNote === note.id ? (
+              /* Edit Mode */
+              <div className="bg-white p-4 rounded border-2 border-blue-200">
+                <input
+                  type="text"
+                  value={editData.title}
+                  onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                  className="w-full text-sm text-black bg-transparent border-none outline-none mb-2 font-inter placeholder-gray-400"
+                  placeholder="Note title (optional)"
+                />
+                <textarea
+                  value={editData.content}
+                  onChange={(e) => setEditData({ ...editData, content: e.target.value })}
+                  className="w-full text-sm text-[#666] bg-transparent border-none outline-none resize-none font-inter"
+                  rows={3}
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={handleSaveEdit}
+                    className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition-colors font-inter"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-xs text-gray-500 hover:text-gray-700 font-inter"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Display Mode */
+              <div className="bg-[#FAF9F9] p-4 rounded relative group">
+                {/* Note Actions Menu */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => setNoteMenuOpen(noteMenuOpen === note.id ? null : note.id)}
+                    className="p-1 rounded hover:bg-gray-200 transition-colors"
+                    title="Note actions"
+                  >
+                    <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {noteMenuOpen === note.id && (
+                    <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded shadow-lg py-1 min-w-[120px] z-50">
+                      <button
+                        onClick={() => handleEditNote(note)}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmOpen(note.id)}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Note Content */}
+                {note.title && (
+                  <h4 className="text-sm font-medium text-black mb-1 font-inter pr-8">
+                    {note.title}
+                  </h4>
+                )}
+                <p className="text-sm text-[#898989] mb-2 font-inter leading-relaxed pr-8">
+                  {note.content}
+                </p>
+                <div className="flex items-center justify-between text-xs text-[#898989] font-inter">
+                  <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                    {note.category}
+                  </span>
+                  <span>{formatDate(note.updatedAt)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmOpen === note.id && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+                  <h3 className="text-lg font-semibold mb-2">Delete Note</h3>
+                  <p className="text-gray-600 mb-4">
+                    Are you sure you want to delete this note? It will be moved to your history and can be restored later.
+                  </p>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => setDeleteConfirmOpen(null)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Max Notes Warning */}
         {hasMaxNotes && (
-          <div className="text-center py-4">
-            <p className="text-xs text-[#889096] font-inter">
-              Maximum notes reached ({maxNotes})
+          <div className="text-center py-4 bg-orange-50 rounded border border-orange-200">
+            <p className="text-xs text-orange-700 font-inter">
+              Maximum notes reached ({maxNotes}). Delete some notes to add more.
             </p>
           </div>
         )}
 
-        {/* Show current count */}
+        {/* Note Count */}
         <div className="text-center py-2">
           <p className="text-xs text-[#889096] font-inter">
             {currentNoteCount} / {maxNotes} notes
@@ -279,6 +432,17 @@ export function NotesPanel({
           }}
         ></div>
       </div>
+
+      {/* Click outside to close menus */}
+      {(noteMenuOpen || deleteConfirmOpen) && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => {
+            setNoteMenuOpen(null);
+            setDeleteConfirmOpen(null);
+          }}
+        />
+      )}
     </div>
   );
 }
