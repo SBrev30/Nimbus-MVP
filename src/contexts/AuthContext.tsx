@@ -32,11 +32,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for active session on mount
     const checkSession = async () => {
       try {
-        // First check database health
-        const isHealthy = await checkDatabaseHealth();
-        if (!isHealthy) {
-          throw new Error('Database connection failed. Please try again later.');
-        }
+        // Run database health check (non-blocking with timeout)
+        checkDatabaseHealth().catch(err => 
+          console.warn('Database health check failed:', err)
+        );
 
         const { data, error } = await supabase.auth.getSession();
         if (error) {
@@ -69,19 +68,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Create or update user profile
           if (event === 'SIGNED_IN' || event === 'SIGNED_UP') {
             try {
+              // FIX: Include email and validate required fields
+              const profileData = {
+                id: session.user.id,
+                email: session.user.email, // ✅ FIXED: Include required email field
+                full_name: session.user.user_metadata?.full_name || '',
+                avatar_url: session.user.user_metadata?.avatar_url || null,
+                updated_at: new Date().toISOString()
+              };
+
+              // Only proceed if we have required fields
+              if (!profileData.email) {
+                console.error('Cannot create user profile: missing email');
+                return;
+              }
+
               const { error: profileError } = await supabase
                 .from('user_profiles')
-                .upsert({
-                  id: session.user.id,
-                  full_name: session.user.user_metadata?.full_name || '',
-                  avatar_url: session.user.user_metadata?.avatar_url || null,
-                  updated_at: new Date().toISOString()
-                }, {
+                .upsert(profileData, {
                   onConflict: 'id'
                 });
 
               if (profileError) {
                 console.error('Error upserting user profile:', profileError);
+              } else {
+                console.log('User profile created/updated successfully');
               }
             } catch (error) {
               console.error('Error handling user profile:', error);
@@ -104,11 +115,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     
     try {
-      // Pre-flight database check
-      const isHealthy = await checkDatabaseHealth();
-      if (!isHealthy) {
-        throw new Error('Database connection failed. Please try again later.');
-      }
+      // Optional: Run health check in background (non-blocking)
+      checkDatabaseHealth().catch(err => 
+        console.warn('Database health check failed during sign in:', err)
+      );
 
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -136,11 +146,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     
     try {
-      // Pre-flight checks
-      const isHealthy = await checkDatabaseHealth();
-      if (!isHealthy) {
-        throw new Error('Database connection failed. Please try again later.');
-      }
+      // Optional: Run health check in background (non-blocking)
+      checkDatabaseHealth().catch(err => 
+        console.warn('Database health check failed during sign up:', err)
+      );
 
       // Validate inputs
       if (!email || !password || !fullName) {
