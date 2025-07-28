@@ -441,11 +441,11 @@ const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => voi
       case 'dashboard':
   return (
     <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner message="Loading Project Dashboard..." />}>
+      <Suspense fallback={<LoadingSpinner message="Loading Library..." />}>
         {currentProject ? (
           <Library projectId={currentProject.id} />
         ) : (
-          <KanbanApp />
+          <Library />  // ✅ Always show Library, even without project
         )}
       </Suspense>
     </ErrorBoundary>
