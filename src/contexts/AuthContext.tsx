@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, checkDatabaseHealth, logSupabaseError } from '../lib/supabase';
+import { supabase, logSupabaseError } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -29,21 +29,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for active session on mount
+    // Check for active session on mount - COMPLETELY NON-BLOCKING
     const checkSession = async () => {
       try {
-        // Run database health check (non-blocking with timeout)
-        checkDatabaseHealth().catch(err => 
-          console.warn('Database health check failed:', err)
-        );
-
+        // NO DATABASE HEALTH CHECK - Just get auth session directly
         const { data, error } = await supabase.auth.getSession();
         if (error) {
+          console.error('Session error:', error);
           throw error;
         }
         
         if (data?.session) {
-          const { data: userData } = await supabase.auth.getUser();
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          if (userError) {
+            console.error('User data error:', userError);
+            throw userError;
+          }
           setUser(userData.user);
         }
       } catch (error: any) {
@@ -51,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logSupabaseError(error, 'session_check');
         setError(error.message);
       } finally {
+        // ALWAYS set loading to false regardless of success/failure
         setLoading(false);
       }
     };
@@ -65,42 +67,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           setUser(session.user);
           
-          // Create or update user profile
+          // Create or update user profile - COMPLETELY OPTIONAL AND NON-BLOCKING
           if (event === 'SIGNED_IN' || event === 'SIGNED_UP') {
-            try {
-              // FIX: Include email and validate required fields
-              const profileData = {
-                id: session.user.id,
-                email: session.user.email, // ✅ FIXED: Include required email field
-                full_name: session.user.user_metadata?.full_name || '',
-                avatar_url: session.user.user_metadata?.avatar_url || null,
-                updated_at: new Date().toISOString()
-              };
-
-              // Only proceed if we have required fields
-              if (!profileData.email) {
-                console.error('Cannot create user profile: missing email');
-                return;
-              }
-
-              const { error: profileError } = await supabase
-                .from('user_profiles')
-                .upsert(profileData, {
-                  onConflict: 'id'
-                });
-
-              if (profileError) {
-                console.error('Error upserting user profile:', profileError);
-              } else {
-                console.log('User profile created/updated successfully');
-              }
-            } catch (error) {
-              console.error('Error handling user profile:', error);
-            }
+            // Run profile creation in background - don't await or block on this
+            createUserProfileInBackground(session.user);
           }
         } else {
           setUser(null);
         }
+        
+        // ALWAYS set loading to false
         setLoading(false);
       }
     );
@@ -110,16 +86,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Background user profile creation - completely non-blocking
+  const createUserProfileInBackground = (user: User) => {
+    // Run this asynchronously without blocking auth
+    setTimeout(async () => {
+      try {
+        if (!user.email) {
+          console.warn('Skipping profile creation - no email available');
+          return;
+        }
+
+        const profileData = {
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || '',
+          avatar_url: user.user_metadata?.avatar_url || null,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .upsert(profileData, {
+            onConflict: 'id'
+          });
+
+        if (profileError) {
+          console.warn('Profile creation failed (non-critical):', profileError);
+        } else {
+          console.log('User profile created/updated successfully');
+        }
+      } catch (error) {
+        console.warn('Background profile creation error (non-critical):', error);
+      }
+    }, 100); // Small delay to ensure auth completes first
+  };
+
   const signIn = async (email: string, password: string) => {
     setError(null);
     setLoading(true);
     
     try {
-      // Optional: Run health check in background (non-blocking)
-      checkDatabaseHealth().catch(err => 
-        console.warn('Database health check failed during sign in:', err)
-      );
-
+      // NO PRE-FLIGHT CHECKS - Direct sign in
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -146,12 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     
     try {
-      // Optional: Run health check in background (non-blocking)
-      checkDatabaseHealth().catch(err => 
-        console.warn('Database health check failed during sign up:', err)
-      );
-
-      // Validate inputs
+      // Validate inputs only - no database checks
       if (!email || !password || !fullName) {
         throw new Error('Please fill in all required fields.');
       }
