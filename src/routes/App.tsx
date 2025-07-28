@@ -442,15 +442,11 @@ const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => voi
   return (
     <ErrorBoundary>
       <Suspense fallback={<LoadingSpinner message="Loading Library..." />}>
-        {currentProject ? (
-          <Library projectId={currentProject.id} />
-        ) : (
-          <Library />  // ✅ Always show Library, even without project
-        )}
+        <Library projectId={currentProject?.id} />
       </Suspense>
     </ErrorBoundary>
   );
-
+        
       case 'files':
   return (
     <ErrorBoundary>
