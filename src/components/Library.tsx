@@ -1,3 +1,5 @@
+// src/components/Library.tsx - FIXED WITH PROJECT FILTERING
+
 import React, { useState, useEffect } from 'react'
 import { Search, Plus, Filter, FileText, Users, BookOpen, Microscope, Tag, Calendar, Trash2, Eye } from 'lucide-react'
 import { supabase, ImportedItem, ItemTag } from '../lib/supabase'
@@ -7,7 +9,13 @@ interface LibraryItem extends ImportedItem {
   tags: ItemTag[]
 }
 
-export function Library() {
+// ADDED: Props interface for project filtering
+interface LibraryProps {
+  projectId?: string;
+}
+
+// UPDATED: Add projectId prop
+export function Library({ projectId }: LibraryProps) {
   const [items, setItems] = useState<LibraryItem[]>([])
   const [filteredItems, setFilteredItems] = useState<LibraryItem[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -24,21 +32,30 @@ export function Library() {
     { value: 'chapter', label: 'Chapters', icon: FileText, count: 0 }
   ]
 
+  // UPDATED: Reload when projectId changes
   useEffect(() => {
     loadItems()
-  }, [])
+  }, [projectId])
 
   useEffect(() => {
     filterItems()
   }, [items, searchQuery, selectedType])
 
+  // UPDATED: Add project filtering to loadItems
   const loadItems = async () => {
     try {
-      // Load items with their tags
-      const { data: itemsData, error: itemsError } = await supabase
+      // FIXED: Build query with optional project filtering
+      let query = supabase
         .from('imported_items')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      // FIXED: Filter by project if projectId provided
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data: itemsData, error: itemsError } = await query;
 
       if (itemsError) throw itemsError
 
@@ -105,16 +122,19 @@ export function Library() {
     }
   }
 
+  // UPDATED: Add project context to canvas items
   const addToCanvas = async (item: LibraryItem) => {
     try {
-      // Add item to canvas with default position
+      const canvasItem = {
+        item_id: item.id,
+        position_x: Math.random() * 400 + 100,
+        position_y: Math.random() * 300 + 100,
+        ...(projectId && { project_id: projectId }) // Add project context if available
+      };
+
       const { error } = await supabase
         .from('canvas_items')
-        .insert({
-          item_id: item.id,
-          position_x: Math.random() * 400 + 100,
-          position_y: Math.random() * 300 + 100
-        })
+        .insert(canvasItem)
 
       if (error) throw error
 
@@ -171,7 +191,15 @@ export function Library() {
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold text-gray-900">Files</h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Files</h1>
+            {/* ADDED: Project context indicator */}
+            {projectId && (
+              <p className="text-sm text-gray-500 mt-1">
+                Showing content for project: {projectId}
+              </p>
+            )}
+          </div>
           <button
             onClick={() => setShowImportWizard(true)}
             className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
@@ -237,7 +265,9 @@ export function Library() {
                 </h3>
                 <p className="text-gray-600 mb-4">
                   {items.length === 0 
-                    ? 'Import your first document to get started'
+                    ? projectId 
+                      ? 'No content has been imported for this project yet'
+                      : 'Import your first document to get started'
                     : 'Try adjusting your search or filters'
                   }
                 </p>
@@ -272,6 +302,13 @@ export function Library() {
                               <Calendar className="w-4 h-4" />
                               {formatDate(item.created_at)}
                             </span>
+                            {/* ADDED: Show import source */}
+                            {item.imported_from && (
+                              <span className="flex items-center gap-1">
+                                <Tag className="w-4 h-4" />
+                                From {item.imported_from}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
