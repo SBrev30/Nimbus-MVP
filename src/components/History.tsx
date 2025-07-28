@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Edit, Plus, Trash2, FileText, User, MapPin, Zap } from 'lucide-react';
+import { Clock, Edit, Plus, Trash2, FileText, User, MapPin, Zap, RotateCcw, X } from 'lucide-react';
 import { SimpleSearchFilter, useSimpleFilter } from './shared/simple-search-filter';
+import { useNotes } from '../hooks/use-notes';
+import { DeletedNote } from '../services/notes-service';
 
 interface HistoryEntry {
   id: string;
@@ -13,6 +15,8 @@ interface HistoryEntry {
     wordCountChange?: number;
     charactersAffected?: string[];
     tagsModified?: string[];
+    category?: string;
+    content?: string;
   };
 }
 
@@ -24,6 +28,10 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [showDeletedNotes, setShowDeletedNotes] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<DeletedNote | null>(null);
+
+  const { deletedNotes, restoreNote, permanentlyDeleteNote, refreshDeletedNotes } = useNotes();
 
   // Define filter options for activity types
   const typeFilterOptions = [
@@ -81,12 +89,14 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
 
   useEffect(() => {
     loadHistoryData();
-  }, []);
+    refreshDeletedNotes();
+  }, [refreshDeletedNotes]);
 
   const loadHistoryData = async () => {
     setIsLoading(true);
     
     // Simulate loading from local storage or API
+    // In a real implementation, this would load from your history_entries table
     const mockHistory: HistoryEntry[] = [
       {
         id: '1',
@@ -133,21 +143,51 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
           wordCountChange: 523
         }
       },
-      {
-        id: '5',
-        type: 'delete',
-        target: 'character',
-        title: 'Thomas the Merchant',
-        description: 'Removed minor character - merged with existing character',
-        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      }
     ];
+
+    // Add deleted notes to history
+    const noteHistoryEntries: HistoryEntry[] = deletedNotes.map(note => ({
+      id: `note-${note.id}`,
+      type: 'delete' as const,
+      target: 'note' as const,
+      title: note.title || 'Untitled Note',
+      description: `Deleted note from ${note.category} category${note.deletedReason ? `: ${note.deletedReason}` : ''}`,
+      timestamp: note.deletedAt,
+      details: {
+        category: note.category,
+        content: note.content?.substring(0, 100) + (note.content && note.content.length > 100 ? '...' : ''),
+      }
+    }));
+
+    const allHistory = [...mockHistory, ...noteHistoryEntries];
 
     // Simulate network delay
     setTimeout(() => {
-      setHistoryEntries(mockHistory);
+      setHistoryEntries(allHistory);
       setIsLoading(false);
     }, 800);
+  };
+
+  const handleRestoreNote = async (noteId: string) => {
+    try {
+      await restoreNote(noteId);
+      await refreshDeletedNotes();
+      await loadHistoryData(); // Refresh history to remove restored note
+      setSelectedNote(null);
+    } catch (error) {
+      console.error('Failed to restore note:', error);
+    }
+  };
+
+  const handlePermanentDelete = async (noteId: string) => {
+    try {
+      await permanentlyDeleteNote(noteId);
+      await refreshDeletedNotes();
+      await loadHistoryData(); // Refresh history to remove permanently deleted note
+      setSelectedNote(null);
+    } catch (error) {
+      console.error('Failed to permanently delete note:', error);
+    }
   };
 
   const getIcon = (type: HistoryEntry['type'], target: HistoryEntry['target']) => {
@@ -210,6 +250,11 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
     }
   };
 
+  const getDeletedNoteFromId = (entryId: string): DeletedNote | undefined => {
+    const noteId = entryId.replace('note-', '');
+    return deletedNotes.find(note => note.id === noteId);
+  };
+
   return (
     <div className="flex-1 bg-[#f2eee2] rounded-t-[17px] overflow-hidden flex flex-col">
       {/* Header */}
@@ -217,11 +262,11 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Activity History</h1>
-            <p className="text-gray-600 mt-1">Track your writing progress and changes</p>
+            <p className="text-gray-600 mt-1">Track your writing progress and recover deleted notes</p>
           </div>
           <button
             onClick={onBack}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-gray rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00] text-white rounded-lg transition-colors"
           >
             Back to Settings
           </button>
@@ -257,6 +302,18 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
               <option value="month">Past month</option>
             </select>
           </div>
+
+          {/* Show Deleted Notes Toggle */}
+          <button
+            onClick={() => setShowDeletedNotes(!showDeletedNotes)}
+            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
+              showDeletedNotes 
+                ? 'bg-blue-500 text-white border-blue-500' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            {showDeletedNotes ? 'Hide' : 'Show'} Deleted Notes ({deletedNotes.length})
+          </button>
 
           <div className="text-sm text-gray-500">
             {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'}
@@ -343,14 +400,44 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
                             </span>
                           )}
                           
-                          {entry.details.tagsModified && (
+                          {entry.details.category && (
                             <span className="flex items-center space-x-1">
                               <span className="w-3 h-3 text-center">#</span>
-                              <span>
-                                Tags: {entry.details.tagsModified.join(', ')}
-                              </span>
+                              <span>Category: {entry.details.category}</span>
                             </span>
                           )}
+
+                          {entry.details.content && (
+                            <span className="flex items-center space-x-1">
+                              <FileText className="w-3 h-3" />
+                              <span>"{entry.details.content}"</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Actions for deleted notes */}
+                      {entry.type === 'delete' && entry.target === 'note' && entry.id.startsWith('note-') && (
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() => {
+                              const noteId = entry.id.replace('note-', '');
+                              handleRestoreNote(noteId);
+                            }}
+                            className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            Restore Note
+                          </button>
+                          <button
+                            onClick={() => {
+                              const deletedNote = getDeletedNoteFromId(entry.id);
+                              if (deletedNote) setSelectedNote(deletedNote);
+                            }}
+                            className="px-3 py-1 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                          >
+                            View Details
+                          </button>
                         </div>
                       )}
                     </div>
@@ -371,9 +458,73 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
         )}
       </div>
 
+      {/* Deleted Note Detail Modal */}
+      {selectedNote && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Deleted Note Details</h3>
+              <button
+                onClick={() => setSelectedNote(null)}
+                className="p-1 rounded hover:bg-gray-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Title:</label>
+                <p className="text-sm text-gray-900">{selectedNote.title || 'Untitled Note'}</p>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700">Category:</label>
+                <span className="ml-2 px-2 py-1 bg-gray-100 text-xs rounded">{selectedNote.category}</span>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700">Content:</label>
+                <div className="mt-1 p-3 bg-gray-50 rounded text-sm text-gray-900 max-h-32 overflow-y-auto">
+                  {selectedNote.content || 'No content'}
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700">Deleted:</label>
+                <p className="text-sm text-gray-600">{formatTimestamp(selectedNote.deletedAt)}</p>
+              </div>
+              
+              {selectedNote.deletedReason && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Reason:</label>
+                  <p className="text-sm text-gray-600">{selectedNote.deletedReason}</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => handleRestoreNote(selectedNote.id)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Restore Note
+              </button>
+              <button
+                onClick={() => handlePermanentDelete(selectedNote.id)}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              >
+                Delete Forever
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary Stats */}
       <div className="border-t border-gray-200 bg-gray-50 p-4">
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-4 gap-4 text-center">
           <div>
             <div className="text-lg font-semibold text-gray-900">
               {historyEntries.filter(e => e.type === 'create').length}
@@ -385,6 +536,12 @@ const History: React.FC<HistoryProps> = ({ onBack }) => {
               {historyEntries.filter(e => e.type === 'edit').length}
             </div>
             <div className="text-sm text-gray-600">Items Edited</div>
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-900">
+              {historyEntries.filter(e => e.type === 'delete' && e.target === 'note').length}
+            </div>
+            <div className="text-sm text-gray-600">Notes Deleted</div>
           </div>
           <div>
             <div className="text-lg font-semibold text-gray-900">
