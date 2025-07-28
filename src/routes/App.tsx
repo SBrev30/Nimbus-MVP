@@ -441,21 +441,17 @@ const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => voi
       case 'dashboard':
   return (
     <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner message="Loading Library..." />}>
-        <Library projectId={currentProject?.id} />
+      <Suspense fallback={<LoadingSpinner message="Loading Project Dashboard..." />}>
+        <KanbanApp />
       </Suspense>
     </ErrorBoundary>
   );
         
-      case 'files':
+case 'files':
   return (
     <ErrorBoundary>
       <Suspense fallback={<LoadingSpinner message="Loading Files..." />}>
-        {currentProject ? (
-          <Library projectId={currentProject.id} />
-        ) : (
-          <Files onBack={handleBackToWrite} />
-        )}
+        <Files onBack={handleBackToWrite} />
       </Suspense>
     </ErrorBoundary>
   );
