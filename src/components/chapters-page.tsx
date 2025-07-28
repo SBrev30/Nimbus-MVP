@@ -1,3 +1,5 @@
+// src/components/chapters-page.tsx - COMPLETE WITH PROJECT FILTERING
+
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
@@ -26,9 +28,10 @@ interface ChapterWithMeta extends Chapter {
   notes?: string;
 }
 
+// UPDATED: Made projectId optional for backward compatibility
 interface ChaptersPageProps {
-  projectId: string;
-  projectTitle: string;
+  projectId?: string;
+  projectTitle?: string;
   onBack: () => void;
   onSelectChapter?: (chapterId: string, chapterTitle: string) => void;
   onCreateChapter?: () => void;
@@ -110,7 +113,7 @@ function ChapterPreviewModal({ chapter, onClose, onEditChapter }: ChapterPreview
 
 export function ChaptersPage({ 
   projectId, 
-  projectTitle, 
+  projectTitle = "Project", 
   onBack, 
   onSelectChapter, 
   onCreateChapter,
@@ -118,9 +121,11 @@ export function ChaptersPage({
 }: ChaptersPageProps) {
   const [chapters, setChapters] = useState<ChapterWithMeta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'order' | 'title' | 'lastModified' | 'wordCount'>('order');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showNewChapterModal, setShowNewChapterModal] = useState(false);
+  const [isCreatingChapter, setIsCreatingChapter] = useState(false);
   const [newChapter, setNewChapter] = useState({
     title: '',
     summary: '',
@@ -173,12 +178,21 @@ export function ChaptersPage({
     }
   });
 
-  // Fetch chapters from Supabase
+  // UPDATED: Fetch chapters with project filtering
   useEffect(() => {
     const fetchChapters = async () => {
       setIsLoading(true);
+      setError(null);
       try {
-        const chaptersData = await chapterService.getProjectChapters(projectId);
+        let chaptersData: Chapter[];
+        
+        // FIXED: Use project filtering if projectId is provided
+        if (projectId) {
+          chaptersData = await chapterService.getProjectChapters(projectId);
+        } else {
+          // Fallback: get all chapters for user
+          chaptersData = await chapterService.getAllChapters();
+        }
         
         // Transform chapters to include additional metadata
         const transformedChapters = chaptersData.map(chapter => ({
@@ -190,25 +204,38 @@ export function ChaptersPage({
         setChapters(transformedChapters);
       } catch (error) {
         console.error('Error fetching chapters:', error);
+        setError('Failed to load chapters. Please try again.');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchChapters();
-  }, [projectId]);
+  }, [projectId]); // FIXED: Re-fetch when projectId changes
 
+  // UPDATED: Create chapter with project context
   const handleCreateChapter = async () => {
+    if (!newChapter.title.trim()) {
+      setError('Chapter title is required');
+      return;
+    }
+
+    setIsCreatingChapter(true);
+    setError(null);
+
     try {
-      const createdChapter = await chapterService.createChapter({
-        projectId,
-        title: newChapter.title,
+      const chapterData = {
+        // FIXED: Include project context if available
+        projectId: projectId || 'default-project',
+        title: newChapter.title.trim(),
         content: '',
-        summary: newChapter.summary,
+        summary: newChapter.summary.trim(),
         wordCount: 0,
         orderIndex: chapters.length + 1,
         status: newChapter.status
-      });
+      };
+
+      const createdChapter = await chapterService.createChapter(chapterData);
       
       if (createdChapter) {
         // Add the new chapter to the list
@@ -230,6 +257,9 @@ export function ChaptersPage({
       }
     } catch (error) {
       console.error('Error creating chapter:', error);
+      setError('Failed to create chapter. Please try again.');
+    } finally {
+      setIsCreatingChapter(false);
     }
   };
 
@@ -247,6 +277,7 @@ export function ChaptersPage({
         }
       } catch (error) {
         console.error('Error deleting chapter:', error);
+        setError('Failed to delete chapter. Please try again.');
       }
     }
     setShowChapterMenu(null);
@@ -260,25 +291,31 @@ export function ChaptersPage({
       }
     } catch (error) {
       console.error('Error updating chapter status:', error);
+      setError('Failed to update chapter status. Please try again.');
     }
     setShowChapterMenu(null);
   };
 
   const handleExportChapter = (chapter: Chapter) => {
-    // Create a plain text version of the chapter content
-    const content = chapter.content.replace(/<[^>]*>/g, ' ');
-    const text = `# ${chapter.title}\n\n${chapter.summary ? `## Summary\n\n${chapter.summary}\n\n` : ''}## Content\n\n${content}`;
-    
-    // Create a blob and download it
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${chapter.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      // Create a plain text version of the chapter content
+      const content = chapter.content.replace(/<[^>]*>/g, ' ');
+      const text = `# ${chapter.title}\n\n${chapter.summary ? `## Summary\n\n${chapter.summary}\n\n` : ''}## Content\n\n${content}`;
+      
+      // Create a blob and download it
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${chapter.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting chapter:', error);
+      setError('Failed to export chapter. Please try again.');
+    }
     
     setShowChapterMenu(null);
   };
@@ -340,7 +377,20 @@ export function ChaptersPage({
 
   const totalWords = chapters.reduce((sum, chapter) => sum + chapter.wordCount, 0);
   const totalTargetWords = chapters.length * 3000; // Assuming 3000 words per chapter
-  const overallProgress = Math.round((totalWords / totalTargetWords) * 100);
+  const overallProgress = totalTargetWords > 0 ? Math.round((totalWords / totalTargetWords) * 100) : 0;
+
+  // ADDED: Error display component
+  const ErrorDisplay = ({ message }: { message: string }) => (
+    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+      <div className="flex items-start">
+        <X className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" />
+        <div>
+          <h4 className="text-red-800 font-medium">Error</h4>
+          <p className="text-red-700 text-sm mt-1">{message}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-screen bg-[#F9FAFB] flex flex-col font-inter">
@@ -358,6 +408,9 @@ export function ChaptersPage({
             </div>
           ) : (
             <>
+              {/* Error Display */}
+              {error && <ErrorDisplay message={error} />}
+
               {/* Back button and title */}
               <div className="flex items-center gap-4 mb-6">
                 <button
@@ -379,9 +432,18 @@ export function ChaptersPage({
                   <h1 className="text-2xl font-semibold text-gray-900">
                     Chapters
                   </h1>
-                  <p className="text-[#889096] mt-1">
-                    {filteredAndSortedChapters.length} chapters • {formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words • {overallProgress}% complete
-                  </p>
+                  <div className="flex items-center gap-2 text-[#889096] mt-1">
+                    <p>
+                      {filteredAndSortedChapters.length} chapters • {formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words • {overallProgress}% complete
+                    </p>
+                    {/* ADDED: Project context indicator */}
+                    {projectId && (
+                      <>
+                        <span>•</span>
+                        <span className="text-sm">Project: {projectId}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
                 
                 <button
@@ -445,19 +507,21 @@ export function ChaptersPage({
               </div>
 
               {/* Overall Progress Bar */}
-              <div className="bg-[#e8ddc1] rounded-lg p-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-700 font-medium">Overall Progress</span>
-                  <span className="text-gray-600">{formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words</span>
+              {totalTargetWords > 0 && (
+                <div className="bg-[#e8ddc1] rounded-lg p-4">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-700 font-medium">Overall Progress</span>
+                    <span className="text-gray-600">{formatWordCount(totalWords)} / {formatWordCount(totalTargetWords)} words</span>
+                  </div>
+                  <div className="w-full bg-white rounded-full h-3">
+                    <div 
+                      className="bg-[#ff4e00] h-3 rounded-full transition-all duration-300"
+                      style={{ width: `${overallProgress}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">{overallProgress}% complete</div>
                 </div>
-                <div className="w-full bg-white rounded-full h-3">
-                  <div 
-                    className="bg-[#ff4e00] h-3 rounded-full transition-all duration-300"
-                    style={{ width: `${overallProgress}%` }}
-                  />
-                </div>
-                <div className="text-xs text-gray-600 mt-1">{overallProgress}% complete</div>
-              </div>
+              )}
             </>
           )}
         </div>
@@ -482,7 +546,12 @@ export function ChaptersPage({
                     {hasActiveFilters ? 'No chapters match your filters' : 'No chapters found'}
                   </h3>
                   <p className="text-[#889096] mb-4">
-                    {hasActiveFilters ? 'Try adjusting your search or filters' : 'Create your first chapter to start writing'}
+                    {hasActiveFilters 
+                      ? 'Try adjusting your search or filters' 
+                      : projectId 
+                        ? 'No chapters have been created for this project yet'
+                        : 'Create your first chapter to start writing'
+                    }
                   </p>
                   {hasActiveFilters ? (
                     <button
@@ -652,9 +721,54 @@ export function ChaptersPage({
                           {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
                         </span>
                       </div>
-                      <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-                        <MoreHorizontal className="w-4 h-4 text-gray-500" />
-                      </button>
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowChapterMenu(showChapterMenu === chapter.id ? null : chapter.id)}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors"
+                        >
+                          <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                        </button>
+                        
+                        {/* Chapter Menu Dropdown for Grid */}
+                        {showChapterMenu === chapter.id && (
+                          <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48">
+                            <div className="py-1">
+                              <button
+                                onClick={() => handleDeleteChapter(chapter.id)}
+                                className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Chapter
+                              </button>
+                              
+                              <div className="px-4 py-1 text-xs text-gray-500 border-b border-gray-100">Change Status</div>
+                              
+                              {['outline', 'draft', 'revision', 'final'].map((status) => (
+                                <button
+                                  key={status}
+                                  onClick={() => handleChangeStatus(chapter, status as any)}
+                                  className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm ${
+                                    chapter.status === status 
+                                      ? 'bg-gray-100 text-gray-900 font-medium' 
+                                      : 'text-gray-700 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <RefreshCw className="w-3 h-3" />
+                                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                                </button>
+                              ))}
+                              
+                              <button
+                                onClick={() => handleExportChapter(chapter)}
+                                className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                              >
+                                <Download className="w-4 h-4" />
+                                Export Chapter
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{chapter.title}</h3>
@@ -747,6 +861,9 @@ export function ChaptersPage({
             </div>
             
             <div className="p-6 space-y-4">
+              {/* Error Display in Modal */}
+              {error && <ErrorDisplay message={error} />}
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Chapter Title <span className="text-red-500">*</span>
@@ -789,21 +906,32 @@ export function ChaptersPage({
                   <option value="final">Final</option>
                 </select>
               </div>
+
+              {/* ADDED: Project context display */}
+              {projectId && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-700">
+                    This chapter will be created for project: <strong>{projectId}</strong>
+                  </p>
+                </div>
+              )}
             </div>
             
             <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowNewChapterModal(false)}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isCreatingChapter}
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateChapter}
-                disabled={!newChapter.title}
-                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors disabled:opacity-50"
+                disabled={!newChapter.title.trim() || isCreatingChapter}
+                className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors disabled:opacity-50"
               >
-                Create Chapter
+                {isCreatingChapter && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {isCreatingChapter ? 'Creating...' : 'Create Chapter'}
               </button>
             </div>
           </div>
