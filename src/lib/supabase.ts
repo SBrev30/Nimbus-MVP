@@ -29,22 +29,36 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 })
 
-// Database health check function
+// FIXED: Non-blocking Database health check with timeout protection
 export async function checkDatabaseHealth(): Promise<boolean> {
   try {
+    // Add timeout protection to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+
     const { data, error } = await supabase
       .from('user_profiles')
       .select('id')
       .limit(1)
+      .abortSignal(controller.signal)
+
+    clearTimeout(timeoutId);
 
     if (error) {
-      console.error('Database health check failed:', error)
+      console.warn('Database health check failed:', error.message)
+      // Return false but don't throw - let auth continue
       return false
     }
 
+    console.log('Database health check passed')
     return true
-  } catch (error) {
-    console.error('Database connection failed:', error)
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.warn('Database health check timed out - continuing with auth')
+    } else {
+      console.warn('Database health check error:', error.message)
+    }
+    // Always return false on error, never throw
     return false
   }
 }
