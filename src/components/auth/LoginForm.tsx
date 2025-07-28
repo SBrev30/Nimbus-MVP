@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
+import { Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 // Nimbus Note Logo Component (from Sidebar)
 const NimbusLogo = () => {
@@ -47,10 +49,19 @@ const NimbusLogo = () => {
   );
 };
 
-export function LoginForm() {
+interface LoginFormProps {
+  onForgotPassword?: () => void;
+}
+
+export function LoginForm({ onForgotPassword }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordError, setForgotPasswordError] = useState('');
   const { signIn, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,12 +77,170 @@ export function LoginForm() {
     setIsLoading(false);
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!forgotEmail.trim()) {
+      setForgotPasswordError('Please enter your email address');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
+      setForgotPasswordError('Please enter a valid email address');
+      return;
+    }
+
+    setForgotPasswordLoading(true);
+    setForgotPasswordError('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setResetEmailSent(true);
+    } catch (error: any) {
+      console.error('Error sending reset email:', error);
+      setForgotPasswordError(
+        error.message || 'Failed to send reset email. Please try again.'
+      );
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false);
+    setResetEmailSent(false);
+    setForgotEmail('');
+    setForgotPasswordError('');
+  };
+
+  if (showForgotPassword) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <div className="text-center mb-6">
+            <NimbusLogo />
+          </div>
+          
+          {!resetEmailSent ? (
+            <>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Reset Password</h2>
+                <p className="text-gray-600 text-sm">
+                  Enter your email address and we'll send you a link to reset your password.
+                </p>
+              </div>
+
+              {forgotPasswordError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm">{forgotPasswordError}</span>
+                </div>
+              )}
+              
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div>
+                  <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff4e00]"
+                    placeholder="Enter your email address"
+                    required
+                  />
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={forgotPasswordLoading}
+                  className="w-full bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {forgotPasswordLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4" />
+                      Send Reset Link
+                    </>
+                  )}
+                </button>
+              </form>
+              
+              <div className="mt-6 text-center">
+                <button
+                  onClick={handleBackToLogin}
+                  className="inline-flex items-center gap-2 text-[#ff4e00] hover:underline text-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Sign In
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
+                <p className="text-gray-600 text-sm">
+                  We've sent a password reset link to <strong>{forgotEmail}</strong>
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h3 className="font-semibold text-blue-900 text-sm mb-2">What's next?</h3>
+                <ol className="text-blue-800 text-sm space-y-1">
+                  <li>1. Check your email inbox (and spam folder)</li>
+                  <li>2. Click the "Reset Password" link in the email</li>
+                  <li>3. Create a new password</li>
+                  <li>4. Sign in with your new password</li>
+                </ol>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleForgotPassword({ preventDefault: () => {} } as React.FormEvent)}
+                  disabled={forgotPasswordLoading}
+                  className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+                >
+                  {forgotPasswordLoading ? 'Sending...' : 'Resend Email'}
+                </button>
+                
+                <button
+                  onClick={handleBackToLogin}
+                  className="inline-flex items-center gap-2 text-[#ff4e00] hover:underline text-sm mx-auto"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Sign In
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white p-8 rounded-lg shadow-md">
         <div className="text-center mb-6">
           <NimbusLogo />
-                  </div>
+        </div>
         
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -121,9 +290,13 @@ export function LoginForm() {
             </div>
             
             <div className="text-sm">
-              <a href="#" className="text-[#ff4e00] hover:underline">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-[#ff4e00] hover:underline"
+              >
                 Forgot password?
-              </a>
+              </button>
             </div>
           </div>
           
