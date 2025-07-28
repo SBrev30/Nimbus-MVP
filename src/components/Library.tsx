@@ -1,4 +1,4 @@
-// src/components/Library.tsx - FIXED WITH PROJECT FILTERING
+// src/components/Library.tsx - FIXED WITH PROJECT FILTERING AND PROFESSIONAL PROJECT DISPLAY
 
 import React, { useState, useEffect } from 'react'
 import { Search, Plus, Filter, FileText, Users, BookOpen, Microscope, Tag, Calendar, Trash2, Eye } from 'lucide-react'
@@ -23,6 +23,10 @@ export function Library({ projectId }: LibraryProps) {
   const [showImportWizard, setShowImportWizard] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null)
+  
+  // ✅ ADDED: Professional project state management
+  const [currentProject, setCurrentProject] = useState<{id: string, title: string} | null>(null)
+  const [projectLoading, setProjectLoading] = useState(false)
 
   const contentTypes = [
     { value: 'all', label: 'All Items', icon: FileText, count: 0 },
@@ -32,14 +36,39 @@ export function Library({ projectId }: LibraryProps) {
     { value: 'chapter', label: 'Chapters', icon: FileText, count: 0 }
   ]
 
-  // UPDATED: Reload when projectId changes
+  // ✅ UPDATED: Load project data when projectId changes
   useEffect(() => {
     loadItems()
+    if (projectId) {
+      loadProject(projectId)
+    } else {
+      setCurrentProject(null)
+    }
   }, [projectId])
 
   useEffect(() => {
     filterItems()
   }, [items, searchQuery, selectedType])
+
+  // ✅ ADDED: Professional project loading function
+  const loadProject = async (projectId: string) => {
+    setProjectLoading(true)
+    try {
+      const { data: project, error } = await supabase
+        .from('projects')
+        .select('id, title')
+        .eq('id', projectId)
+        .single()
+
+      if (error) throw error
+      setCurrentProject(project)
+    } catch (error) {
+      console.error('Error loading project:', error)
+      setCurrentProject(null)
+    } finally {
+      setProjectLoading(false)
+    }
+  }
 
   // UPDATED: Add project filtering to loadItems
   const loadItems = async () => {
@@ -192,14 +221,41 @@ export function Library({ projectId }: LibraryProps) {
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Files</h1>
-            {/* ADDED: Project context indicator */}
+            <h1 className="text-2xl font-semibold text-gray-900">Library</h1>
+            
+            {/* ✅ FIXED: Professional project context indicator */}
             {projectId && (
-              <p className="text-sm text-gray-500 mt-1">
-                Showing content for project: {projectId}
-              </p>
+              <div className="text-sm text-gray-500 mt-1">
+                {projectLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+                    Loading project...
+                  </div>
+                ) : currentProject ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Project: <span className="font-medium text-gray-700">{currentProject.title}</span></span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <span>Project ID: {projectId}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ✅ ADDED: All projects indicator when no project selected */}
+            {!projectId && (
+              <div className="text-sm text-gray-500 mt-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>Showing content from all projects</span>
+                </div>
+              </div>
             )}
           </div>
+          
           <button
             onClick={() => setShowImportWizard(true)}
             className="flex items-center gap-2 px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
