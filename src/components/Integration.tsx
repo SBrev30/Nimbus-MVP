@@ -1,4 +1,4 @@
-// src/components/Integration.tsx - UPDATED
+// src/components/Integration.tsx - FIXED SCROLLING ISSUE
 
 import React, { useState, useCallback } from 'react';
 import { 
@@ -201,8 +201,6 @@ export default function Integration({
     }
     onBack(); // Close integration
   };
-
-  // ... rest of the component remains the same until renderStepContent
 
   const renderStepContent = () => {
     switch (state.step) {
@@ -467,39 +465,41 @@ export default function Integration({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {[
-              { key: 'connect', label: 'Connect' },
-              { key: 'preview', label: 'Preview' },
-              { key: 'importing', label: 'Import' },
-              { key: 'success', label: 'Complete' }
-            ].map((step, index, array) => (
-              <React.Fragment key={step.key}>
-                <div className="flex items-center">
-                  {getStepIcon(step.key as Step, state.step)}
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    {step.label}
-                  </span>
-                </div>
-                {index < array.length - 1 && (
-                  <div className="flex-1 h-px bg-gray-300 mx-4"></div>
-                )}
-              </React.Fragment>
-            ))}
+    <div className="fixed inset-0 bg-gray-50 overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          {/* Progress Steps */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              {[
+                { key: 'connect', label: 'Connect' },
+                { key: 'preview', label: 'Preview' },
+                { key: 'importing', label: 'Import' },
+                { key: 'success', label: 'Complete' }
+              ].map((step, index, array) => (
+                <React.Fragment key={step.key}>
+                  <div className="flex items-center">
+                    {getStepIcon(step.key as Step, state.step)}
+                    <span className="ml-2 text-sm font-medium text-gray-700">
+                      {step.label}
+                    </span>
+                  </div>
+                  {index < array.length - 1 && (
+                    <div className="flex-1 h-px bg-gray-300 mx-4"></div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          {renderStepContent()}
-          
-          {/* Action Buttons */}
-          <div className="mt-8">
-            {getActionButtons()}
+          {/* Main Content */}
+          <div className="bg-white rounded-lg shadow-sm p-8">
+            {renderStepContent()}
+            
+            {/* Action Buttons */}
+            <div className="mt-8">
+              {getActionButtons()}
+            </div>
           </div>
         </div>
       </div>
