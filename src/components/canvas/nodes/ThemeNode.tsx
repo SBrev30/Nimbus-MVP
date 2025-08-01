@@ -299,4 +299,6 @@ const ThemeNode: React.FC<ThemeNodeProps> = ({
   );
 };
 
+// Export both named and default exports to fix import issues
+export { ThemeNode };
 export default ThemeNode;
