@@ -413,7 +413,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject]);
 
-  // EXISTING: Load plot threads (unchanged)
+  // FIXED: Load plot threads with proper foreign key handling
   const loadPlotThreads = useCallback(async () => {
     try {
       console.log('Loading plot threads from planning...');
@@ -459,7 +459,9 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       const threadsWithEvents = await Promise.all(
         (threads || []).map(async (thread) => {
-          const { data: events, error: eventsError } = await supabase
+          // FIXED: Use the correct foreign key column for plot_events relationship
+          // Try plot_thread_id first (newer column), fallback to thread_id if that fails
+          let { data: events, error: eventsError } = await supabase
             .from('plot_events')
             .select(`
               id,
@@ -472,6 +474,27 @@ export const useCanvasPlanningData = (projectId?: string) => {
             `)
             .eq('plot_thread_id', thread.id)
             .order('order_index');
+
+          // If plot_thread_id column doesn't work or returns empty, try thread_id
+          if (eventsError?.message?.includes('column') || (!events || events.length === 0)) {
+            console.log('Trying thread_id column for plot events...');
+            const { data: eventsAlt, error: eventsErrorAlt } = await supabase
+              .from('plot_events')
+              .select(`
+                id,
+                name,
+                description,
+                event_type,
+                tension_level,
+                chapter_id,
+                order_index
+              `)
+              .eq('thread_id', thread.id)
+              .order('order_index');
+
+            events = eventsAlt;
+            eventsError = eventsErrorAlt;
+          }
 
           if (eventsError) {
             console.warn(`Failed to load events for thread ${thread.id}:`, eventsError);
@@ -541,7 +564,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject]);
 
-  // ENHANCED: Load locations from both locations table AND world_elements table
+  // FIXED: Load locations from both locations table AND world_elements table
   const loadLocations = useCallback(async () => {
     try {
       console.log('Loading locations from both sources...');
@@ -598,7 +621,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
         allLocations.push(...formattedLocations);
       }
 
-      // 2. Load from world_elements table (category = 'location')
+      // 2. FIXED: Load from world_elements table without connected_character_ids column
+      // Query only existing columns - connected_character_ids does not exist
       console.log('Loading from world_elements table...');
       let worldElementsQuery = supabase
         .from('world_elements')
@@ -608,8 +632,9 @@ export const useCanvasPlanningData = (projectId?: string) => {
           description,
           category,
           details,
-          connected_character_ids,
-          image_url,
+          connections,
+          metadata,
+          image_urls,
           created_at,
           updated_at
         `)
@@ -636,6 +661,37 @@ export const useCanvasPlanningData = (projectId?: string) => {
           let culture = {};
           let type: CanvasLocationData['type'] = 'building';
           let importance: CanvasLocationData['importance'] = 'moderate';
+          let connectedCharacters: string[] = []; // Default since column doesn't exist
+        
+          // Try to extract connected characters from available data
+          if (element.connections) {
+            try {
+              const connections = typeof element.connections === 'string' 
+                ? JSON.parse(element.connections) 
+                : element.connections;
+              
+              if (connections.character_ids && Array.isArray(connections.character_ids)) {
+                connectedCharacters = connections.character_ids;
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse connections:', parseError);
+            }
+          }
+          
+          // Also check metadata for character connections
+          if (element.metadata && !connectedCharacters.length) {
+            try {
+              const metadata = typeof element.metadata === 'string' 
+                ? JSON.parse(element.metadata) 
+                : element.metadata;
+              
+              if (metadata.connected_character_ids && Array.isArray(metadata.connected_character_ids)) {
+                connectedCharacters = metadata.connected_character_ids;
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse metadata:', parseError);
+            }
+          }
           
           if (element.details) {
             try {
@@ -676,6 +732,17 @@ export const useCanvasPlanningData = (projectId?: string) => {
                   importance = parsedDetails.importance;
                 }
               }
+
+              // FIXED: Check for connected_character_ids in details JSON
+              // Since table doesn't have the column, it might be stored in details
+              if (parsedDetails.connected_character_ids && Array.isArray(parsedDetails.connected_character_ids)) {
+                connectedCharacters = parsedDetails.connected_character_ids;
+              }
+              
+              // Also check for character_connections or similar
+              if (parsedDetails.character_connections && Array.isArray(parsedDetails.character_connections)) {
+                connectedCharacters = parsedDetails.character_connections;
+              }
             } catch (parseError) {
               console.warn('Failed to parse world element details:', parseError);
             }
@@ -689,7 +756,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
             importance,
             geography,
             culture,
-            connectedCharacters: element.connected_character_ids || [],
+            connectedCharacters, // Use extracted character connections
             source: 'world_elements',
             fromPlanning: true
           };
@@ -809,8 +876,12 @@ export const useCanvasPlanningData = (projectId?: string) => {
         if (elements.length > 0) {
           const connectedContent = new Set();
           elements.forEach(el => {
-            if (el.connected_character_ids) {
-              el.connected_character_ids.forEach((id: string) => connectedContent.add(id));
+            // Extract character connections from connections or metadata
+            if (el.connections?.character_ids) {
+              el.connections.character_ids.forEach((id: string) => connectedContent.add(id));
+            }
+            if (el.metadata?.connected_character_ids) {
+              el.metadata.connected_character_ids.forEach((id: string) => connectedContent.add(id));
             }
           });
 
@@ -840,7 +911,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject]);
 
-  // NEW: Load conflicts from plot events and character relationships
+  // FIXED: Load conflicts from plot events and character relationships
   const loadConflicts = useCallback(async () => {
     try {
       console.log('Loading conflicts from plot events and relationships...');
@@ -850,12 +921,14 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       const conflictData: CanvasConflictData[] = [];
 
-      // Get plot events for external conflicts
+      // FIXED: Specify exact foreign key relationship to avoid ambiguity
+      // Database has BOTH thread_id AND plot_thread_id columns
+      // Using plot_thread_id as it's the primary relationship
       let plotQuery = supabase
         .from('plot_events')
         .select(`
           *,
-          plot_threads (
+          plot_threads!plot_events_plot_thread_id_fkey (
             id,
             name,
             connected_character_ids
@@ -1194,7 +1267,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
     );
   }, [planningData.planningLocations]);
 
-  // NEW: Sync location to appropriate planning table
+  // FIXED: Sync location to appropriate planning table
+  // Store character connections in appropriate fields that exist
   const syncLocationToPlanning = useCallback(async (locationData: CanvasLocationData): Promise<boolean> => {
     try {
       const { user } = await getCurrentUserAndProject();
@@ -1222,12 +1296,18 @@ export const useCanvasPlanningData = (projectId?: string) => {
           return false;
         }
       } else if (locationData.source === 'world_elements') {
-        // Sync to world_elements table
+        // FIXED: Store connected_character_ids in connections or metadata
+        // Since the world_elements table doesn't have connected_character_ids column
+        const connections = {
+          character_ids: locationData.connectedCharacters || []
+        };
+        
         const details = {
           type: locationData.type,
           importance: locationData.importance,
           geography: locationData.geography,
-          culture: locationData.culture
+          culture: locationData.culture,
+          connected_character_ids: locationData.connectedCharacters // Also store in details for compatibility
         };
 
         const { error } = await supabase
@@ -1235,8 +1315,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
           .update({
             title: locationData.name,
             description: locationData.description,
-            details: details,
-            connected_character_ids: locationData.connectedCharacters,
+            details: JSON.stringify(details), // Store as JSON string
+            connections: connections, // Store connections separately
             updated_at: new Date().toISOString()
           })
           .eq('id', locationData.id)
