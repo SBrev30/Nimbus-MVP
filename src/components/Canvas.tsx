@@ -238,6 +238,12 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     );
   }, [setNodes]);
 
+  // Handle connect functionality for nodes
+  const handleConnect = useCallback((nodeId: string) => {
+    console.log('🔗 Connect requested for node:', nodeId);
+    // TODO: Implement connection logic or show connection interface
+  }, []);
+
   // ✅ COMPLETE NODE TYPES REGISTRATION - All nodes with proper planning integration
   const nodeTypes: NodeTypes = useMemo(() => {
     console.log('🎨 Registering ALL node types with enhanced handlers');
@@ -245,120 +251,172 @@ const CanvasFlow: React.FC<CanvasProps> = ({ projectId, onBack }) => {
     const nodeTypeRegistry: NodeTypes = {};
     
     // ✅ PLANNING INTEGRATION NODES - Pass projectId for planning data access
-    nodeTypeRegistry.character = (props: any) => {
-      console.log('🎭 Rendering CharacterNode with planning integration:', props.id);
-      return (
-        <CharacterNode
-          {...props}
-          projectId={projectId} // ✅ PLANNING INTEGRATION
-          onDataChange={(newData: any) => {
-            console.log('📝 CharacterNode data change:', props.id, newData);
-            handleNodeDataChange(props.id, newData);
-          }}
-        />
-      );
-    };
+    nodeTypeRegistry.character = (props: any) => (
+      <CharacterNode
+        {...props}
+        projectId={projectId}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        onConnect={handleConnect}
+      />
+    );
     
-    nodeTypeRegistry.plot = (props: any) => {
-      console.log('📖 Rendering PlotNode with planning integration:', props.id);
-      return (
-        <PlotNode
-          {...props}
-          projectId={projectId} // ✅ PLANNING INTEGRATION
-          onDataChange={(newData: any) => {
-            console.log('📝 PlotNode data change:', props.id, newData);
-            handleNodeDataChange(props.id, newData);
-          }}
-        />
-      );
-    };
+    nodeTypeRegistry.plot = (props: any) => (
+      <PlotNode
+        {...props}
+        projectId={projectId}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        onConnect={handleConnect}
+      />
+    );
     
-    nodeTypeRegistry.location = (props: any) => {
-      console.log('🗺️ Rendering LocationNode with planning integration:', props.id);
-      return (
-        <LocationNode
-          {...props}
-          projectId={projectId} // ✅ PLANNING INTEGRATION - FIXED!
-          onDataChange={(newData: any) => {
-            console.log('📝 LocationNode data change:', props.id, newData);
-            handleNodeDataChange(props.id, newData);
-          }}
-        />
-      );
-    };
+    nodeTypeRegistry.location = (props: any) => (
+      <LocationNode
+        {...props}
+        projectId={projectId}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        onConnect={handleConnect}
+      />
+    );
     
-    // ✅ BASIC NODES - Standard implementation without planning integration
-    nodeTypeRegistry.theme = (props: any) => {
-      console.log('🎨 Rendering ThemeNode (basic):', props.id);
-      return (
-        <ThemeNode
-          {...props}
-          onDataChange={(newData: any) => {
-            console.log('📝 ThemeNode data change:', props.id, newData);
-            handleNodeDataChange(props.id, newData);
-          }}
-        />
-      );
-    };
+    // ✅ NEW NODE TYPES - All four new types with proper handlers
+    nodeTypeRegistry.timeline = (props: any) => (
+      <TimelineNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        onConnect={handleConnect}
+        projectId={projectId}
+      />
+    );
     
-    nodeTypeRegistry.conflict = (props: any) => {
-      console.log('⚔️ Rendering ConflictNode (basic):', props.id);
-      return (
-        <ConflictNode
-          {...props}
-          onDataChange={(newData: any) => {
-            console.log('📝 ConflictNode data change:', props.id, newData);
-            handleNodeDataChange(props.id, newData);
-          }}
-        />
-      );
-    };
+    nodeTypeRegistry.research = (props: any) => (
+      <ResearchNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        onConnect={handleConnect}
+        projectId={projectId}
+      />
+    );
     
-    nodeTypeRegistry.timeline = (props: any) => {
-      console.log('📅 Rendering TimelineNode (basic):', props.id);
-      return (
-        <TimelineNode
-          {...props}
-          onDataChange={(newData: any) => {
-            console.log('📝 TimelineNode data change:', props.id, newData);
-            handleNodeDataChange(props.id, newData);
-          }}
-        />
-      );
-    };
+    nodeTypeRegistry.conflict = (props: any) => (
+      <ConflictNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        onConnect={handleConnect}
+        projectId={projectId}
+      />
+    );
     
-    nodeTypeRegistry.research = (props: any) => {
-      console.log('📚 Rendering ResearchNode (basic):', props.id);
-      return (
-        <ResearchNode
-          {...props}
-          onDataChange={(newData: any) => {
-            console.log('📝 ResearchNode data change:', props.id, newData);
-            handleNodeDataChange(props.id, newData);
-          }}
-        />
-      );
-    };
+    nodeTypeRegistry.theme = (props: any) => (
+      <ThemeNode
+        {...props}
+        onDataChange={(newData: any) => handleNodeDataChange(props.id, newData)}
+        onConnect={handleConnect}
+        projectId={projectId}
+      />
+    );
     
     return nodeTypeRegistry;
-  }, [handleNodeDataChange, projectId]);
+  }, [handleNodeDataChange, handleConnect, projectId]);
+
+  // Node creation functions
+  const createTimelineNode = useCallback((position: { x: number; y: number }) => {
+    const newNode: Node = {
+      id: `timeline-${Date.now()}`,
+      type: 'timeline',
+      position,
+      data: {
+        id: `timeline-${Date.now()}`,
+        name: 'New Timeline',
+        description: 'Story timeline or character arc progression',
+        timelineType: 'story_beats',
+        chapterCount: 0,
+        significanceLevel: 'medium'
+      }
+    };
+    setNodes(nds => [...nds, newNode]);
+  }, [setNodes]);
+
+  const createResearchNode = useCallback((position: { x: number; y: number }) => {
+    const newNode: Node = {
+      id: `research-${Date.now()}`,
+      type: 'research',
+      position,
+      data: {
+        id: `research-${Date.now()}`,
+        name: 'New Research',
+        description: 'Research collection and reference materials',
+        researchCategory: 'culture',
+        elementCount: 0
+      }
+    };
+    setNodes(nds => [...nds, newNode]);
+  }, [setNodes]);
+
+  const createConflictNode = useCallback((position: { x: number; y: number }) => {
+    const newNode: Node = {
+      id: `conflict-${Date.now()}`,
+      type: 'conflict',
+      position,
+      data: {
+        id: `conflict-${Date.now()}`,
+        name: 'New Conflict',
+        description: 'Story conflict or tension point',
+        conflictType: 'external',
+        tensionLevel: 5,
+        charactersInvolved: []
+      }
+    };
+    setNodes(nds => [...nds, newNode]);
+  }, [setNodes]);
+
+  const createThemeNode = useCallback((position: { x: number; y: number }) => {
+    const newNode: Node = {
+      id: `theme-${Date.now()}`,
+      type: 'theme',
+      position,
+      data: {
+        id: `theme-${Date.now()}`,
+        name: 'New Theme',
+        description: 'Thematic element or symbolic meaning',
+        themeType: 'major',
+        completenessScore: 0,
+        connectionCount: 0
+      }
+    };
+    setNodes(nds => [...nds, newNode]);
+  }, [setNodes]);
 
   const createNode = useCallback((type: string) => {
     if (!reactFlowInstance) return;
     
-    const id = uuidv4();
     const position = reactFlowInstance.project({ x: 250, y: 250 });
     
-    const newNode: Node = {
-      id,
-      type,
-      position,
-      data: createNodeData(type)
-    };
-    
-    console.log('🆕 Creating new node:', type, id);
-    setNodes((nds) => [...nds, newNode]);
-  }, [reactFlowInstance, setNodes]);
+    // Use specific create functions for new node types
+    switch (type) {
+      case 'timeline':
+        createTimelineNode(position);
+        break;
+      case 'research':
+        createResearchNode(position);
+        break;
+      case 'conflict':
+        createConflictNode(position);
+        break;
+      case 'theme':
+        createThemeNode(position);
+        break;
+      default:
+        // Use existing createNodeData for other types
+        const newNode: Node = {
+          id: uuidv4(),
+          type,
+          position,
+          data: createNodeData(type)
+        };
+        console.log('🆕 Creating new node:', type, newNode.id);
+        setNodes((nds) => [...nds, newNode]);
+    }
+  }, [reactFlowInstance, setNodes, createTimelineNode, createResearchNode, createConflictNode, createThemeNode]);
 
   // ✅ ENHANCED SYNC HANDLER - Support for ALL planning integration types
   const handleSync = useCallback(async () => {
