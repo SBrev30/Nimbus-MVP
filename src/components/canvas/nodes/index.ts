@@ -1,19 +1,22 @@
-// Enhanced Node Components Export
-export { CharacterNode } from './CharacterNode';
-export { PlotNode } from './PlotNode';
-export { LocationNode } from './LocationNode';
-export { ThemeNode } from './ThemeNode';
-export { ConflictNode } from './ConflictNode';
-export { TimelineNode } from './TimelineNode';
-export { ResearchNode } from './ResearchNode';
+// src/components/canvas/nodes/index.ts
 
-import { CharacterNode } from './CharacterNode';
-import { PlotNode } from './PlotNode';
-import { LocationNode } from './LocationNode';
-import { ThemeNode } from './ThemeNode';
-import { ConflictNode } from './ConflictNode';
-import { TimelineNode } from './TimelineNode';
-import { ResearchNode } from './ResearchNode';
+// Import default exports correctly
+import CharacterNodeDefault from './CharacterNode';
+import PlotNodeDefault from './PlotNode';
+import LocationNodeDefault from './LocationNode';
+import ThemeNodeDefault from './ThemeNode';
+import ConflictNodeDefault from './ConflictNode';
+import TimelineNodeDefault from './TimelineNode';
+import ResearchNodeDefault from './ResearchNode';
+
+// Re-export as named exports for consistency
+export const CharacterNode = CharacterNodeDefault;
+export const PlotNode = PlotNodeDefault;
+export const LocationNode = LocationNodeDefault;
+export const ThemeNode = ThemeNodeDefault;
+export const ConflictNode = ConflictNodeDefault;
+export const TimelineNode = TimelineNodeDefault;
+export const ResearchNode = ResearchNodeDefault;
 
 // Export data interfaces for type checking
 export type { CharacterNodeData } from './CharacterNode';
@@ -46,15 +49,15 @@ export const nodeColors = {
   research: '#F3E8FF',  // Light Purple
 };
 
-// Node icons for toolbar and UI
+// Node icons for toolbar and UI (using Lucide icon names for consistency)
 export const nodeIcons = {
-  character: '👤',
-  plot: '📖',
-  location: '📍',
-  theme: '💡',
-  conflict: '⚔️',
-  timeline: '⏰',
-  research: '🔍',
+  character: 'User',        // matches User icon in toolbar
+  plot: 'BookOpen',        // matches BookOpen icon in toolbar
+  location: 'MapPin',      // matches MapPin icon in toolbar
+  theme: 'Lightbulb',      // matches Lightbulb icon in toolbar
+  conflict: 'Zap',         // matches Zap icon in toolbar
+  timeline: 'Calendar',    // matches Calendar icon in toolbar
+  research: 'FileText',    // matches FileText icon in toolbar
 };
 
 // Node creation functions
