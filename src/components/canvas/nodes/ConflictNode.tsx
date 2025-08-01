@@ -288,4 +288,6 @@ const ConflictNode: React.FC<ConflictNodeProps> = ({
   );
 };
 
+// Export both as named export and default export to handle different import patterns
+export { ConflictNode };
 export default ConflictNode;
