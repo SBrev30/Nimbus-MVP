@@ -255,4 +255,6 @@ const TimelineNode: React.FC<TimelineNodeProps> = ({
   );
 };
 
+// Export both named and default exports to fix import issues
+export { TimelineNode };
 export default TimelineNode;
