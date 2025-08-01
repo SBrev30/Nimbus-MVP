@@ -1,11 +1,12 @@
-// src/hooks/useCanvasPlanningData.ts
-import { useState, useEffect, useCallback } from 'react';
+// src/hooks/useCanvasPlanningData.ts - Complete Enhanced Version
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
+// Existing interfaces (from your current file)
 export interface CanvasCharacterData {
   id: string;
   name: string;
-  role: 'protagonist' | 'antagonist' | 'supporting' | 'minor'; // ✅ FIXED: Changed 'other' to 'minor'
+  role: 'protagonist' | 'antagonist' | 'supporting' | 'minor';
   description: string;
   age?: number;
   occupation?: string;
@@ -35,7 +36,6 @@ export interface CanvasPlotData {
   fromPlanning: boolean;
 }
 
-// Enhanced Plot Thread Data for Canvas Integration
 export interface CanvasPlotThreadData {
   id: string;
   title: string;
@@ -79,15 +79,88 @@ export interface CanvasLocationData {
     customs?: string;
   };
   connectedCharacters?: string[];
+  source?: 'locations' | 'world_elements'; // Track data source
   fromPlanning: boolean;
 }
 
+// NEW: Timeline data interface
+export interface CanvasTimelineData {
+  id: string;
+  name: string;
+  type: 'timeline';
+  description: string;
+  fromPlanning: boolean;
+  planningId?: string;
+  timelineType?: 'story_beats' | 'character_arc' | 'plot_progression';
+  chapterCount?: number;
+  significanceLevel?: 'low' | 'medium' | 'high' | 'critical';
+  characterArcs?: string[];
+}
+
+// NEW: Research data interface
+export interface CanvasResearchData {
+  id: string;
+  name: string;
+  type: 'research';
+  description: string;
+  fromPlanning: boolean;
+  planningId?: string;
+  researchCategory?: string;
+  elementCount?: number;
+  connectedContent?: string[];
+}
+
+// NEW: Conflict data interface
+export interface CanvasConflictData {
+  id: string;
+  name: string;
+  type: 'conflict';
+  description: string;
+  fromPlanning: boolean;
+  planningId?: string;
+  conflictType?: 'internal' | 'external' | 'interpersonal' | 'societal';
+  tensionLevel?: number;
+  charactersInvolved?: string[];
+  plotThreads?: string[];
+}
+
+// NEW: Theme data interface
+export interface CanvasThemeData {
+  id: string;
+  name: string;
+  type: 'theme';
+  description: string;
+  fromPlanning: boolean;
+  planningId?: string;
+  themeType?: 'major' | 'minor' | 'motif';
+  completenessScore?: number;
+  connectionCount?: number;
+  characterConnections?: number;
+  plotConnections?: number;
+}
+
+// Enhanced planning data interface
 interface PlanningData {
+  // Existing content types
   planningCharacters: CanvasCharacterData[];
   planningPlots: CanvasPlotData[];
   plotThreads: CanvasPlotThreadData[];
   planningLocations: CanvasLocationData[];
-  characterRelationships: any[]; // ✅ ADDED: For auto-connections
+  characterRelationships: any[];
+  
+  // NEW: Additional content types
+  planningTimelines: CanvasTimelineData[];
+  planningResearch: CanvasResearchData[];
+  planningConflicts: CanvasConflictData[];
+  planningThemes: CanvasThemeData[];
+}
+
+// Search filters interface
+interface SearchFilters {
+  query?: string;
+  contentType?: 'character' | 'plot' | 'location' | 'timeline' | 'research' | 'conflict' | 'theme' | 'all';
+  completenessMin?: number;
+  hasConnections?: boolean;
 }
 
 export const useCanvasPlanningData = (projectId?: string) => {
@@ -96,26 +169,25 @@ export const useCanvasPlanningData = (projectId?: string) => {
     planningPlots: [],
     plotThreads: [],
     planningLocations: [],
-    characterRelationships: [] // ✅ ADDED
+    characterRelationships: [],
+    planningTimelines: [],
+    planningResearch: [],
+    planningConflicts: [],
+    planningThemes: []
   });
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
-  // Auto-load data on mount and when projectId changes
-  useEffect(() => {
-    loadAllPlanningData();
-  }, [projectId]);
-
-  // Get current user and project (updated to handle proper project IDs)
+  // Get current user and project
   const getCurrentUserAndProject = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { user: null, projectId: null };
 
-    // Use the provided projectId if available, otherwise get the user's projects
     let finalProjectId = projectId;
     
     if (!finalProjectId || finalProjectId === 'no-project') {
-      // Get the user's projects to find a valid project ID
       const { data: projects } = await supabase
         .from('projects')
         .select('id, title')
@@ -123,7 +195,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
         .order('updated_at', { ascending: false })
         .limit(1);
 
-      // Use the most recent project if available, otherwise null (for characters without project association)
       finalProjectId = projects && projects.length > 0 ? projects[0].id : null;
     }
     
@@ -145,7 +216,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     return requiredComplete ? (50 + (optionalComplete / optionalFields.length) * 50) : 0;
   }, []);
 
-  // Fetch characters from planning pages
+  // EXISTING: Load characters (unchanged from your current implementation)
   const loadCharacters = useCallback(async () => {
     try {
       console.log('Loading characters from planning...');
@@ -161,7 +232,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       console.log('User found:', user.id, 'Project ID:', finalProjectId);
 
-      // Build query with optional project_id filter
       let query = supabase
         .from('characters')
         .select(`
@@ -183,12 +253,11 @@ export const useCanvasPlanningData = (projectId?: string) => {
         `)
         .eq('user_id', user.id);
 
-      // Add project filter if projectId exists, otherwise include characters with null project_id
       if (finalProjectId) {
-  query = query.eq('project_id', finalProjectId);
-} else {
-  query = query.is('project_id', null);
-}
+        query = query.eq('project_id', finalProjectId);
+      } else {
+        query = query.is('project_id', null);
+      }
 
       console.log('Executing characters query...');
       
@@ -201,7 +270,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
       console.log('Characters loaded from database:', characters?.length || 0);
 
       const formattedCharacters: CanvasCharacterData[] = (characters || []).map(char => {
-        // ✅ SAFE ROLE MAPPING: Ensure role is valid for database constraint
         let role: 'protagonist' | 'antagonist' | 'supporting' | 'minor' = 'minor';
         if (['protagonist', 'antagonist', 'supporting', 'minor'].includes(char.role)) {
           role = char.role;
@@ -212,7 +280,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
         return {
           id: char.id,
           name: char.name || '',
-          role: role, // ✅ SAFE: Always valid database role
+          role: role,
           description: char.description || '',
           age: char.age,
           occupation: char.occupation || '',
@@ -237,20 +305,18 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
     } catch (err) {
       console.error('Error loading characters:', err);
-      console.error('Full error details:', err);
       setError('Failed to load characters from planning');
     } finally {
       setLoading(false);
     }
   }, [getCurrentUserAndProject, calculateCharacterCompleteness]);
 
-  // ✅ FIXED: Load character relationships for auto-connections
+  // EXISTING: Load character relationships (unchanged)
   const loadCharacterRelationships = useCallback(async () => {
     try {
       const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return;
 
-      // ✅ FIX: Remove user_id filter since the table doesn't have this column
       let query = supabase
         .from('character_relationships')
         .select(`
@@ -262,7 +328,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
           strength
         `);
 
-      // Only filter by project_id since that's what the table has
       if (finalProjectId) {
         query = query.eq('project_id', finalProjectId);
       }
@@ -276,11 +341,10 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       console.log('Character relationships loaded:', relationships?.length || 0);
 
-      // Transform the data to match expected format for auto-connections
       const transformedRelationships = (relationships || []).map(rel => ({
         id: rel.id,
-        character_id: rel.character_a_id, // Map character_a_id to character_id
-        related_character_id: rel.character_b_id, // Map character_b_id to related_character_id
+        character_id: rel.character_a_id,
+        related_character_id: rel.character_b_id,
         relationship_type: rel.relationship_type,
         description: rel.description,
         strength: rel.strength
@@ -296,13 +360,12 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject]);
 
-  // Fetch plots from planning pages (original plots from chapters)
+  // EXISTING: Load plots (unchanged)
   const loadPlots = useCallback(async () => {
     try {
       const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return;
 
-      // Build query with optional project_id filter
       let query = supabase
         .from('chapters')
         .select(`
@@ -318,7 +381,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
         `)
         .eq('user_id', user.id);
 
-      // Add project filter if projectId exists
       if (finalProjectId) {
         query = query.eq('project_id', finalProjectId);
       }
@@ -351,7 +413,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject]);
 
-  // Fetch plot threads from planning pages (enhanced plot management)
+  // EXISTING: Load plot threads (unchanged)
   const loadPlotThreads = useCallback(async () => {
     try {
       console.log('Loading plot threads from planning...');
@@ -364,7 +426,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       console.log('Loading plot threads for user:', user.id, 'Project:', finalProjectId);
 
-      // Build query for plot threads using correct column names
       let threadsQuery = supabase
         .from('plot_threads')
         .select(`
@@ -384,7 +445,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
         `)
         .eq('user_id', user.id);
 
-      // Add project filter if projectId exists
       if (finalProjectId) {
         threadsQuery = threadsQuery.eq('project_id', finalProjectId);
       }
@@ -397,7 +457,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
       console.log('Plot threads loaded:', threads?.length || 0);
 
-      // Load events for each thread
       const threadsWithEvents = await Promise.all(
         (threads || []).map(async (thread) => {
           const { data: events, error: eventsError } = await supabase
@@ -428,7 +487,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
       );
 
       const formattedPlotThreads: CanvasPlotThreadData[] = threadsWithEvents.map(thread => {
-        // Calculate completion percentage based on thread status and events
         let completion_percentage = 0;
         if (thread.status === 'completed') {
           completion_percentage = 100;
@@ -438,7 +496,6 @@ export const useCanvasPlanningData = (projectId?: string) => {
           completion_percentage = 20;
         }
         
-        // Build tension curve from start, peak, end values
         const tension_curve = [];
         if (thread.start_tension !== undefined && thread.peak_tension !== undefined && thread.end_tension !== undefined) {
           tension_curve.push(thread.start_tension, thread.peak_tension, thread.end_tension);
@@ -446,8 +503,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
         return {
           id: thread.id,
-          title: thread.name || '', // Map database 'name' to interface 'title'
-          type: thread.thread_type || 'subplot', // Map database 'thread_type' to interface 'type'
+          title: thread.name || '',
+          type: thread.thread_type || 'subplot',
           description: thread.description || '',
           color: thread.color || '#3B82F6',
           completion_percentage,
@@ -458,7 +515,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
           connected_thread_ids: thread.metadata?.connected_thread_ids || [],
           events: (thread.events || []).map((event: any) => ({
             id: event.id,
-            title: event.name, // Map database 'name' to interface 'title'
+            title: event.name,
             description: event.description,
             event_type: event.event_type,
             tension_level: event.tension_level,
@@ -480,19 +537,23 @@ export const useCanvasPlanningData = (projectId?: string) => {
 
     } catch (err) {
       console.error('Error loading plot threads:', err);
-      console.error('Full error details:', err);
       setError('Failed to load plot threads from planning');
     }
   }, [getCurrentUserAndProject]);
 
-  // Fetch locations from planning pages
+  // ENHANCED: Load locations from both locations table AND world_elements table
   const loadLocations = useCallback(async () => {
     try {
+      console.log('Loading locations from both sources...');
+      
       const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return;
 
-      // Build query with optional project_id filter
-      let query = supabase
+      const allLocations: CanvasLocationData[] = [];
+
+      // 1. Load from dedicated locations table
+      console.log('Loading from locations table...');
+      let locationsQuery = supabase
         .from('locations')
         .select(`
           id,
@@ -508,34 +569,140 @@ export const useCanvasPlanningData = (projectId?: string) => {
         `)
         .eq('user_id', user.id);
 
-      // Add project filter if projectId exists, otherwise include locations with null project_id
       if (finalProjectId) {
-  query = query.eq('project_id', finalProjectId);
-} else {
-  query = query.is('project_id', null);
-}
-
-      const { data: locations, error: locationsError } = await query.order('name');
-
-      if (locationsError) {
-        throw locationsError;
+        locationsQuery = locationsQuery.eq('project_id', finalProjectId);
+      } else {
+        locationsQuery = locationsQuery.is('project_id', null);
       }
 
-      const formattedLocations: CanvasLocationData[] = (locations || []).map(loc => ({
-        id: loc.id,
-        name: loc.name || '',
-        type: loc.type || 'building',
-        description: loc.description || '',
-        importance: loc.importance || 'moderate',
-        geography: loc.geography || {},
-        culture: loc.culture || {},
-        connectedCharacters: loc.connected_characters || [],
-        fromPlanning: true
-      }));
+      const { data: locations, error: locationsError } = await locationsQuery.order('name');
+
+      if (locationsError) {
+        console.warn('Error loading from locations table:', locationsError);
+      } else {
+        console.log('Locations from locations table:', locations?.length || 0);
+        
+        const formattedLocations: CanvasLocationData[] = (locations || []).map(loc => ({
+          id: loc.id,
+          name: loc.name || '',
+          type: loc.type || 'building',
+          description: loc.description || '',
+          importance: loc.importance || 'moderate',
+          geography: loc.geography || {},
+          culture: loc.culture || {},
+          connectedCharacters: loc.connected_characters || [],
+          source: 'locations',
+          fromPlanning: true
+        }));
+
+        allLocations.push(...formattedLocations);
+      }
+
+      // 2. Load from world_elements table (category = 'location')
+      console.log('Loading from world_elements table...');
+      let worldElementsQuery = supabase
+        .from('world_elements')
+        .select(`
+          id,
+          title,
+          description,
+          category,
+          details,
+          connected_character_ids,
+          image_url,
+          created_at,
+          updated_at
+        `)
+        .eq('user_id', user.id)
+        .eq('category', 'location');
+
+      if (finalProjectId) {
+        worldElementsQuery = worldElementsQuery.eq('project_id', finalProjectId);
+      } else {
+        worldElementsQuery = worldElementsQuery.is('project_id', null);
+      }
+
+      const { data: worldElements, error: worldElementsError } = await worldElementsQuery.order('title');
+
+      if (worldElementsError) {
+        console.warn('Error loading from world_elements table:', worldElementsError);
+      } else {
+        console.log('World elements (locations):', worldElements?.length || 0);
+        
+        // Transform world elements to location format
+        const worldElementLocations: CanvasLocationData[] = (worldElements || []).map(element => {
+          // Parse details JSON for geography and culture info
+          let geography = {};
+          let culture = {};
+          let type: CanvasLocationData['type'] = 'building';
+          let importance: CanvasLocationData['importance'] = 'moderate';
+          
+          if (element.details) {
+            try {
+              const parsedDetails = typeof element.details === 'string' 
+                ? JSON.parse(element.details) 
+                : element.details;
+              
+              // Extract geography information
+              if (parsedDetails.geography || parsedDetails.climate || parsedDetails.terrain) {
+                geography = {
+                  climate: parsedDetails.geography?.climate || parsedDetails.climate,
+                  terrain: parsedDetails.geography?.terrain || parsedDetails.terrain,
+                  size: parsedDetails.geography?.size || parsedDetails.size
+                };
+              }
+              
+              // Extract culture information
+              if (parsedDetails.culture || parsedDetails.politics || parsedDetails.religion) {
+                culture = {
+                  politics: parsedDetails.culture?.politics || parsedDetails.politics,
+                  religion: parsedDetails.culture?.religion || parsedDetails.religion,
+                  customs: parsedDetails.culture?.customs || parsedDetails.customs
+                };
+              }
+              
+              // Infer type from details
+              if (parsedDetails.type) {
+                const validTypes = ['city', 'building', 'natural', 'mystical', 'country', 'region'];
+                if (validTypes.includes(parsedDetails.type)) {
+                  type = parsedDetails.type;
+                }
+              }
+              
+              // Infer importance
+              if (parsedDetails.importance) {
+                const validImportance = ['critical', 'high', 'moderate', 'low'];
+                if (validImportance.includes(parsedDetails.importance)) {
+                  importance = parsedDetails.importance;
+                }
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse world element details:', parseError);
+            }
+          }
+
+          return {
+            id: element.id,
+            name: element.title || '',
+            type,
+            description: element.description || '',
+            importance,
+            geography,
+            culture,
+            connectedCharacters: element.connected_character_ids || [],
+            source: 'world_elements',
+            fromPlanning: true
+          };
+        });
+
+        allLocations.push(...worldElementLocations);
+      }
+
+      console.log('Total locations loaded:', allLocations.length);
 
       setPlanningData(prev => ({
         ...prev,
-        planningLocations: formattedLocations
+        planningLocations: allLocations
       }));
 
     } catch (err) {
@@ -544,47 +711,444 @@ export const useCanvasPlanningData = (projectId?: string) => {
     }
   }, [getCurrentUserAndProject]);
 
-  // Load all planning data (updated to include character relationships)
+  // NEW: Load timelines from chapters
+  const loadTimelines = useCallback(async () => {
+    try {
+      console.log('Loading timelines from chapters...');
+      
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
+      if (!user) return;
+
+      let query = supabase
+        .from('chapters')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('order', { ascending: true });
+
+      if (finalProjectId) {
+        query = query.eq('project_id', finalProjectId);
+      }
+
+      const { data: chapters, error } = await query;
+      if (error) throw error;
+
+      const timelineData: CanvasTimelineData[] = [];
+      
+      if (chapters && chapters.length > 0) {
+        const criticalChapters = chapters.filter(ch => ch.significance === 'critical');
+        const highChapters = chapters.filter(ch => ch.significance === 'high');
+        
+        if (criticalChapters.length > 0) {
+          timelineData.push({
+            id: `timeline-story-beats-${finalProjectId || 'default'}`,
+            name: 'Story Beats',
+            type: 'timeline',
+            description: `Major story beats and critical moments (${criticalChapters.length} critical chapters)`,
+            fromPlanning: true,
+            planningId: `story-beats-${finalProjectId || 'default'}`,
+            timelineType: 'story_beats',
+            chapterCount: chapters.length,
+            significanceLevel: 'critical',
+            characterArcs: []
+          });
+        }
+
+        if (highChapters.length > 0) {
+          timelineData.push({
+            id: `timeline-plot-progression-${finalProjectId || 'default'}`,
+            name: 'Plot Progression',
+            type: 'timeline',
+            description: `Plot development timeline (${chapters.length} chapters)`,
+            fromPlanning: true,
+            planningId: `plot-progression-${finalProjectId || 'default'}`,
+            timelineType: 'plot_progression',
+            chapterCount: chapters.length,
+            significanceLevel: 'high',
+            characterArcs: []
+          });
+        }
+      }
+
+      console.log('Timelines generated:', timelineData.length);
+
+      setPlanningData(prev => ({
+        ...prev,
+        planningTimelines: timelineData
+      }));
+
+    } catch (err) {
+      console.error('Error loading timelines:', err);
+    }
+  }, [getCurrentUserAndProject]);
+
+  // NEW: Load research from world elements
+  const loadResearch = useCallback(async () => {
+    try {
+      console.log('Loading research from world elements...');
+      
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
+      if (!user) return;
+
+      let query = supabase
+        .from('world_elements')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (finalProjectId) {
+        query = query.eq('project_id', finalProjectId);
+      }
+
+      const { data: allElements, error } = await query;
+      if (error) throw error;
+
+      const researchCategories = ['culture', 'technology', 'economy', 'hierarchy'];
+      const researchData: CanvasResearchData[] = [];
+
+      for (const category of researchCategories) {
+        const elements = (allElements || []).filter(el => el.category === category);
+        if (elements.length > 0) {
+          const connectedContent = new Set();
+          elements.forEach(el => {
+            if (el.connected_character_ids) {
+              el.connected_character_ids.forEach((id: string) => connectedContent.add(id));
+            }
+          });
+
+          researchData.push({
+            id: `research-${category}-${finalProjectId || 'default'}`,
+            name: `${category.charAt(0).toUpperCase() + category.slice(1)} Research`,
+            type: 'research',
+            description: `${elements.length} ${category} elements with research data`,
+            fromPlanning: true,
+            planningId: `${category}-research-${finalProjectId || 'default'}`,
+            researchCategory: category,
+            elementCount: elements.length,
+            connectedContent: Array.from(connectedContent) as string[]
+          });
+        }
+      }
+
+      console.log('Research collections generated:', researchData.length);
+
+      setPlanningData(prev => ({
+        ...prev,
+        planningResearch: researchData
+      }));
+
+    } catch (err) {
+      console.error('Error loading research:', err);
+    }
+  }, [getCurrentUserAndProject]);
+
+  // NEW: Load conflicts from plot events and character relationships
+  const loadConflicts = useCallback(async () => {
+    try {
+      console.log('Loading conflicts from plot events and relationships...');
+      
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
+      if (!user) return;
+
+      const conflictData: CanvasConflictData[] = [];
+
+      // Get plot events for external conflicts
+      let plotQuery = supabase
+        .from('plot_events')
+        .select(`
+          *,
+          plot_threads (
+            id,
+            name,
+            connected_character_ids
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (finalProjectId) {
+        plotQuery = plotQuery.eq('project_id', finalProjectId);
+      }
+
+      const { data: plotEvents, error: plotError } = await plotQuery;
+      if (plotError) {
+        console.warn('Error loading plot events:', plotError);
+      } else if (plotEvents && plotEvents.length > 0) {
+        const conflictEvents = plotEvents.filter(event => 
+          event.event_type === 'conflict' && event.tension_level >= 6
+        );
+
+        if (conflictEvents.length > 0) {
+          const avgTension = conflictEvents.reduce((sum, event) => sum + event.tension_level, 0) / conflictEvents.length;
+          const allCharacters = new Set();
+          conflictEvents.forEach(event => {
+            if (event.plot_threads?.connected_character_ids) {
+              event.plot_threads.connected_character_ids.forEach((id: string) => allCharacters.add(id));
+            }
+          });
+
+          conflictData.push({
+            id: `conflict-external-${finalProjectId || 'default'}`,
+            name: 'External Conflicts',
+            type: 'conflict',
+            description: `${conflictEvents.length} high-tension external conflicts`,
+            fromPlanning: true,
+            planningId: `external-conflicts-${finalProjectId || 'default'}`,
+            conflictType: 'external',
+            tensionLevel: Math.round(avgTension),
+            charactersInvolved: Array.from(allCharacters) as string[],
+            plotThreads: conflictEvents.map(event => event.plot_thread_id).filter(Boolean)
+          });
+        }
+      }
+
+      // Get character relationships for interpersonal conflicts
+      let relQuery = supabase
+        .from('character_relationships')
+        .select('*');
+
+      if (finalProjectId) {
+        relQuery = relQuery.eq('project_id', finalProjectId);
+      }
+
+      const { data: relationships, error: relError } = await relQuery;
+      if (relError) {
+        console.warn('Error loading relationships:', relError);
+      } else if (relationships && relationships.length > 0) {
+        const conflictRelationships = relationships.filter(rel => 
+          rel.relationship_type?.includes('enemy') || 
+          rel.relationship_type?.includes('rival') ||
+          rel.strength < 4
+        );
+
+        if (conflictRelationships.length > 0) {
+          const avgStrength = conflictRelationships.reduce((sum, rel) => sum + (rel.strength || 5), 0) / conflictRelationships.length;
+          const characters = new Set();
+          conflictRelationships.forEach(rel => {
+            characters.add(rel.character_a_id);
+            characters.add(rel.character_b_id);
+          });
+
+          conflictData.push({
+            id: `conflict-interpersonal-${finalProjectId || 'default'}`,
+            name: 'Interpersonal Conflicts',
+            type: 'conflict',
+            description: `${conflictRelationships.length} character relationship conflicts`,
+            fromPlanning: true,
+            planningId: `interpersonal-conflicts-${finalProjectId || 'default'}`,
+            conflictType: 'interpersonal',
+            tensionLevel: Math.round(10 - avgStrength), // Lower relationship strength = higher conflict tension
+            charactersInvolved: Array.from(characters) as string[],
+            plotThreads: []
+          });
+        }
+      }
+
+      console.log('Conflicts generated:', conflictData.length);
+
+      setPlanningData(prev => ({
+        ...prev,
+        planningConflicts: conflictData
+      }));
+
+    } catch (err) {
+      console.error('Error loading conflicts:', err);
+    }
+  }, [getCurrentUserAndProject]);
+
+  // NEW: Load themes from themes table
+  const loadThemes = useCallback(async () => {
+    try {
+      console.log('Loading themes from planning...');
+      
+      const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
+      if (!user) return;
+
+      let query = supabase
+        .from('themes')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (finalProjectId) {
+        query = query.eq('project_id', finalProjectId);
+      }
+
+      const { data: themes, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Error loading themes (table may not exist yet):', error);
+        setPlanningData(prev => ({
+          ...prev,
+          planningThemes: []
+        }));
+        return;
+      }
+
+      console.log('Themes loaded:', themes?.length || 0);
+
+      const formattedThemes: CanvasThemeData[] = (themes || []).map(theme => {
+        const characterConnections = theme.character_connections?.length || 0;
+        const plotConnections = theme.plot_connections?.length || 0;
+        const locationConnections = theme.location_connections?.length || 0;
+        const totalConnections = characterConnections + plotConnections + locationConnections;
+
+        return {
+          id: theme.id,
+          name: theme.title,
+          type: 'theme',
+          description: theme.description || `${theme.theme_type} theme`,
+          fromPlanning: true,
+          planningId: theme.id,
+          themeType: theme.theme_type,
+          completenessScore: theme.completeness_score,
+          connectionCount: totalConnections,
+          characterConnections,
+          plotConnections
+        };
+      });
+
+      setPlanningData(prev => ({
+        ...prev,
+        planningThemes: formattedThemes
+      }));
+
+    } catch (err) {
+      console.error('Error loading themes:', err);
+    }
+  }, [getCurrentUserAndProject]);
+
+  // Load all planning data
   const loadAllPlanningData = useCallback(async () => {
+    console.log('🔄 Loading all planning data for project:', projectId);
+    
     setLoading(true);
+    setError(null);
+    
     try {
       await Promise.all([
         loadCharacters(),
-        loadCharacterRelationships(), // ✅ ADDED
+        loadCharacterRelationships(),
         loadPlots(),
         loadPlotThreads(),
-        loadLocations()
+        loadLocations(),
+        loadTimelines(),
+        loadResearch(),
+        loadConflicts(),
+        loadThemes()
       ]);
+      
+      setLastRefresh(new Date());
+      console.log('✅ All planning data loaded successfully');
+      
     } catch (err) {
-      console.error('Error loading planning data:', err);
-      setError('Failed to load planning data');
+      console.error('❌ Error loading planning data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load planning data');
     } finally {
       setLoading(false);
     }
-  }, [loadCharacters, loadCharacterRelationships, loadPlots, loadPlotThreads, loadLocations]);
+  }, [loadCharacters, loadCharacterRelationships, loadPlots, loadPlotThreads, loadLocations, loadTimelines, loadResearch, loadConflicts, loadThemes, projectId]);
 
-  // Refresh functions
-  const refreshCharacters = useCallback(() => {
-    return loadCharacters();
-  }, [loadCharacters]);
-
-  const refreshPlots = useCallback(() => {
-    return loadPlots();
-  }, [loadPlots]);
-
-  const refreshPlotThreads = useCallback(() => {
-    return loadPlotThreads();
-  }, [loadPlotThreads]);
-
-  const refreshLocations = useCallback(() => {
-    return loadLocations();
-  }, [loadLocations]);
-
-  const refreshAll = useCallback(() => {
-    return loadAllPlanningData();
+  // Auto-load data on mount and when projectId changes
+  useEffect(() => {
+    loadAllPlanningData();
   }, [loadAllPlanningData]);
 
-  // Search functions
+  // Search and filter functionality
+  const searchContent = useCallback((filters: SearchFilters) => {
+    const { query = '', contentType = 'all', completenessMin = 0, hasConnections } = filters;
+    
+    let allContent: Array<CanvasCharacterData | CanvasPlotData | CanvasLocationData | CanvasTimelineData | CanvasResearchData | CanvasConflictData | CanvasThemeData> = [];
+    
+    // Collect content based on type filter
+    if (contentType === 'all' || contentType === 'character') {
+      allContent.push(...planningData.planningCharacters);
+    }
+    if (contentType === 'all' || contentType === 'plot') {
+      allContent.push(...planningData.planningPlots);
+      allContent.push(...planningData.plotThreads);
+    }
+    if (contentType === 'all' || contentType === 'location') {
+      allContent.push(...planningData.planningLocations);
+    }
+    if (contentType === 'all' || contentType === 'timeline') {
+      allContent.push(...planningData.planningTimelines);
+    }
+    if (contentType === 'all' || contentType === 'research') {
+      allContent.push(...planningData.planningResearch);
+    }
+    if (contentType === 'all' || contentType === 'conflict') {
+      allContent.push(...planningData.planningConflicts);
+    }
+    if (contentType === 'all' || contentType === 'theme') {
+      allContent.push(...planningData.planningThemes);
+    }
+
+    // Apply filters
+    return allContent.filter(item => {
+      // Text search
+      if (query) {
+        const searchText = `${item.name || (item as any).title} ${item.description}`.toLowerCase();
+        if (!searchText.includes(query.toLowerCase())) {
+          return false;
+        }
+      }
+
+      // Completeness filter
+      const completeness = 'completeness_score' in item ? item.completeness_score || 0 : 
+                          'completenessScore' in item ? item.completenessScore || 0 : 100;
+      if (completeness < completenessMin) {
+        return false;
+      }
+
+      // Connections filter
+      if (hasConnections !== undefined) {
+        const hasAnyConnections = 
+          ('relationships' in item && (item.relationships?.length || 0) > 0) ||
+          ('connectedCharacters' in item && (item.connectedCharacters?.length || 0) > 0) ||
+          ('connectionCount' in item && (item.connectionCount || 0) > 0) ||
+          ('connectedContent' in item && (item.connectedContent?.length || 0) > 0) ||
+          ('charactersInvolved' in item && (item.charactersInvolved?.length || 0) > 0);
+        
+        if (hasConnections && !hasAnyConnections) {
+          return false;
+        }
+        if (!hasConnections && hasAnyConnections) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [planningData]);
+
+  // Get content by specific type
+  const getContentByType = useCallback((type: SearchFilters['contentType']) => {
+    return searchContent({ contentType: type });
+  }, [searchContent]);
+
+  // Get incomplete content for development tracking
+  const getIncompleteContent = useCallback((threshold = 80) => {
+    return searchContent({ completenessMin: 0 }).filter(item => {
+      const completeness = 'completeness_score' in item ? item.completeness_score || 0 : 
+                          'completenessScore' in item ? item.completenessScore || 0 : 100;
+      return completeness < threshold;
+    });
+  }, [searchContent]);
+
+  // Get highly connected content
+  const getHighlyConnectedContent = useCallback(() => {
+    return searchContent({ hasConnections: true }).sort((a, b) => {
+      const getConnectionCount = (item: any) => {
+        if ('relationships' in item) return item.relationships?.length || 0;
+        if ('connectedCharacters' in item) return item.connectedCharacters?.length || 0;
+        if ('connectionCount' in item) return item.connectionCount || 0;
+        if ('connectedContent' in item) return item.connectedContent?.length || 0;
+        if ('charactersInvolved' in item) return item.charactersInvolved?.length || 0;
+        return 0;
+      };
+      
+      return getConnectionCount(b) - getConnectionCount(a);
+    });
+  }, [searchContent]);
+
+  // Existing search functions (unchanged)
   const searchCharacters = useCallback((query: string): CanvasCharacterData[] => {
     if (!query.trim()) return planningData.planningCharacters;
     
@@ -630,27 +1194,70 @@ export const useCanvasPlanningData = (projectId?: string) => {
     );
   }, [planningData.planningLocations]);
 
-  // Get character by ID
-  const getCharacterById = useCallback((id: string): CanvasCharacterData | null => {
-    return planningData.planningCharacters.find(char => char.id === id) || null;
-  }, [planningData.planningCharacters]);
+  // NEW: Sync location to appropriate planning table
+  const syncLocationToPlanning = useCallback(async (locationData: CanvasLocationData): Promise<boolean> => {
+    try {
+      const { user } = await getCurrentUserAndProject();
+      if (!user) return false;
 
-  // Get plot by ID
-  const getPlotById = useCallback((id: string): CanvasPlotData | null => {
-    return planningData.planningPlots.find(plot => plot.id === id) || null;
-  }, [planningData.planningPlots]);
+      if (locationData.source === 'locations') {
+        // Sync to locations table
+        const { error } = await supabase
+          .from('locations')
+          .update({
+            name: locationData.name,
+            type: locationData.type,
+            description: locationData.description,
+            importance: locationData.importance,
+            geography: locationData.geography,
+            culture: locationData.culture,
+            connected_characters: locationData.connectedCharacters,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', locationData.id)
+          .eq('user_id', user.id);
 
-  // Get plot thread by ID
-  const getPlotThreadById = useCallback((id: string): CanvasPlotThreadData | null => {
-    return planningData.plotThreads.find(thread => thread.id === id) || null;
-  }, [planningData.plotThreads]);
+        if (error) {
+          console.error('Error syncing location:', error);
+          return false;
+        }
+      } else if (locationData.source === 'world_elements') {
+        // Sync to world_elements table
+        const details = {
+          type: locationData.type,
+          importance: locationData.importance,
+          geography: locationData.geography,
+          culture: locationData.culture
+        };
 
-  // Get location by ID
-  const getLocationById = useCallback((id: string): CanvasLocationData | null => {
-    return planningData.planningLocations.find(loc => loc.id === id) || null;
-  }, [planningData.planningLocations]);
+        const { error } = await supabase
+          .from('world_elements')
+          .update({
+            title: locationData.name,
+            description: locationData.description,
+            details: details,
+            connected_character_ids: locationData.connectedCharacters,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', locationData.id)
+          .eq('user_id', user.id);
 
-  // Sync character data back to planning
+        if (error) {
+          console.error('Error syncing world element location:', error);
+          return false;
+        }
+      }
+
+      // Refresh local data
+      await loadLocations();
+      return true;
+    } catch (err) {
+      console.error('Error syncing location to planning:', err);
+      return false;
+    }
+  }, [getCurrentUserAndProject, loadLocations]);
+
+  // Existing sync functions (unchanged)
   const syncCharacterToPlanning = useCallback(async (characterData: CanvasCharacterData): Promise<boolean> => {
     try {
       const { user } = await getCurrentUserAndProject();
@@ -681,16 +1288,14 @@ export const useCanvasPlanningData = (projectId?: string) => {
         return false;
       }
 
-      // Refresh local data
-      await refreshCharacters();
+      await loadCharacters();
       return true;
     } catch (err) {
       console.error('Error syncing character to planning:', err);
       return false;
     }
-  }, [getCurrentUserAndProject, refreshCharacters]);
+  }, [getCurrentUserAndProject, loadCharacters]);
 
-  // Sync plot thread data back to planning
   const syncPlotThreadToPlanning = useCallback(async (threadData: CanvasPlotThreadData): Promise<boolean> => {
     try {
       const { user } = await getCurrentUserAndProject();
@@ -699,8 +1304,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
       const { error } = await supabase
         .from('plot_threads')
         .update({
-          name: threadData.title, // Map interface 'title' to database 'name'
-          thread_type: threadData.type, // Map interface 'type' to database 'thread_type'
+          name: threadData.title,
+          thread_type: threadData.type,
           description: threadData.description,
           color: threadData.color,
           start_tension: threadData.tension_curve[0],
@@ -721,22 +1326,20 @@ export const useCanvasPlanningData = (projectId?: string) => {
         return false;
       }
 
-      // Refresh local data
-      await refreshPlotThreads();
+      await loadPlotThreads();
       return true;
     } catch (err) {
       console.error('Error syncing plot thread to planning:', err);
       return false;
     }
-  }, [getCurrentUserAndProject, refreshPlotThreads]);
+  }, [getCurrentUserAndProject, loadPlotThreads]);
 
-  // Create new character in planning
+  // Create new character in planning (unchanged)
   const createCharacterInPlanning = useCallback(async (characterData: Partial<CanvasCharacterData>): Promise<CanvasCharacterData | null> => {
     try {
       const { user, projectId: finalProjectId } = await getCurrentUserAndProject();
       if (!user) return null;
 
-      // ✅ SAFE ROLE VALIDATION: Ensure role is valid before creating
       const validRoles = ['protagonist', 'antagonist', 'supporting', 'minor'];
       const role = validRoles.includes(characterData.role || '') ? characterData.role : 'minor';
 
@@ -744,7 +1347,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
         .from('characters')
         .insert({
           name: characterData.name || 'New Character',
-          role: role, // ✅ SAFE: Always valid database role
+          role: role,
           description: characterData.description || '',
           age: characterData.age,
           occupation: characterData.occupation,
@@ -756,7 +1359,7 @@ export const useCanvasPlanningData = (projectId?: string) => {
           traits: characterData.traits || [],
           relationships: characterData.relationships || [],
           user_id: user.id,
-          project_id: finalProjectId, // Will be null if no project exists
+          project_id: finalProjectId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -768,10 +1371,8 @@ export const useCanvasPlanningData = (projectId?: string) => {
         return null;
       }
 
-      // Refresh local data
-      await refreshCharacters();
+      await loadCharacters();
 
-      // Return formatted character data
       return {
         id: data.id,
         name: data.name,
@@ -793,52 +1394,162 @@ export const useCanvasPlanningData = (projectId?: string) => {
       console.error('Error creating character in planning:', err);
       return null;
     }
-  }, [getCurrentUserAndProject, refreshCharacters, calculateCharacterCompleteness]);
+  }, [getCurrentUserAndProject, loadCharacters, calculateCharacterCompleteness]);
+
+  // Statistics
+  const statistics = useMemo(() => {
+    const totalContent = 
+      planningData.planningCharacters.length +
+      planningData.planningPlots.length +
+      planningData.plotThreads.length +
+      planningData.planningLocations.length +
+      planningData.planningTimelines.length +
+      planningData.planningResearch.length +
+      planningData.planningConflicts.length +
+      planningData.planningThemes.length;
+
+    const completenessScores = [
+      ...planningData.planningCharacters.map(c => c.completeness_score || 0),
+      ...planningData.planningThemes.map(t => t.completenessScore || 0)
+    ];
+
+    const averageCompleteness = completenessScores.length > 0 
+      ? completenessScores.reduce((sum, score) => sum + score, 0) / completenessScores.length 
+      : 0;
+
+    return {
+      totalContent,
+      averageCompleteness: Math.round(averageCompleteness),
+      contentBreakdown: {
+        characters: planningData.planningCharacters.length,
+        plots: planningData.planningPlots.length,
+        plotThreads: planningData.plotThreads.length,
+        locations: planningData.planningLocations.length,
+        timelines: planningData.planningTimelines.length,
+        research: planningData.planningResearch.length,
+        conflicts: planningData.planningConflicts.length,
+        themes: planningData.planningThemes.length
+      },
+      lastRefresh
+    };
+  }, [planningData, lastRefresh]);
+
+  // Individual getters (for backward compatibility)
+  const getCharacterById = useCallback((id: string): CanvasCharacterData | null => {
+    return planningData.planningCharacters.find(char => char.id === id) || null;
+  }, [planningData.planningCharacters]);
+
+  const getPlotById = useCallback((id: string): CanvasPlotData | null => {
+    return planningData.planningPlots.find(plot => plot.id === id) || null;
+  }, [planningData.planningPlots]);
+
+  const getPlotThreadById = useCallback((id: string): CanvasPlotThreadData | null => {
+    return planningData.plotThreads.find(thread => thread.id === id) || null;
+  }, [planningData.plotThreads]);
+
+  const getLocationById = useCallback((id: string): CanvasLocationData | null => {
+    return planningData.planningLocations.find(loc => loc.id === id) || null;
+  }, [planningData.planningLocations]);
+
+  // Individual refresh functions
+  const refreshCharacters = useCallback(() => loadCharacters(), [loadCharacters]);
+  const refreshPlots = useCallback(() => loadPlots(), [loadPlots]);
+  const refreshPlotThreads = useCallback(() => loadPlotThreads(), [loadPlotThreads]);
+  const refreshLocations = useCallback(() => loadLocations(), [loadLocations]);
+  const refreshTimelines = useCallback(() => loadTimelines(), [loadTimelines]);
+  const refreshResearch = useCallback(() => loadResearch(), [loadResearch]);
+  const refreshConflicts = useCallback(() => loadConflicts(), [loadConflicts]);
+  const refreshThemes = useCallback(() => loadThemes(), [loadThemes]);
+  const refreshAll = useCallback(() => loadAllPlanningData(), [loadAllPlanningData]);
 
   return {
-    // Data
+    // Data - Existing
     planningCharacters: planningData.planningCharacters,
     planningPlots: planningData.planningPlots,
     plotThreads: planningData.plotThreads,
     plotPoints: planningData.plotThreads, // Alias for backward compatibility
     planningLocations: planningData.planningLocations,
-    characterRelationships: planningData.characterRelationships, // ✅ ADDED: For auto-connections
+    characterRelationships: planningData.characterRelationships,
+    
+    // Data - NEW
+    planningTimelines: planningData.planningTimelines,
+    planningResearch: planningData.planningResearch,
+    planningConflicts: planningData.planningConflicts,
+    planningThemes: planningData.planningThemes,
     
     // State
     loading,
     error,
+    lastRefresh,
     
-    // Refresh functions
+    // Individual loaders - NEW
+    loadCharacters,
+    loadPlots,
+    loadPlotThreads,
+    loadLocations,
+    loadTimelines,
+    loadResearch,
+    loadConflicts,
+    loadThemes,
+    
+    // Refresh functions - Existing
     refreshCharacters,
     refreshPlots,
     refreshPlotThreads,
     refreshLocations,
     refresh: refreshAll,
     
-    // Search functions
+    // Refresh functions - NEW
+    refreshTimelines,
+    refreshResearch,
+    refreshConflicts,
+    refreshThemes,
+    
+    // Search functions - Existing
     searchCharacters,
     searchPlots,
     searchPlotThreads,
     searchLocations,
     
-    // Getters
+    // Search functions - NEW
+    searchContent,
+    getContentByType,
+    getIncompleteContent,
+    getHighlyConnectedContent,
+    
+    // Getters - Existing
     getCharacterById,
     getPlotById,
     getPlotThreadById,
     getLocationById,
     
-    // Sync functions
+    // Sync functions - Existing
     syncCharacterToPlanning,
     syncPlotThreadToPlanning,
     createCharacterInPlanning,
     
-    // Stats (updated to include plot threads)
+    // Sync functions - NEW
+    syncLocationToPlanning,
+    
+    // Stats - Enhanced
+    statistics,
     stats: {
       characterCount: planningData.planningCharacters.length,
       plotCount: planningData.planningPlots.length,
       plotThreadCount: planningData.plotThreads.length,
       locationCount: planningData.planningLocations.length,
-      totalItems: planningData.planningCharacters.length + planningData.planningPlots.length + planningData.plotThreads.length + planningData.planningLocations.length
+      timelineCount: planningData.planningTimelines.length,
+      researchCount: planningData.planningResearch.length,
+      conflictCount: planningData.planningConflicts.length,
+      themeCount: planningData.planningThemes.length,
+      totalItems: planningData.planningCharacters.length + 
+                  planningData.planningPlots.length + 
+                  planningData.plotThreads.length + 
+                  planningData.planningLocations.length +
+                  planningData.planningTimelines.length +
+                  planningData.planningResearch.length +
+                  planningData.planningConflicts.length +
+                  planningData.planningThemes.length
     }
   };
 };
