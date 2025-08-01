@@ -123,7 +123,7 @@ const themeService = {
   }
 };
 
-const ThemesPage: React.FC = () => {
+export const ThemesPage: React.FC = () => {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -508,5 +508,3 @@ const ThemesPage: React.FC = () => {
     </div>
   );
 };
-
-export default ThemesPage;
