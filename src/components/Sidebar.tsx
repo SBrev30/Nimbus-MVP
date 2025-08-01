@@ -12,7 +12,8 @@ import {
   Folder,
   Settings,
   HelpCircle,
-  PanelLeftClose
+  PanelLeftClose,
+  Lightbulb
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -210,7 +211,8 @@ const menuItems: MenuItem[] = [
       { id: 'outline', label: 'Outline' },
       { id: 'plot', label: 'Plot' },
       { id: 'characters', label: 'Characters' },
-      { id: 'world-building', label: 'World Building' }
+      { id: 'world-building', label: 'World Building' },
+      { id: 'themes', label: 'Themes' } // NEW: Added Themes
     ]
   },
   {
