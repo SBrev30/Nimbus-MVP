@@ -1,22 +1,22 @@
 // src/components/canvas/nodes/index.ts
 
-// Import default exports correctly
-import CharacterNodeDefault from './CharacterNode';
-import PlotNodeDefault from './PlotNode';
-import LocationNodeDefault from './LocationNode';
-import ThemeNodeDefault from './ThemeNode';
-import ConflictNodeDefault from './ConflictNode';
-import TimelineNodeDefault from './TimelineNode';
-import ResearchNodeDefault from './ResearchNode';
+// Import named exports correctly
+import { CharacterNode } from './CharacterNode';
+import { PlotNode } from './PlotNode';
+import { LocationNode } from './LocationNode';
+import { ThemeNode } from './ThemeNode';
+import { ConflictNode } from './ConflictNode';
+import { TimelineNode } from './TimelineNode';
+import { ResearchNode } from './ResearchNode';
 
-// Re-export as named exports for consistency
-export const CharacterNode = CharacterNodeDefault;
-export const PlotNode = PlotNodeDefault;
-export const LocationNode = LocationNodeDefault;
-export const ThemeNode = ThemeNodeDefault;
-export const ConflictNode = ConflictNodeDefault;
-export const TimelineNode = TimelineNodeDefault;
-export const ResearchNode = ResearchNodeDefault;
+// Re-export named exports
+export { CharacterNode };
+export { PlotNode };
+export { LocationNode };
+export { ThemeNode };
+export { ConflictNode };
+export { TimelineNode };
+export { ResearchNode };
 
 // Export data interfaces for type checking
 export type { CharacterNodeData } from './CharacterNode';
