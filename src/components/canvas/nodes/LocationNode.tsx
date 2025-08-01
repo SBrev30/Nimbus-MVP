@@ -46,7 +46,6 @@ interface LocationNodeProps extends BaseCanvasComponentProps {
   isEditing?: boolean;
   hasChanges?: boolean;
   onDataChange?: (field: string, value: any) => void; // HOC provides this format
-  onConnect?: (nodeId: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -59,7 +58,6 @@ const LocationNodeComponent: React.FC<LocationNodeProps> = ({
   isEditing,
   hasChanges,
   onDataChange,
-  onConnect,
   onEdit,
   onDelete
 }) => {
@@ -67,7 +65,6 @@ const LocationNodeComponent: React.FC<LocationNodeProps> = ({
   const [showPopup, setShowPopup] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [searchQuery, setSearchQuery] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -174,12 +171,6 @@ const LocationNodeComponent: React.FC<LocationNodeProps> = ({
     if (showDropdown) {
       return;
     }
-    
-    if (isConnecting) {
-      // Cancel connection mode
-      setIsConnecting(false);
-      return;
-    }
 
     if (data.fromPlanning && !isEditing) {
       const rect = event.currentTarget.getBoundingClientRect();
@@ -189,7 +180,7 @@ const LocationNodeComponent: React.FC<LocationNodeProps> = ({
       });
       setShowPopup(true);
     }
-  }, [showDropdown, isConnecting, data.fromPlanning, isEditing]);
+  }, [showDropdown, data.fromPlanning, isEditing]);
 
   const handleUnlinkLocation = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
@@ -200,20 +191,6 @@ const LocationNodeComponent: React.FC<LocationNodeProps> = ({
       onDataChange('planningId', undefined);
     }
   }, [onDataChange]);
-
-  const handleConnectButtonClick = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    event.preventDefault();
-    
-    console.log('🔗 Connect button clicked for location:', data.name);
-    
-    if (onConnect) {
-      setIsConnecting(true);
-      onConnect(id);
-    } else {
-      console.warn('⚠️ onConnect handler not available');
-    }
-  }, [onConnect, id, data.name]);
 
   const calculateLocationCompleteness = useCallback((location: any) => {
     const requiredFields = ['name', 'type', 'description'];
@@ -295,12 +272,11 @@ const LocationNodeComponent: React.FC<LocationNodeProps> = ({
     <>
       <div className={`
         location-node min-w-72 max-w-80 p-4 bg-white border-2 rounded-lg shadow-md relative
-        ${isConnecting ? 'ring-2 ring-blue-400 bg-blue-50' : ''}
         ${selected ? 'ring-2 ring-purple-400 ring-offset-2' : ''} 
         ${getLocationColor(data.type)}
       `}
       onClick={handleNodeClick}
-      style={{ cursor: isConnecting ? 'crosshair' : 'pointer' }}
+      style={{ cursor: 'pointer' }}
       >
         <Handle type="target" position={Position.Top} className="w-2 h-2" />
         
@@ -472,21 +448,8 @@ const LocationNodeComponent: React.FC<LocationNodeProps> = ({
             </div>
           )}
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Removed Connect Button */}
           <div className="flex gap-2 mt-3">
-            <button 
-              onClick={handleConnectButtonClick}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
-                isConnecting 
-                  ? 'bg-blue-200 text-blue-800' 
-                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-              }`}
-              title={isConnecting ? 'Click another node to connect' : 'Create connection'}
-            >
-              <MapPin size={10} />
-              {isConnecting ? 'Connecting...' : 'Connect'}
-            </button>
-
             {data.fromPlanning && onEdit && (
               <button 
                 onClick={(e) => {
