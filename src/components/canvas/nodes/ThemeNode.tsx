@@ -1,263 +1,302 @@
+// src/components/canvas/nodes/ThemeNode.tsx
 import React, { useState, useCallback } from 'react';
 import { Handle, Position } from 'reactflow';
-import { Lightbulb, Edit2, Save, X, Plus, Minus } from 'lucide-react';
-import { ThemeNodeData } from '../types';
+import { Lightbulb, Star, Circle, Users, BookOpen, MapPin } from 'lucide-react';
+import { useCanvasPlanningData } from '../../../hooks/useCanvasPlanningData';
+import type { CanvasThemeData } from '../../../services/canvas-integration-service';
 
-interface ThemeNodeProps {
-  data: ThemeNodeData;
-  selected: boolean;
+interface ThemeNodeData {
   id: string;
-  onDataChange?: (id: string, newData: Partial<ThemeNodeData>) => void;
+  name: string;
+  description: string;
+  fromPlanning?: boolean;
+  planningId?: string;
+  themeType?: 'major' | 'minor' | 'motif';
+  completenessScore?: number;
+  connectionCount?: number;
+  characterConnections?: number;
+  plotConnections?: number;
 }
 
-export const ThemeNode: React.FC<ThemeNodeProps> = ({ 
-  data, 
-  selected, 
+interface ThemeNodeProps {
+  id: string;
+  data: ThemeNodeData;
+  selected?: boolean;
+  onDataChange?: (newData: Partial<ThemeNodeData>) => void;
+  onConnect?: (nodeId: string) => void;
+  projectId?: string;
+}
+
+const ThemeNode: React.FC<ThemeNodeProps> = ({
   id,
-  onDataChange 
+  data,
+  selected,
+  onDataChange,
+  onConnect,
+  projectId
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState(data);
-  const [newCharacter, setNewCharacter] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  
+  const { planningThemes, loading } = useCanvasPlanningData(projectId);
 
-  const handleSave = useCallback(() => {
-    onDataChange?.(id, editData);
-    setIsEditing(false);
-  }, [id, editData, onDataChange]);
-
-  const handleCancel = useCallback(() => {
-    setEditData(data);
-    setIsEditing(false);
-  }, [data]);
-
-  const updateField = useCallback((field: string, value: any) => {
-    setEditData(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  const addCharacter = useCallback(() => {
-    if (newCharacter.trim()) {
-      setEditData(prev => ({
-        ...prev,
-        relatedCharacters: [...(prev.relatedCharacters || []), newCharacter.trim()]
-      }));
-      setNewCharacter('');
+  // Handle theme selection from planning data
+  const handleThemeSelect = useCallback((theme: CanvasThemeData) => {
+    if (onDataChange) {
+      onDataChange({
+        ...data,
+        name: theme.name,
+        description: theme.description,
+        fromPlanning: true,
+        planningId: theme.id,
+        themeType: theme.themeType,
+        completenessScore: theme.completenessScore,
+        connectionCount: theme.connectionCount,
+        characterConnections: theme.characterConnections,
+        plotConnections: theme.plotConnections
+      });
     }
-  }, [newCharacter]);
+    setShowDropdown(false);
+  }, [data, onDataChange]);
 
-  const removeCharacter = useCallback((index: number) => {
-    setEditData(prev => ({
-      ...prev,
-      relatedCharacters: prev.relatedCharacters?.filter((_, i) => i !== index) || []
-    }));
-  }, []);
+  const handleAtomClick = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    setShowDropdown(!showDropdown);
+  }, [showDropdown]);
 
-  const getThemeColor = (type: string) => {
-    switch (type) {
-      case 'central': return 'bg-yellow-100 border-yellow-400 text-yellow-900';
-      case 'supporting': return 'bg-orange-100 border-orange-400 text-orange-900';
-      case 'minor': return 'bg-amber-100 border-amber-400 text-amber-900';
-      case 'subplot': return 'bg-yellow-50 border-yellow-300 text-yellow-800';
-      default: return 'bg-gray-100 border-gray-400 text-gray-900';
+  const handleConnectClick = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    if (onConnect) {
+      setIsConnecting(true);
+      onConnect(id);
+    }
+  }, [onConnect, id]);
+
+  // Get theme type icon
+  const getThemeIcon = () => {
+    switch (data.themeType) {
+      case 'major':
+        return <Star className="w-4 h-4" />;
+      case 'minor':
+        return <Circle className="w-4 h-4" />;
+      case 'motif':
+        return <Lightbulb className="w-4 h-4" />;
+      default:
+        return <Lightbulb className="w-4 h-4" />;
     }
   };
 
-  const getSignificanceIndicator = (significance: string) => {
-    switch (significance) {
-      case 'critical': return '🔴';
-      case 'high': return '🟡';
-      case 'moderate': return '🟢';
-      case 'low': return '⚪';
-      default: return '⚪';
+  // Get theme type color
+  const getThemeColor = () => {
+    switch (data.themeType) {
+      case 'major':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      case 'minor':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'motif':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  // Get completeness color
+  const getCompletenessColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    if (score >= 40) return 'text-orange-600';
+    return 'text-red-600';
   };
 
   return (
-    <div className={`theme-node min-w-[220px] max-w-[350px] p-4 border-2 rounded-lg transition-all shadow-md ${
-      selected ? 'ring-2 ring-yellow-400 ring-offset-2' : ''
-    } ${getThemeColor(data.type)} bg-white bg-opacity-90`}>
-      <Handle type="target" position={Position.Left} className="w-3 h-3 bg-yellow-500" />
+    <div className={`
+      bg-white rounded-lg shadow-md border-2 transition-all duration-200 min-w-[200px] max-w-[300px]
+      ${selected ? 'border-indigo-400 shadow-lg' : 'border-indigo-200'}
+      ${data.fromPlanning ? 'ring-2 ring-green-200' : ''}
+    `}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-3 h-3 bg-indigo-400 border-2 border-white"
+      />
       
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 flex-1">
-          <Lightbulb className="w-4 h-4 flex-shrink-0" />
-          <span className="text-lg">{getSignificanceIndicator(data.significance)}</span>
-          {isEditing ? (
-            <input
-              type="text"
-              value={editData.title}
-              onChange={(e) => updateField('title', e.target.value)}
-              className="font-semibold text-sm bg-white border border-gray-300 rounded px-2 py-1 flex-1"
-              placeholder="Theme title"
-            />
-          ) : (
-            <h3 className="font-semibold text-sm flex-1">{data.title || 'New Theme'}</h3>
-          )}
-        </div>
-        
-        {isEditing ? (
-          <div className="flex gap-1">
+      <div className="px-3 py-2 bg-indigo-50 rounded-t-lg border-b border-indigo-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            {getThemeIcon()}
+            <span className="text-xs font-medium text-indigo-700">Theme</span>
+            {data.fromPlanning && (
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-xs text-green-600">Linked</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex space-x-1">
+            {/* Atom button for planning integration */}
             <button
-              onClick={handleSave}
-              className="p-1 hover:bg-green-200 rounded transition-colors"
-              title="Save"
+              onClick={handleAtomClick}
+              className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 p-1 rounded transition-colors relative"
+              title="Link to Planning Themes"
             >
-              <Save size={14} />
+              <span className="text-sm font-bold">⚛</span>
             </button>
+            
+            {/* Connect button */}
             <button
-              onClick={handleCancel}
-              className="p-1 hover:bg-red-200 rounded transition-colors"
-              title="Cancel"
+              onClick={handleConnectClick}
+              className={`text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 p-1 rounded transition-colors ${
+                isConnecting ? 'bg-indigo-200' : ''
+              }`}
+              title="Connect to other nodes"
             >
-              <X size={14} />
+              🔗
             </button>
           </div>
-        ) : (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="p-1 hover:bg-white hover:bg-opacity-50 rounded transition-colors"
-            title="Edit"
-          >
-            <Edit2 size={14} />
-          </button>
+        </div>
+      </div>
+
+      {/* Planning Dropdown */}
+      {showDropdown && (
+        <>
+          <div 
+            className="fixed inset-0 z-10" 
+            onClick={() => setShowDropdown(false)}
+          />
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-60 overflow-y-auto">
+            <div className="p-2 border-b border-gray-100">
+              <div className="text-xs font-medium text-gray-600">Story Themes</div>
+            </div>
+            
+            {loading ? (
+              <div className="p-3 text-center text-gray-500 text-sm">
+                Loading themes...
+              </div>
+            ) : planningThemes.length === 0 ? (
+              <div className="p-3 text-center text-gray-500 text-sm">
+                No themes found
+              </div>
+            ) : (
+              <div className="max-h-48 overflow-y-auto">
+                {planningThemes.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => handleThemeSelect(theme)}
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="font-medium text-sm text-gray-900">{theme.name}</div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {theme.themeType} • {theme.completenessScore}% complete
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                      {theme.description}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Content */}
+      <div className="px-3 py-2">
+        <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-2">
+          {data.name}
+        </h3>
+        
+        <p className="text-xs text-gray-600 leading-relaxed mb-3 line-clamp-3">
+          {data.description}
+        </p>
+
+        {/* Theme Details */}
+        <div className="space-y-2">
+          {data.themeType && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">Type:</span>
+              <span className={`text-xs px-2 py-1 rounded-full border capitalize ${getThemeColor()}`}>
+                {data.themeType}
+              </span>
+            </div>
+          )}
+          
+          {data.completenessScore !== undefined && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">Development:</span>
+              <span className={`text-xs font-medium ${getCompletenessColor(data.completenessScore)}`}>
+                {data.completenessScore}%
+              </span>
+            </div>
+          )}
+          
+          {data.connectionCount !== undefined && data.connectionCount > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">Total Connections:</span>
+              <span className="text-xs text-gray-700">
+                {data.connectionCount}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Connection Breakdown */}
+        {(data.characterConnections || data.plotConnections) && (
+          <div className="mt-3 pt-2 border-t border-gray-100">
+            <div className="text-xs text-gray-500 mb-2">Theme Connections</div>
+            <div className="space-y-1">
+              {data.characterConnections !== undefined && data.characterConnections > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">Characters</span>
+                  </div>
+                  <span className="text-xs text-gray-700">{data.characterConnections}</span>
+                </div>
+              )}
+              
+              {data.plotConnections !== undefined && data.plotConnections > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1">
+                    <BookOpen className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">Plots</span>
+                  </div>
+                  <span className="text-xs text-gray-700">{data.plotConnections}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Completeness Progress Bar */}
+        {data.completenessScore !== undefined && (
+          <div className="mt-3 pt-2 border-t border-gray-100">
+            <div className="text-xs text-gray-500 mb-1">Theme Development</div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  data.completenessScore >= 80 ? 'bg-green-500' :
+                  data.completenessScore >= 60 ? 'bg-yellow-500' :
+                  data.completenessScore >= 40 ? 'bg-orange-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${data.completenessScore}%` }}
+              ></div>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Type and Significance */}
-      <div className="flex items-center gap-2 mb-3">
-        {isEditing ? (
-          <select
-            value={editData.type}
-            onChange={(e) => updateField('type', e.target.value)}
-className="text-xs bg-white border border-gray-300 rounded px-2 py-1 capitalize"
-         >
-           <option value="central">Central</option>
-           <option value="supporting">Supporting</option>
-           <option value="minor">Minor</option>
-           <option value="subplot">Subplot</option>
-         </select>
-       ) : (
-         <span className="text-xs font-medium capitalize opacity-75">{data.type}</span>
-       )}
-       <span className="text-xs opacity-50">•</span>
-       {isEditing ? (
-         <select
-           value={editData.significance}
-           onChange={(e) => updateField('significance', e.target.value)}
-           className="text-xs bg-white border border-gray-300 rounded px-2 py-1 capitalize"
-         >
-           <option value="critical">Critical</option>
-           <option value="high">High</option>
-           <option value="moderate">Moderate</option>
-           <option value="low">Low</option>
-         </select>
-       ) : (
-         <span className="text-xs font-medium capitalize opacity-75">{data.significance} significance</span>
-       )}
-     </div>
-
-     {/* Description */}
-     <div className="mb-3">
-       {isEditing ? (
-         <textarea
-           value={editData.description}
-           onChange={(e) => updateField('description', e.target.value)}
-           className="w-full text-xs bg-white border border-gray-300 rounded px-2 py-1 resize-none"
-           rows={3}
-           placeholder="Theme description and how it manifests..."
-         />
-       ) : (
-         <p className="text-xs leading-relaxed opacity-90">
-           {data.description || 'No description provided...'}
-         </p>
-       )}
-     </div>
-
-     {/* Development */}
-     {(data.development || isEditing) && (
-       <div className="mb-3">
-         <h4 className="text-xs font-semibold mb-1 opacity-75">Development:</h4>
-         {isEditing ? (
-           <textarea
-             value={editData.development || ''}
-             onChange={(e) => updateField('development', e.target.value)}
-             className="w-full text-xs bg-white border border-gray-300 rounded px-2 py-1 resize-none"
-             rows={2}
-             placeholder="How this theme develops throughout the story..."
-           />
-         ) : (
-           <p className="text-xs leading-relaxed opacity-80">
-             {data.development}
-           </p>
-         )}
-       </div>
-     )}
-
-     {/* Related Characters */}
-     <div>
-       <h4 className="text-xs font-semibold mb-2 flex items-center gap-1">
-         👥 Related Characters
-       </h4>
-       
-       {isEditing ? (
-         <div className="space-y-2">
-           <div className="flex flex-wrap gap-1">
-             {editData.relatedCharacters?.map((char, idx) => (
-               <span 
-                 key={idx} 
-                 className="inline-flex items-center gap-1 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full"
-               >
-                 {char}
-                 <button
-                   onClick={() => removeCharacter(idx)}
-                   className="hover:text-yellow-600"
-                 >
-                   <Minus size={10} />
-                 </button>
-               </span>
-             ))}
-           </div>
-           <div className="flex gap-1">
-             <input
-               type="text"
-               value={newCharacter}
-               onChange={(e) => setNewCharacter(e.target.value)}
-               onKeyPress={(e) => e.key === 'Enter' && addCharacter()}
-               className="flex-1 text-xs bg-white border border-gray-300 rounded px-2 py-1"
-               placeholder="Add character..."
-             />
-             <button
-               onClick={addCharacter}
-               className="p-1 bg-yellow-200 hover:bg-yellow-300 rounded transition-colors"
-             >
-               <Plus size={12} />
-             </button>
-           </div>
-         </div>
-       ) : (
-         <div className="flex flex-wrap gap-1">
-           {data.relatedCharacters && data.relatedCharacters.length > 0 ? (
-             data.relatedCharacters.slice(0, 3).map((char, idx) => (
-               <span 
-                 key={idx} 
-                 className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full"
-               >
-                 {char}
-               </span>
-             ))
-           ) : (
-             <span className="text-xs opacity-50 italic">No characters linked</span>
-           )}
-           {data.relatedCharacters && data.relatedCharacters.length > 3 && (
-             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-               +{data.relatedCharacters.length - 3}
-             </span>
-           )}
-         </div>
-       )}
-     </div>
-
-     <Handle type="source" position={Position.Right} className="w-3 h-3 bg-yellow-500" />
-   </div>
- );
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-3 h-3 bg-indigo-400 border-2 border-white"
+      />
+    </div>
+  );
 };
+
+export default ThemeNode;
