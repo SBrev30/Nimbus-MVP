@@ -1,4 +1,4 @@
-// src/services/notion-import-service.ts
+// src/services/notion-import-service.ts - FIXED VERSION
 
 interface NotionProperty {
   id: string;
@@ -176,7 +176,8 @@ export class NotionImportService {
     if (nameL.includes('character') || 
         propKeys.some(k => 
           k.includes('role') || k.includes('age') || k.includes('race') || 
-          k.includes('abilities') || k.includes('class') || k.includes('trait')
+          k.includes('abilities') || k.includes('class') || k.includes('trait') ||
+          k.includes('techniques') || k.includes('face claim')
         )) {
       return 'character';
     }
@@ -292,24 +293,57 @@ export class NotionImportService {
     return databases;
   }
 
+  // 🔧 FIXED: Enhanced URL extraction method
   private extractDatabaseIdFromUrl(url: string): string {
+    console.log('🔍 Extracting database ID from URL:', url);
+    
+    // Remove any trailing whitespace and normalize
+    const cleanUrl = url.trim();
+    
+    // Handle view parameters by removing them
+    const urlWithoutView = cleanUrl.split('?')[0];
+    
     // Extract database ID from various Notion URL formats
     const patterns = [
-      /notion\.so\/([a-f0-9]{32})/,           // Standard database URL
-      /notion\.so\/.+\/([a-f0-9]{32})/,       // Database URL with title
-      /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/, // UUID format
+      // Standard database URL with or without view parameter
+      /notion\.so\/([a-f0-9]{32})(?:\?.*)?$/,
+      // Database URL with title
+      /notion\.so\/.+\/([a-f0-9]{32})(?:\?.*)?$/,
+      // UUID format with hyphens
+      /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/,
+      // Raw UUID without hyphens
+      /([a-f0-9]{32})/,
     ];
 
     for (const pattern of patterns) {
-      const match = url.match(pattern);
+      const match = cleanUrl.match(pattern);
       if (match) {
-        const id = match[1];
+        let id = match[1];
         // Remove hyphens from UUID format
-        return id.replace(/-/g, '');
+        id = id.replace(/-/g, '');
+        console.log('✅ Extracted database ID:', id);
+        return id;
       }
     }
 
-    throw new Error(`Invalid Notion database URL: ${url}`);
+    // If no pattern matches, try extracting from URL path
+    const pathSegments = cleanUrl.split('/');
+    for (const segment of pathSegments.reverse()) {
+      // Look for segments that look like Notion IDs
+      const cleanSegment = segment.split('?')[0]; // Remove query params
+      if (/^[a-f0-9]{32}$/.test(cleanSegment)) {
+        console.log('✅ Extracted database ID from path:', cleanSegment);
+        return cleanSegment;
+      }
+      if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(cleanSegment)) {
+        const id = cleanSegment.replace(/-/g, '');
+        console.log('✅ Extracted database ID from path (UUID):', id);
+        return id;
+      }
+    }
+
+    console.error('❌ Failed to extract database ID from URL:', url);
+    throw new Error(`Invalid Notion database URL: ${url}. Please ensure you're using a valid Notion database URL.`);
   }
 
   // Helper method to validate token by making a test request
@@ -333,19 +367,19 @@ export class DatabaseMapper {
       project_id: projectId,
       name: record.name,
       role: this.mapNotionRoleToApp(props.Role || props.Type || ''),
-      age: this.extractAge(props.Age || props['Age '] || ''),
+      age: this.extractAge(props['Age '] || props.Age || ''), // Handle "Age " with space
       description: record.content || props.Description || '',
-      // Map specific character fields
-      race: Array.isArray(props.Race || props['Race ']) 
-        ? (props.Race || props['Race '])[0] 
-        : (props.Race || props['Race '] || ''),
+      // Map specific character fields from your Notion schema
+      race: Array.isArray(props['Race ']) 
+        ? props['Race '][0] 
+        : (props['Race '] || ''),
       abilities: Array.isArray(props.Abilities) ? props.Abilities : [],
       techniques: Array.isArray(props.Techniques) ? props.Techniques : [],
       fantasy_class: Array.isArray(props['Multi-select']) ? props['Multi-select'].join(', ') : '',
       appearance: props['Face Claim'] || '',
-      backstory: '', // Could be extracted from content if available
+      backstory: record.content || '', // Your character content is rich backstory
       motivation: '', // Could be extracted from content if available
-      personality: '', // Could be extracted from content if available
+      personality: record.content || '', // Character personality in content
       imported_from: 'notion',
       imported_at: new Date().toISOString(),
     };
