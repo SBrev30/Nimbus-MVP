@@ -69,6 +69,13 @@ export default function Integration({
       handleError('Notion integration token is required');
       return false;
     }
+    
+    // 🔧 FIXED: Updated token format validation for new ntn_ format
+    if (!state.token.trim().startsWith('ntn_') && !state.token.trim().startsWith('secret_')) {
+      handleError('Invalid token format. Token should start with "ntn_" (new format) or "secret_" (legacy format)');
+      return false;
+    }
+    
     if (!state.databaseUrls.trim()) {
       handleError('At least one database URL is required');
       return false;
@@ -86,13 +93,16 @@ export default function Integration({
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      console.log('🔍 Creating NotionImportService with token format:', state.token.substring(0, 6) + '...');
       const notionService = new NotionImportService(state.token.trim());
       
       // Validate token
+      console.log('🔍 Validating token...');
       const isValidToken = await notionService.validateToken();
       if (!isValidToken) {
-        throw new Error('Invalid Notion integration token');
+        throw new Error('Invalid Notion integration token. Please check your token and make sure databases are shared with your integration.');
       }
+      console.log('✅ Token validation successful');
 
       // Parse database URLs
       const urls = state.databaseUrls
@@ -104,16 +114,21 @@ export default function Integration({
         throw new Error('No valid database URLs provided');
       }
 
+      console.log('🔍 Importing from databases:', urls);
+
       // Import from databases
       const databases = await notionService.importFromMultipleDatabases(urls);
       
       if (databases.length === 0) {
-        throw new Error('No databases could be imported. Please check your URLs and permissions.');
+        throw new Error('No databases could be imported. Please check your URLs and make sure databases are shared with your integration.');
       }
+
+      console.log('✅ Successfully imported databases:', databases.map(db => ({ name: db.name, type: db.type, records: db.records.length })));
 
       setState(prev => ({ ...prev, databases, step: 'preview', isLoading: false }));
 
     } catch (error) {
+      console.error('❌ Import failed:', error);
       handleError(error as Error);
     }
   };
@@ -212,7 +227,7 @@ export default function Integration({
                 <BookOpen className="w-8 h-8 text-blue-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect Your Notion Workspace</h2>
-              <p className="text-gray-600">Import your novel tracker data from Notion into WritersBlock</p>
+              <p className="text-gray-600">Import your novel tracker data from Notion into Nimbus</p>
             </div>
 
             <div className="space-y-4">
@@ -224,11 +239,11 @@ export default function Integration({
                   type="password"
                   value={state.token}
                   onChange={(e) => setState(prev => ({ ...prev, token: e.target.value }))}
-                  placeholder="secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  placeholder="ntn_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  Create an integration at notion.so/my-integrations and copy the token here
+                  Create an integration at notion.so/my-integrations and copy the token here (starts with "ntn_")
                 </p>
               </div>
 
@@ -256,7 +271,7 @@ export default function Integration({
                   <h4 className="text-sm font-semibold text-blue-900">Setup Instructions</h4>
                   <ol className="text-sm text-blue-700 mt-1 list-decimal list-inside space-y-1">
                     <li>Create a Notion integration at <a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener noreferrer" className="underline inline-flex items-center gap-1">notion.so/my-integrations <ExternalLink className="w-3 h-3" /></a></li>
-                    <li>Copy the "Internal Integration Token"</li>
+                    <li>Copy the "Internal Integration Token" (starts with "ntn_")</li>
                     <li>Share your Writing Novel Tracker databases with the integration</li>
                     <li>Copy the database URLs from your browser address bar</li>
                   </ol>
@@ -295,7 +310,7 @@ export default function Integration({
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Preview Your Content</h2>
-              <p className="text-gray-600">Review what will be imported into WritersBlock</p>
+              <p className="text-gray-600">Review what will be imported into Nimbus</p>
             </div>
 
             <div className="space-y-4">
