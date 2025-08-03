@@ -1,4 +1,4 @@
-// src/services/notion-import-service.ts - FIXED VERSION
+// src/services/notion-import-service.ts - UPDATED WITH PROXY SUPPORT
 
 interface NotionProperty {
   id: string;
@@ -45,14 +45,69 @@ export interface ImportedDatabase {
 
 export class NotionImportService {
   private token: string;
-  private baseUrl = 'https://api.notion.com/v1';
+  private useProxy: boolean;
+  private proxyUrl: string;
   
   constructor(token: string) {
     this.token = token;
+    // Always use proxy in browser environment
+    this.useProxy = typeof window !== 'undefined';
+    this.proxyUrl = '/.netlify/functions/notion-proxy';
   }
 
   private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    if (this.useProxy) {
+      return this.makeProxyRequest(endpoint, options);
+    } else {
+      return this.makeDirectRequest(endpoint, options);
+    }
+  }
+
+  private async makeProxyRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
+    console.log('🔍 Making proxy request to:', endpoint);
+
+    const response = await fetch(this.proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        method: options.method || 'GET',
+        endpoint: endpoint,
+        token: this.token,
+        body: options.body ? JSON.parse(options.body as string) : undefined,
+      }),
+    });
+
+    const result = await response.json();
+    
+    console.log('📡 Proxy response:', {
+      success: result.success,
+      status: result.status,
+      hasData: !!result.data,
+    });
+
+    if (!result.success) {
+      const errorMessage = result.data?.message || `API error: ${result.status}`;
+      
+      if (result.status === 401) {
+        throw new Error('Invalid Notion token. Please check your integration token.');
+      } else if (result.status === 403) {
+        throw new Error('Access denied. Make sure your databases are shared with the integration.');
+      } else if (result.status === 404) {
+        throw new Error('Database not found. Please check your database URLs.');
+      } else {
+        throw new Error(errorMessage);
+      }
+    }
+
+    return result.data;
+  }
+
+  private async makeDirectRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
+    console.log('🔍 Making direct request to:', endpoint);
+
+    const response = await fetch(`https://api.notion.com/v1${endpoint}`, {
       ...options,
       headers: {
         'Authorization': `Bearer ${this.token}`,
