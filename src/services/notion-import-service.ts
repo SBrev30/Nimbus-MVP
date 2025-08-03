@@ -349,11 +349,25 @@ export class NotionImportService {
   // Helper method to validate token by making a test request
   async validateToken(): Promise<boolean> {
     try {
-      await this.makeRequest('/users/me');
+      console.log('🔍 Validating Notion token...');
+      const response = await this.makeRequest('/users/me');
+      console.log('✅ Token validation successful:', response);
       return true;
     } catch (error) {
+      console.error('❌ Token validation failed:', error);
       return false;
     }
+  }
+
+  // Helper method to validate token format
+  private isValidTokenFormat(token: string): boolean {
+    // Updated to accept both old and new Notion token formats
+    const validFormats = [
+      /^secret_[a-zA-Z0-9]{43}$/, // Old format: secret_xxx
+      /^ntn_[a-zA-Z0-9]+$/, // New format: ntn_xxx
+    ];
+    
+    return validFormats.some(format => format.test(token));
   }
 }
 
