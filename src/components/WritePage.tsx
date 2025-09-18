@@ -72,8 +72,27 @@ export function WritePage({ onSelectChapter, selectedProjectId, selectedChapter,
   useEffect(() => {
     if (selectedChapter) {
       setCurrentView('editor');
+      // Load chapter content when chapter is selected
+      loadChapterContent(selectedChapter.id);
     }
   }, [selectedChapter]);
+
+  // Load chapter content into editor
+  const loadChapterContent = useCallback(async (chapterId: string) => {
+    try {
+      const chapter = await chapterService.getChapter(chapterId);
+      if (chapter) {
+        setEditorContent({
+          title: chapter.title,
+          content: chapter.content || '<p>Start writing here...</p>',
+          wordCount: chapter.wordCount || 0,
+          lastSaved: new Date(chapter.updatedAt)
+        });
+      }
+    } catch (error) {
+      console.error('Error loading chapter content:', error);
+    }
+  }, []);
 
   // Fetch projects from Supabase
   useEffect(() => {
@@ -244,7 +263,7 @@ export function WritePage({ onSelectChapter, selectedProjectId, selectedChapter,
               </div>
             </div>
 
-            {/* Editor */}
+            {/* Editor with proper chapter context */}
             <Editor
               content={editorContent}
               onChange={handleEditorChange}
