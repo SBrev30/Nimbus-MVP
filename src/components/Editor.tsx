@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { EditorContent } from '../types';
 import { useWordCount, useUndo, useKeyboard } from '../hooks/useUtilities';
-import { useOptimizedAutoSave } from '../hooks/useOptimizedAutoSave';
+import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
 import { chapterService } from '../services/chapterService';
 
 interface EditorProps {
@@ -187,10 +187,6 @@ export const Editor: React.FC<EditorProps> = ({
   // Get chapter number from the service or derive it
   const [chapterNumber, setChapterNumber] = useState<number | null>(null);
   
-  // Auto-save state variables
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  
   // Helper function to get text content safely
   function getTextContent(): string {
     if (editorRef.current) {
@@ -206,21 +202,36 @@ export const Editor: React.FC<EditorProps> = ({
     content: localContent
   });
 
-  // Enhanced auto-save with optimized hook
-  const { forceSave, isSaving } = useOptimizedAutoSave(
+  // Enhanced auto-save with useUnifiedAutoSave hook
+  const { 
+    lastSaved, 
+    isSaving, 
+    saveError, 
+    cloudSyncStatus,
+    forceSave 
+  } = useUnifiedAutoSave(
     { title: localTitle, content: localContent, wordCount: words, lastSaved: new Date() },
-    selectedChapter?.id || null,
+    selectedChapter?.id || 'default',
     {
+      localKey: `chapter-${selectedChapter?.id || 'default'}`,
+      enableCloud: true,
       delay: 2000,
       onSaveSuccess: (data) => {
+        // Save to database when auto-save triggers
+        if (selectedChapter?.id) {
+          chapterService.updateChapter(selectedChapter.id, {
+            title: data.title,
+            content: data.content,
+            wordCount: data.wordCount
+          }).catch(error => {
+            console.error('Failed to save chapter to database:', error);
+          });
+        }
         onChange(data);
         setHasUnsavedChanges(false);
-        setLastSaved(new Date()); // Update lastSaved state
-        setSaveError(null); // Clear any errors
       },
       onSaveError: (error) => {
         console.error('Auto-save failed:', error);
-        setSaveError(error.message); // Set error state
       }
     }
   );
@@ -233,6 +244,20 @@ export const Editor: React.FC<EditorProps> = ({
           const chapter = await chapterService.getChapter(selectedChapter.id);
           if (chapter) {
             setChapterNumber(chapter.orderIndex || null);
+            // Load chapter content if it exists and is different from current
+            if (chapter.title !== localTitle || chapter.content !== localContent) {
+              setLocalTitle(chapter.title);
+              setLocalContent(chapter.content);
+              if (editorRef.current) {
+                editorRef.current.innerHTML = chapter.content;
+              }
+              onChange({
+                title: chapter.title,
+                content: chapter.content,
+                wordCount: chapter.wordCount || 0,
+                lastSaved: new Date(chapter.updatedAt)
+              });
+            }
           }
         } catch (error) {
           console.error('Error fetching chapter details:', error);
@@ -323,7 +348,6 @@ export const Editor: React.FC<EditorProps> = ({
 
   const handleSave = useCallback(async () => {
     await forceSave();
-    setLastSaved(new Date());
   }, [forceSave]);
 
   const formatText = useCallback((command: string, value?: string) => {
@@ -513,6 +537,19 @@ export const Editor: React.FC<EditorProps> = ({
                 <span className="text-sm text-gray-700">
                   {chapterNumber ? `Chapter ${chapterNumber}` : 'Chapter'}: {selectedChapter.title}
                 </span>
+                {/* Cloud sync status indicator */}
+                {cloudSyncStatus === 'syncing' && (
+                  <div className="flex items-center text-xs text-blue-600">
+                    <Cloud className="w-3 h-3 mr-1 animate-pulse" />
+                    Syncing...
+                  </div>
+                )}
+                {cloudSyncStatus === 'synced' && (
+                  <div className="flex items-center text-xs text-green-600">
+                    <Check className="w-3 h-3 mr-1" />
+                    Synced
+                  </div>
+                )}
               </div>
               {showWordCount && (
                 <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
