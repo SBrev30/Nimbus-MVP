@@ -1,231 +1,182 @@
-import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 
-// Check if Supabase credentials are available
-const hasSupabaseCredentials = () => {
-  return !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
-};
+interface CloudStorageData {
+  project_id?: string;
+  canvas_data: any;
+  metadata?: any;
+}
 
-// Create a mock Supabase client when credentials are missing
-const createMockSupabase = () => ({
-  from: () => ({
-    upsert: () => Promise.resolve({ error: null }),
-    select: () => ({
-      eq: () => ({
-        single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } })
-      })
-    }),
-    delete: () => ({
-      eq: () => Promise.resolve({ error: null })
-    })
-  })
-});
-
-// Create Supabase client
-const createSupabaseClient = () => {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  
-  if (!hasSupabaseCredentials()) {
-    console.log('Supabase credentials not found, using local storage only');
-    return createMockSupabase();
-  }
-  
-  try {
-    return createClient(supabaseUrl, supabaseKey);
-  } catch (error) {
-    console.log('Supabase not available, using local storage only');
-    return createMockSupabase();
-  }
-};
-
-// Initialize the client
-const supabase = createSupabaseClient();
-
-export const useCloudStorage = (userId: string | null) => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'offline'>('synced');
+export function useCloudStorage() {
+  const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      setSyncStatus('synced');
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
-      setSyncStatus('offline');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  const saveToCloud = useCallback(async (data: any): Promise<boolean> => {
-    if (!isOnline || !userId || !hasSupabaseCredentials() || userId === 'anonymous') {
-      setSyncStatus('offline');
-      return false;
-    }
-
+  const saveToCloud = useCallback(async (key: string, data: CloudStorageData) => {
     try {
-      setSyncStatus('syncing');
+      setIsSyncing(true);
+      setSyncError(null);
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      // Check if the user_id is a valid UUID
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
-        console.error('Invalid UUID format for user_id:', userId);
-        setSyncStatus('error');
-        return false;
+      if (userError) {
+        throw new Error(`Authentication error: ${userError.message}`);
       }
-      
-      // First check if record exists
-      const { data: existingData, error: checkError } = await supabase
+
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Saving to cloud with user_id:', user.id, 'storage_key:', key);
+
+      // Prepare data with user_id - matching the new table structure
+      const cloudData = {
+        user_id: user.id,
+        storage_key: key,
+        project_id: data.project_id || null,
+        canvas_data: data.canvas_data,
+        metadata: data.metadata || {},
+        updated_at: new Date().toISOString()
+      };
+
+      // Try to update existing record first
+      const { data: existingData, error: selectError } = await supabase
         .from('canvas_data')
         .select('id')
-        .eq('user_id', userId)
-        .maybeSingle();
-        
-      if (checkError) {
-        console.error('Error checking existing data:', checkError);
-        setSyncStatus('error');
-        return false;
+        .eq('user_id', user.id)
+        .eq('storage_key', key)
+        .single();
+
+      if (selectError && selectError.code !== 'PGRST116') { // PGRST116 = no rows found
+        throw selectError;
       }
-      
-      let error;
-      
+
+      let result;
       if (existingData) {
         // Update existing record
-        const { error: updateError } = await supabase
+        console.log('Updating existing canvas data record:', existingData.id);
+        result = await supabase
           .from('canvas_data')
-          .update({
-            canvas_data: data,
-            last_modified: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId);
-          
-        error = updateError;
+          .update(cloudData)
+          .eq('id', existingData.id)
+          .select();
       } else {
         // Insert new record
-        const { error: insertError } = await supabase
+        console.log('Inserting new canvas data record');
+        result = await supabase
           .from('canvas_data')
-          .insert({
-            user_id: userId,
-            canvas_data: data,
-            last_modified: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-          
-        error = insertError;
+          .insert(cloudData)
+          .select();
       }
 
-      if (error) {
-        console.error('Cloud save error:', error);
-        setSyncStatus('error');
-        return false;
+      if (result.error) {
+        console.error('Supabase operation error:', result.error);
+        throw result.error;
       }
 
-      setSyncStatus('synced');
       setLastSyncTime(new Date());
-      return true;
+      console.log('✅ Cloud save successful for key:', key);
+      return result.data?.[0] || null;
+
     } catch (error) {
-      console.error('Cloud save failed:', error);
-      setSyncStatus('error');
-      return false;
+      console.error('Cloud save error:', error);
+      setSyncError(error instanceof Error ? error.message : 'Unknown cloud save error');
+      throw error;
+    } finally {
+      setIsSyncing(false);
     }
-  }, [isOnline, userId]);
+  }, []);
 
-  const loadFromCloud = useCallback(async (): Promise<any | null> => {
-    if (!isOnline || !userId || !hasSupabaseCredentials() || userId === 'anonymous') {
-      setSyncStatus('offline');
-      return null;
-    }
-
+  const loadFromCloud = useCallback(async (key: string) => {
     try {
-      setSyncStatus('syncing');
+      setIsSyncing(true);
+      setSyncError(null);
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      // Check if the user_id is a valid UUID
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
-        console.error('Invalid UUID format for user_id:', userId);
-        setSyncStatus('error');
-        return null;
+      if (userError || !user) {
+        throw new Error('User not authenticated');
       }
-      
+
+      console.log('Loading from cloud for user_id:', user.id, 'storage_key:', key);
+
       const { data, error } = await supabase
         .from('canvas_data')
-        .select('canvas_data')
-        .eq('user_id', userId)
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('storage_key', key)
         .single();
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // No data found - this is normal for new users
-          setSyncStatus('synced');
+          // No data found - this is okay
+          console.log('No cloud data found for key:', key);
           return null;
         }
-        console.error('Cloud load error:', error);
-        setSyncStatus('error');
-        return null;
+        throw error;
       }
 
-      setSyncStatus('synced');
-      setLastSyncTime(new Date());
-      return data?.canvas_data || null;
+      console.log('✅ Cloud load successful for key:', key);
+      return data;
+
     } catch (error) {
-      console.error('Cloud load failed:', error);
-      setSyncStatus('error');
+      console.error('Cloud load error:', error);
+      setSyncError(error instanceof Error ? error.message : 'Unknown cloud load error');
       return null;
+    } finally {
+      setIsSyncing(false);
     }
-  }, [isOnline, userId]);
+  }, []);
 
-  const deleteFromCloud = useCallback(async (): Promise<boolean> => {
-    if (!isOnline || !userId || !hasSupabaseCredentials() || userId === 'anonymous') {
-      setSyncStatus('offline');
-      return false;
-    }
-
+  const deleteFromCloud = useCallback(async (key: string) => {
     try {
-      setSyncStatus('syncing');
+      setIsSyncing(true);
+      setSyncError(null);
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      // Check if the user_id is a valid UUID
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
-        console.error('Invalid UUID format for user_id:', userId);
-        setSyncStatus('error');
-        return false;
+      if (userError || !user) {
+        throw new Error('User not authenticated');
       }
-      
+
+      console.log('Deleting from cloud for user_id:', user.id, 'storage_key:', key);
+
       const { error } = await supabase
         .from('canvas_data')
         .delete()
-        .eq('user_id', userId);
+        .eq('user_id', user.id)
+        .eq('storage_key', key);
 
       if (error) {
-        console.error('Cloud delete error:', error);
-        setSyncStatus('error');
-        return false;
+        throw error;
       }
 
-      setSyncStatus('synced');
-      setLastSyncTime(new Date());
+      console.log('✅ Cloud delete successful for key:', key);
       return true;
+
     } catch (error) {
-      console.error('Cloud delete failed:', error);
-      setSyncStatus('error');
+      console.error('Cloud delete error:', error);
+      setSyncError(error instanceof Error ? error.message : 'Unknown cloud delete error');
       return false;
+    } finally {
+      setIsSyncing(false);
     }
-  }, [isOnline, userId]);
+  }, []);
+
+  const clearError = useCallback(() => {
+    setSyncError(null);
+  }, []);
 
   return {
     saveToCloud,
     loadFromCloud,
     deleteFromCloud,
-    isOnline,
-    syncStatus,
-    lastSyncTime
+    isSyncing,
+    lastSyncTime,
+    syncError,
+    clearError
   };
-};
+}
