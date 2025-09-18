@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { EditorContent } from '../types';
 import { useWordCount, useUndo, useKeyboard } from '../hooks/useUtilities';
-import { useUnifiedAutoSave } from '../hooks/useUnifiedAutoSave';
+import { useOptimizedAutoSave } from '../hooks/useOptimizedAutoSave';
 import { chapterService } from '../services/chapterService';
 
 interface EditorProps {
@@ -173,7 +173,7 @@ export const Editor: React.FC<EditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   
-  // FIX 1: Use stable state that doesn't flicker
+  // Use stable state that doesn't flicker
   const [localTitle, setLocalTitle] = useState(content.title);
   const [localContent, setLocalContent] = useState(content.content);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -184,8 +184,12 @@ export const Editor: React.FC<EditorProps> = ({
   const [currentAlignment, setCurrentAlignment] = useState('left');
   const [showWordCount, setShowWordCount] = useState(true);
   
-  // FIX 2: Get chapter number from the service or derive it
+  // Get chapter number from the service or derive it
   const [chapterNumber, setChapterNumber] = useState<number | null>(null);
+  
+  // Auto-save state variables
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   
   // Helper function to get text content safely
   function getTextContent(): string {
@@ -202,35 +206,26 @@ export const Editor: React.FC<EditorProps> = ({
     content: localContent
   });
 
-  // Enhanced auto-save with database integration
-  const { lastSaved, isSaving, saveError, cloudSyncStatus } = useUnifiedAutoSave(
+  // Enhanced auto-save with optimized hook
+  const { forceSave, isSaving } = useOptimizedAutoSave(
     { title: localTitle, content: localContent, wordCount: words, lastSaved: new Date() },
-    selectedChapter?.id || 'default', // Use chapter ID as key
+    selectedChapter?.id || null,
     {
-      localKey: `chapter-${selectedChapter?.id || 'default'}`,
-      enableCloud: true,
-      delay: 180000, // 3 minutes
+      delay: 2000,
       onSaveSuccess: (data) => {
-        // Save to database when auto-save triggers
-        if (selectedChapter?.id) {
-          chapterService.updateChapter(selectedChapter.id, {
-            title: data.title,
-            content: data.content,
-            wordCount: data.wordCount
-          }).catch(error => {
-            console.error('Failed to save chapter to database:', error);
-          });
-        }
         onChange(data);
         setHasUnsavedChanges(false);
+        setLastSaved(new Date()); // Update lastSaved state
+        setSaveError(null); // Clear any errors
       },
       onSaveError: (error) => {
         console.error('Auto-save failed:', error);
+        setSaveError(error.message); // Set error state
       }
     }
   );
 
-  // FIX 3: Fetch chapter details when selectedChapter changes
+  // Fetch chapter details when selectedChapter changes
   useEffect(() => {
     const fetchChapterDetails = async () => {
       if (selectedChapter?.id) {
@@ -251,7 +246,7 @@ export const Editor: React.FC<EditorProps> = ({
     fetchChapterDetails();
   }, [selectedChapter?.id]);
 
-  // FIX 4: Only update local state when external content actually changes
+  // Only update local state when external content actually changes
   useEffect(() => {
     if (content.title !== localTitle) {
       setLocalTitle(content.title);
@@ -327,31 +322,9 @@ export const Editor: React.FC<EditorProps> = ({
   }, [localContent, words, onChange, setUndoState]);
 
   const handleSave = useCallback(async () => {
-    const currentContent = {
-      title: localTitle,
-      content: localContent,
-      wordCount: words,
-      lastSaved: new Date()
-    };
-    
-    // Save to local state
-    onChange(currentContent);
-    setHasUnsavedChanges(false);
-    
-    // Save to database if we have a chapter selected
-    if (selectedChapter?.id) {
-      try {
-        await chapterService.updateChapter(selectedChapter.id, {
-          title: localTitle,
-          content: localContent,
-          wordCount: words
-        });
-      } catch (error) {
-        console.error('Failed to save chapter to database:', error);
-        // Could show a user notification here
-      }
-    }
-  }, [localTitle, localContent, words, onChange, selectedChapter?.id]);
+    await forceSave();
+    setLastSaved(new Date());
+  }, [forceSave]);
 
   const formatText = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -532,7 +505,7 @@ export const Editor: React.FC<EditorProps> = ({
       {/* Editor Container - Full width since NotesPanel is handled by App.tsx */}
       <div className="flex-1 flex overflow-hidden">
         <div className="w-full h-full bg-white mx-3 md:mx-6 mb-3 md:mb-6 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* FIX 5: Chapter Info - Better display logic */}
+          {/* Chapter Info - Better display logic */}
           {selectedChapter?.title && (
             <div className="px-4 md:px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-2">
               <div className="flex items-center space-x-3">
@@ -564,7 +537,7 @@ export const Editor: React.FC<EditorProps> = ({
             ) : (
               <div className="px-4 md:px-10 pt-6 md:pt-10 pb-20 md:pb-32">
                 <div className="max-w-[803px] mx-auto">
-                  {/* FIX 6: Title Input - More stable */}
+                  {/* Title Input - More stable */}
                   <input
                     type="text"
                     value={localTitle}
