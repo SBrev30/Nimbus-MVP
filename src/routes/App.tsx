@@ -134,9 +134,6 @@ function AppContent() {
   // Notes state
   const [notes, setNotes] = useLocalStorage<Note[]>('notes', []);
 
-  // Auto-save functionality
-  useAutoSave(editorContent, setEditorContent, 5000);
-
   // Load user's default project on login
   useEffect(() => {
     const loadDefaultProject = async () => {
