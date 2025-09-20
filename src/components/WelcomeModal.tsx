@@ -10,8 +10,7 @@ interface WelcomeModalProps {
 }
 
 interface UserProfile {
-  first_name: string | null;
-  last_name: string | null;
+  full_name: string | null;
 }
 
 interface RecentChapter extends Chapter {
@@ -35,7 +34,7 @@ export function WelcomeModal({ onClose, onNavigateToProject, onNavigateToKanban 
 
         const { data: profile } = await supabase
           .from('user_profiles')
-          .select('first_name, last_name')
+          .select('full_name')
           .eq('id', user.id)
           .single();
 
@@ -104,7 +103,8 @@ export function WelcomeModal({ onClose, onNavigateToProject, onNavigateToKanban 
     return 'Good evening';
   };
 
-  const firstName = userProfile?.first_name || 'Writer';
+  // Extract first name from full_name
+  const firstName = userProfile?.full_name?.split(' ')[0] || 'Writer';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
