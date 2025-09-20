@@ -15,6 +15,52 @@ export interface Chapter {
 
 export const chapterService = {
   /**
+   * Get all chapters for the current authenticated user across all projects
+   * Used by WelcomeModal to find the most recent chapter
+   */
+  async getAllChapters(): Promise<Chapter[]> {
+    try {
+      const { data: authUser } = await supabase.auth.getUser();
+      
+      if (!authUser.user) {
+        return [];
+      }
+      
+      const { data, error } = await supabase
+        .from('chapters')
+        .select(`
+          *,
+          projects!inner(
+            user_id,
+            title
+          )
+        `)
+        .eq('projects.user_id', authUser.user.id)
+        .order('updated_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return (data || []).map(chapter => ({
+        id: chapter.id,
+        projectId: chapter.project_id,
+        title: chapter.title,
+        content: chapter.content,
+        summary: chapter.summary,
+        wordCount: chapter.word_count,
+        orderIndex: chapter.order_index,
+        status: chapter.status,
+        createdAt: chapter.created_at,
+        updatedAt: chapter.updated_at
+      }));
+    } catch (error) {
+      console.error('Error getting all chapters:', error);
+      return [];
+    }
+  },
+
+  /**
    * Get all chapters for a project
    */
   async getProjectChapters(projectId: string): Promise<Chapter[]> {
