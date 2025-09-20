@@ -5,7 +5,7 @@ import { Chapter } from '../services/chapterService';
 interface ChapterPreviewModalProps {
   chapter: Chapter;
   onClose: () => void;
-  onEditChapter?: (chapterId: string, chapterTitle: string) => void; // Add this line
+  onEditChapter?: (chapterId: string, chapterTitle: string) => void;
 }
 
 export function ChapterPreviewModal({ chapter, onClose, onEditChapter }: ChapterPreviewModalProps) {
@@ -60,17 +60,15 @@ export function ChapterPreviewModal({ chapter, onClose, onEditChapter }: Chapter
           >
             Close
           </button>
-          // Replace the existing "Edit Chapter" button onClick handler:
-<button
-  onClick={() => {
-    onClose();
-    // Change this line to properly call onEditChapter
-    onEditChapter?.(chapter.id, chapter.title);
-  }}
-  className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors font-medium"
->
-  Edit Chapter
-</button>
+          <button
+            onClick={() => {
+              onClose();
+              onEditChapter?.(chapter.id, chapter.title);
+            }}
+            className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-gray-900 rounded-lg transition-colors font-medium"
+          >
+            Edit Chapter
+          </button>
         </div>
       </div>
     </div>
