@@ -75,22 +75,51 @@ export function WritePage({ onSelectChapter, selectedProjectId, selectedChapter,
       // Load chapter content when chapter is selected
       loadChapterContent(selectedChapter.id);
     }
-  }, [selectedChapter]);
+  }, [selectedChapter?.id]); // Changed dependency to only chapter ID
 
-  // Load chapter content into editor
+  // FIXED: Load chapter content into editor with proper error handling
   const loadChapterContent = useCallback(async (chapterId: string) => {
     try {
+      setIsLoading(true);
+      console.log('📖 WritePage: Loading chapter content for:', chapterId);
+      
       const chapter = await chapterService.getChapter(chapterId);
+      
       if (chapter) {
+        console.log('✅ WritePage: Chapter loaded successfully:', {
+          title: chapter.title,
+          contentLength: chapter.content?.length || 0,
+          wordCount: chapter.wordCount
+        });
+        
+        // Set the editor content with the most recent data from database
         setEditorContent({
           title: chapter.title,
           content: chapter.content || '<p>Start writing here...</p>',
           wordCount: chapter.wordCount || 0,
           lastSaved: new Date(chapter.updatedAt)
         });
+      } else {
+        console.warn('⚠️ WritePage: No chapter data returned');
+        // Fallback to default content
+        setEditorContent({
+          title: 'Untitled Chapter',
+          content: '<p>Start writing here...</p>',
+          wordCount: 0,
+          lastSaved: new Date()
+        });
       }
     } catch (error) {
-      console.error('Error loading chapter content:', error);
+      console.error('❌ WritePage: Error loading chapter content:', error);
+      // Set default content on error
+      setEditorContent({
+        title: 'Error Loading Chapter',
+        content: '<p>Failed to load chapter content. Please try again.</p>',
+        wordCount: 0,
+        lastSaved: new Date()
+      });
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -173,6 +202,7 @@ export function WritePage({ onSelectChapter, selectedProjectId, selectedChapter,
   };
 
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
+    console.log('📝 WritePage: Selecting chapter:', { chapterId, chapterTitle });
     if (onSelectChapter) {
       onSelectChapter(chapterId, chapterTitle); 
     }
@@ -268,7 +298,7 @@ export function WritePage({ onSelectChapter, selectedProjectId, selectedChapter,
               content={editorContent}
               onChange={handleEditorChange}
               selectedChapter={selectedChapter}
-              isLoading={false}
+              isLoading={isLoading}
               className={notesPanelCollapsed || isMobile ? '' : 'mr-80'}
             />
           </div>
