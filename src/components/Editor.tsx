@@ -512,7 +512,7 @@ export const Editor: React.FC<EditorProps> = ({
               <div className="flex items-center space-x-3">
                 <FileText className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-700">
-                  {chapterNumber ? `Chapter ${chapterNumber}` : 'Chapter'}: {selectedChapter.title}
+                  {selectedChapter.title}
                 </span>
                 {/* Cloud sync status indicator */}
                 {cloudSyncStatus === 'syncing' && (
