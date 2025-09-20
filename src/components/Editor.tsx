@@ -177,6 +177,7 @@ export const Editor: React.FC<EditorProps> = ({
   const [localTitle, setLocalTitle] = useState(content.title);
   const [localContent, setLocalContent] = useState(content.content);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isLoadingChapter, setIsLoadingChapter] = useState(false);
   
   // Enhanced editor state
   const [currentFont, setCurrentFont] = useState('Inter, sans-serif');
@@ -236,56 +237,83 @@ export const Editor: React.FC<EditorProps> = ({
     }
   );
 
-  // Fetch chapter details when selectedChapter changes
+  // FIXED: Fetch the most recent chapter details when selectedChapter changes
   useEffect(() => {
     const fetchChapterDetails = async () => {
       if (selectedChapter?.id) {
+        setIsLoadingChapter(true);
         try {
+          console.log('📖 Loading chapter from database:', selectedChapter.id);
           const chapter = await chapterService.getChapter(selectedChapter.id);
+          
           if (chapter) {
             setChapterNumber(chapter.orderIndex || null);
-            // Load chapter content if it exists and is different from current
-            if (chapter.title !== localTitle || chapter.content !== localContent) {
-              setLocalTitle(chapter.title);
-              setLocalContent(chapter.content);
-              if (editorRef.current) {
-                editorRef.current.innerHTML = chapter.content;
-              }
-              onChange({
-                title: chapter.title,
-                content: chapter.content,
-                wordCount: chapter.wordCount || 0,
-                lastSaved: new Date(chapter.updatedAt)
-              });
+            
+            // Always load the most recent content from database
+            const mostRecentTitle = chapter.title || 'Untitled Chapter';
+            const mostRecentContent = chapter.content || '<p>Start writing here...</p>';
+            
+            console.log('✅ Loaded chapter:', {
+              title: mostRecentTitle,
+              contentLength: mostRecentContent.length,
+              wordCount: chapter.wordCount
+            });
+            
+            // Update local state with fresh data
+            setLocalTitle(mostRecentTitle);
+            setLocalContent(mostRecentContent);
+            
+            // Update the editor content
+            if (editorRef.current) {
+              editorRef.current.innerHTML = mostRecentContent;
             }
+            
+            // Notify parent component
+            onChange({
+              title: mostRecentTitle,
+              content: mostRecentContent,
+              wordCount: chapter.wordCount || 0,
+              lastSaved: new Date(chapter.updatedAt)
+            });
           }
         } catch (error) {
-          console.error('Error fetching chapter details:', error);
+          console.error('❌ Error fetching chapter details:', error);
           setChapterNumber(null);
+          
+          // Fallback to default content on error
+          setLocalTitle('Untitled Chapter');
+          setLocalContent('<p>Start writing here...</p>');
+          if (editorRef.current) {
+            editorRef.current.innerHTML = '<p>Start writing here...</p>';
+          }
+        } finally {
+          setIsLoadingChapter(false);
         }
       } else {
         setChapterNumber(null);
+        setLocalTitle('Untitled');
+        setLocalContent('<p>Start writing here...</p>');
       }
     };
 
     fetchChapterDetails();
-  }, [selectedChapter?.id]);
+  }, [selectedChapter?.id, onChange]);
 
   // Only update local state when external content actually changes
   useEffect(() => {
-    if (content.title !== localTitle) {
+    if (content.title !== localTitle && !isLoadingChapter) {
       setLocalTitle(content.title);
     }
-  }, [content.title]);
+  }, [content.title, isLoadingChapter]);
 
   useEffect(() => {
-    if (content.content !== localContent) {
+    if (content.content !== localContent && !isLoadingChapter) {
       setLocalContent(content.content);
       if (editorRef.current && editorRef.current.innerHTML !== content.content) {
         editorRef.current.innerHTML = content.content;
       }
     }
-  }, [content.content]);
+  }, [content.content, isLoadingChapter]);
 
   // Keyboard shortcuts
   useKeyboard({
@@ -400,7 +428,7 @@ export const Editor: React.FC<EditorProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  if (isLoading) {
+  if (isLoading || isLoadingChapter) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: '#f2eee2' }}>
         <div className="text-center p-8">
