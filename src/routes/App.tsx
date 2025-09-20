@@ -19,6 +19,7 @@ import { LandingPage } from '../components/landing-page';
 import { chapterService } from '../services/chapterService';
 import { ProfilePage } from '../components/ProfilePage';
 import { ResetPasswordPage } from '../components/ResetPasswordPage';
+import { WelcomeModal } from '../components/WelcomeModal';
 
 // Define types directly in this file to avoid import issues
 interface EditorContent {
@@ -44,7 +45,6 @@ import { ThemesPage } from '../components/planning/themes-page';
 import { CharactersPage } from '../components/planning/CharactersPage';
 import { WorldBuildingPage } from '../components/planning/WorldBuildingPage';
 import { Library } from '../components/Library';
-
 
 // Import help components
 import { HelpTopicsPage } from '../components/help/HelpTopicsPage';
@@ -111,8 +111,8 @@ function AppContent() {
   const [activeView, setActiveView] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   
-  // FIX: Updated currentChapter type to include number
   const [currentChapter, setCurrentChapter] = useState<{ id: string; title: string; number?: number } | null>(null);
   const [editorLoading, setEditorLoading] = useState(false);
   const [showAuthPage, setShowAuthPage] = useState(false);
@@ -150,13 +150,13 @@ function AppContent() {
             setCurrentProject(projects[0]);
           }
         } catch (error) {
-          // Could add user notification here if needed
+          console.error('Error loading default project:', error);
         }
       }
     };
 
     loadDefaultProject();
-  }, [user]);
+  }, [user, currentProject]);
 
   // ALL CALLBACK HANDLERS
   const handleEditorChange = useCallback((content: EditorContent) => {
@@ -178,7 +178,6 @@ function AppContent() {
     }
   }, []);
 
-  // FIX: Updated handleSelectChapter to include chapter number
   const handleSelectChapter = useCallback((chapterId: string, chapterTitle: string) => {
     setEditorLoading(true);
     setActiveView('editor');
@@ -195,11 +194,10 @@ function AppContent() {
     chapterService.getChapter(chapterId)
       .then(chapter => {
         if (chapter) {
-          // Set chapter with number included - THIS IS THE KEY FIX
           setCurrentChapter({ 
             id: chapterId, 
             title: chapter.title,
-            number: chapter.orderIndex // This fixes "Chapter Unknown"
+            number: chapter.orderIndex
           });
           
           const chapterContent = {
@@ -215,11 +213,10 @@ function AppContent() {
             [chapterId]: chapterContent
           }));
         } else {
-          // Fallback if chapter not found
           setCurrentChapter({ 
             id: chapterId, 
             title: chapterTitle,
-            number: undefined // No number available
+            number: undefined
           });
           
           const existingContent = chapterContents[chapterId];
@@ -236,7 +233,6 @@ function AppContent() {
       .catch(error => {
         console.error('Error fetching chapter:', error);
         
-        // Set chapter without number on error
         setCurrentChapter({ 
           id: chapterId, 
           title: chapterTitle,
@@ -266,6 +262,21 @@ function AppContent() {
     }
   }, [handleSelectChapter]);
 
+  // Welcome modal navigation handlers
+  const handleNavigateToProjectFromWelcome = useCallback((projectId: string, chapterId?: string) => {
+    setCurrentProject({ id: projectId, title: 'Loading...' });
+    if (chapterId) {
+      handleSelectChapter(chapterId, 'Loading...');
+    } else {
+      setActiveView('projects');
+    }
+  }, [handleSelectChapter]);
+
+  const handleNavigateToKanbanFromWelcome = useCallback((projectId: string) => {
+    setCurrentProject({ id: projectId, title: 'Loading...' });
+    setActiveView('dashboard');
+  }, []);
+
   // Notes handlers
   const handleAddNote = useCallback((note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newNote: Note = {
@@ -294,72 +305,63 @@ function AppContent() {
     try {
       await supabase.auth.signOut();
       setUser(null);
-      setCurrentProject(null); // Clear project on sign out
-      setActiveView('write');
+      setCurrentProject(null);
+      setActiveView('dashboard');
     } catch (error) {
       console.error('Error signing out:', error);
     }
   }, []);
 
   // Navigation handlers
-const handleBackToSettings = useCallback(() => setActiveView('settings'), []);
-const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
-const handleBackToWrite = useCallback(() => setActiveView('write'), []);
-const handleBackToProjects = useCallback(() => {
-  if (currentChapter) {
-    setChapterContents(prev => ({
-      ...prev,
-      [currentChapter.id]: editorContent
-    }));
-  }
-  setCurrentChapter(null);
-  setActiveView('projects');
-}, [currentChapter, editorContent, setChapterContents]);
+  const handleBackToSettings = useCallback(() => setActiveView('settings'), []);
+  const handleBackToPlanning = useCallback(() => setActiveView('planning'), []);
+  const handleBackToWrite = useCallback(() => setActiveView('write'), []);
+  const handleBackToProjects = useCallback(() => {
+    if (currentChapter) {
+      setChapterContents(prev => ({
+        ...prev,
+        [currentChapter.id]: editorContent
+      }));
+    }
+    setCurrentChapter(null);
+    setActiveView('projects');
+  }, [currentChapter, editorContent, setChapterContents]);
 
-// Integration navigation handlers
-const handleIntegrationNavigateToPlanning = useCallback((page: 'characters' | 'plot' | 'world-building' | 'outline', projectId: string) => {
-  console.log(`Navigating to ${page} with project ${projectId}`);
-  // Set the current project with imported data
-  setCurrentProject({ 
-    id: projectId, 
-    title: `Notion Import - ${new Date().toLocaleDateString()}` 
-  });
-  // Navigate to the planning page
-  setActiveView(page);
-}, []);
+  // Integration navigation handlers
+  const handleIntegrationNavigateToPlanning = useCallback((page: 'characters' | 'plot' | 'world-building' | 'outline', projectId: string) => {
+    setCurrentProject({ 
+      id: projectId, 
+      title: `Notion Import - ${new Date().toLocaleDateString()}` 
+    });
+    setActiveView(page);
+  }, []);
 
-const handleIntegrationNavigateToCanvas = useCallback((projectId: string) => {
-  console.log(`Navigating to canvas with project ${projectId}`);
-  // Set the current project
-  setCurrentProject({ 
-    id: projectId, 
-    title: `Notion Import - ${new Date().toLocaleDateString()}` 
-  });
-  // Navigate to canvas
-  setActiveView('canvas');
-}, []);
+  const handleIntegrationNavigateToCanvas = useCallback((projectId: string) => {
+    setCurrentProject({ 
+      id: projectId, 
+      title: `Notion Import - ${new Date().toLocaleDateString()}` 
+    });
+    setActiveView('canvas');
+  }, []);
 
-const handleIntegrationNavigateToLibrary = useCallback((projectId: string) => {
-  console.log(`Navigating to library with project ${projectId}`);
-  // Set the current project
-  setCurrentProject({ 
-    id: projectId, 
-    title: `Notion Import - ${new Date().toLocaleDateString()}` 
-  });
-  // Navigate to dashboard which now shows Library with project context
-  setActiveView('dashboard');
-}, []);
+  const handleIntegrationNavigateToLibrary = useCallback((projectId: string) => {
+    setCurrentProject({ 
+      id: projectId, 
+      title: `Notion Import - ${new Date().toLocaleDateString()}` 
+    });
+    setActiveView('dashboard');
+  }, []);
 
-// Lazy component wrappers with providers
-const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
-  <Integration 
-    onBack={onBack}
-    onNavigateToPlanning={handleIntegrationNavigateToPlanning}
-    onNavigateToCanvas={handleIntegrationNavigateToCanvas}
-    onNavigateToLibrary={handleIntegrationNavigateToLibrary}
-    onNavigateToProjects={() => setActiveView('projects')}
-  />
-), [handleIntegrationNavigateToPlanning, handleIntegrationNavigateToCanvas, handleIntegrationNavigateToLibrary]);
+  // Lazy component wrappers with providers
+  const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
+    <Integration 
+      onBack={onBack}
+      onNavigateToPlanning={handleIntegrationNavigateToPlanning}
+      onNavigateToCanvas={handleIntegrationNavigateToCanvas}
+      onNavigateToLibrary={handleIntegrationNavigateToLibrary}
+      onNavigateToProjects={() => setActiveView('projects')}
+    />
+  ), [handleIntegrationNavigateToPlanning, handleIntegrationNavigateToCanvas, handleIntegrationNavigateToLibrary]);
 
   const HistoryPageWithProvider = useCallback(({ onBack }: { onBack: () => void }) => (
     <History onBack={onBack} />
@@ -438,22 +440,22 @@ const IntegrationPageWithProvider = useCallback(({ onBack }: { onBack: () => voi
         );
       
       case 'dashboard':
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner message="Loading Project Dashboard..." />}>
-        <KanbanApp />
-      </Suspense>
-    </ErrorBoundary>
-  );
+        return (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading Project Dashboard..." />}>
+              <KanbanApp />
+            </Suspense>
+          </ErrorBoundary>
+        );
         
-case 'files':
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner message="Loading Files..." />}>
-        <Files onBack={handleBackToWrite} />
-      </Suspense>
-    </ErrorBoundary>
-  );
+      case 'files':
+        return (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading Files..." />}>
+              <Files onBack={handleBackToWrite} />
+            </Suspense>
+          </ErrorBoundary>
+        );
 
       // Planning pages
       case 'outline':
@@ -463,7 +465,7 @@ case 'files':
           </ErrorBoundary>
         );
 
-   case 'plot':
+      case 'plot':
         return (
           <ErrorBoundary>
             <div className="flex-1 pr-[20px]">
@@ -494,112 +496,112 @@ case 'files':
             </div>
           </ErrorBoundary>
         );
-case 'themes':
-  return (
-    <ErrorBoundary>
-      <div className="flex-1 pr-[20px]">
-        {currentProject ? (
-          <ThemesPage 
-            onBack={handleBackToPlanning} 
-            projectId={currentProject.id}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
-                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
-              <p className="text-gray-600 mb-6">Please select a project to access theme management.</p>
-              <button
-                onClick={() => setActiveView('projects')}
-                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-medium"
-              >
-                Go to Projects
-              </button>
+
+      case 'themes':
+        return (
+          <ErrorBoundary>
+            <div className="flex-1 pr-[20px]">
+              {currentProject ? (
+                <ThemesPage 
+                  onBack={handleBackToPlanning} 
+                  projectId={currentProject.id}
+                />
+              ) : (
+                <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
+                    <p className="text-gray-600 mb-6">Please select a project to access theme management.</p>
+                    <button
+                      onClick={() => setActiveView('projects')}
+                      className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-medium"
+                    >
+                      Go to Projects
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-      </div>
-    </ErrorBoundary>
-  );
+          </ErrorBoundary>
+        );
         
-        
-     case 'characters':
-  return (
-    <ErrorBoundary>
-      <div className="flex-1 pr-[20px]">
-        {currentProject ? (
-          <CharactersPage 
-            onBack={handleBackToPlanning} 
-            projectId={currentProject.id}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
-                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
-              <p className="text-gray-600 mb-6">Please select a project to access character management.</p>
-              <button
-                onClick={() => setActiveView('projects')}
-                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-medium"
-              >
-                Go to Projects
-              </button>
+      case 'characters':
+        return (
+          <ErrorBoundary>
+            <div className="flex-1 pr-[20px]">
+              {currentProject ? (
+                <CharactersPage 
+                  onBack={handleBackToPlanning} 
+                  projectId={currentProject.id}
+                />
+              ) : (
+                <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
+                    <p className="text-gray-600 mb-6">Please select a project to access character management.</p>
+                    <button
+                      onClick={() => setActiveView('projects')}
+                      className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-medium"
+                    >
+                      Go to Projects
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-      </div>
-    </ErrorBoundary>
-  );
+          </ErrorBoundary>
+        );
 
       case 'world-building':
-  return (
-    <ErrorBoundary>
-      <div className="flex-1 pr-[20px]">
-        {currentProject ? (
-          <WorldBuildingPage 
-            onBack={handleBackToPlanning} 
-            projectId={currentProject.id}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
-                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
-              <p className="text-gray-600 mb-6">Please select a project to access world building tools.</p>
-              <button
-                onClick={() => setActiveView('projects')}
-                className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-medium"
-              >
-                Go to Projects
-              </button>
+        return (
+          <ErrorBoundary>
+            <div className="flex-1 pr-[20px]">
+              {currentProject ? (
+                <WorldBuildingPage 
+                  onBack={handleBackToPlanning} 
+                  projectId={currentProject.id}
+                />
+              ) : (
+                <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">No Project Selected</h2>
+                    <p className="text-gray-600 mb-6">Please select a project to access world building tools.</p>
+                    <button
+                      onClick={() => setActiveView('projects')}
+                      className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 text-white rounded-lg transition-colors font-medium"
+                    >
+                      Go to Projects
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-      </div>
-    </ErrorBoundary>
-  );
+          </ErrorBoundary>
+        );
       
       // Settings pages
-case 'profile':
+      case 'profile':
         return (
           <ErrorBoundary>
             <ProfilePage activeView={activeView} onNavigate={handleViewChange} />
           </ErrorBoundary>
         );      
 
-case 'integrations':
+      case 'integrations':
         return (
           <ErrorBoundary>
             <Suspense fallback={<LoadingSpinner message="Loading Integration Settings..." />}>
@@ -646,12 +648,12 @@ case 'integrations':
           </ErrorBoundary>
         );
 
-        case 'reset-password':
-  return (
-    <ErrorBoundary>
-      <ResetPasswordPage onBackToLogin={() => setActiveView('write')} />
-    </ErrorBoundary>
-  );
+      case 'reset-password':
+        return (
+          <ErrorBoundary>
+            <ResetPasswordPage onBackToLogin={() => setActiveView('dashboard')} />
+          </ErrorBoundary>
+        );
 
       // Static pages
       case 'planning':
@@ -682,15 +684,13 @@ case 'integrations':
                   onClick={() => setActiveView('characters')}
                   className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
                 >
-<button
-  onClick={() => setActiveView('themes')}
-  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
->
-  Themes
-</button>
-
-                  
                   Characters
+                </button>
+                <button
+                  onClick={() => setActiveView('themes')}
+                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
+                >
+                  Themes
                 </button>
                 <button
                   onClick={() => setActiveView('world-building')}
@@ -704,48 +704,47 @@ case 'integrations':
         );
 
       case 'settings':
-        return (
-          <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Settings</h2>
-              <p className="text-gray-600 mb-6">Configure your application settings</p>
-              <div className="space-y-2">
-                <button
-  onClick={() => setActiveView('profile')}  // ✅ CORRECT
-  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
->
-  Profile
-</button>
-                <button
-                  onClick={() => setActiveView('history')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
-                >
-                  Change History
-                </button>
-                <button
-                  onClick={() => setActiveView('integrations')}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
-                >
-                  Integrations
-                </button>
-                <button
-                  onClick={handleSignOut}
-                  className="block w-full max-w-xs mx-auto px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-        
-      case 'help':
+  return (
+    <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-[#ff4e00] rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2"/>
+          </svg>
+        </div>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Settings</h2>
+        <p className="text-gray-600 mb-6">Configure your application settings</p>
+        <div className="space-y-2">
+          <button
+            onClick={() => setActiveView('profile')}
+            className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
+          >
+            Profile
+          </button>
+          <button
+            onClick={() => setActiveView('history')}
+            className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
+          >
+            Change History
+          </button>
+          <button
+            onClick={() => setActiveView('integrations')}
+            className="block w-full max-w-xs mx-auto px-4 py-2 bg-[#eae4d3] hover:bg-[#eae4d3] rounded-lg transition-colors font-medium"
+          >
+            Integrations
+          </button>
+          <button
+            onClick={handleSignOut}
+            className="block w-full max-w-xs mx-auto px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+case 'help':
         return (
           <div className="flex-1 flex items-center justify-center bg-white rounded-t-[17px]">
             <div className="text-center">
@@ -797,10 +796,10 @@ case 'integrations':
                 <h2 className="text-2xl font-semibold text-gray-800 mb-4">View Not Found</h2>
                 <p className="text-gray-600 mb-4">The requested view "{activeView}" was not found.</p>
                 <button 
-                  onClick={() => handleViewChange('write')} 
+                  onClick={() => handleViewChange('dashboard')} 
                   className="px-4 py-2 bg-[#ff4e00] hover:bg-[#ff4e00]/80 rounded-lg transition-colors font-medium"
                 >
-                  Go to Write
+                  Go to Library
                 </button>
               </div>
             </div>
@@ -822,9 +821,9 @@ case 'integrations':
     handleBackToProjects,
     handleViewChange,
     handleSignOut,
-  handleIntegrationNavigateToPlanning,  // ADD THIS
-  handleIntegrationNavigateToCanvas,    // ADD THIS
-  handleIntegrationNavigateToLibrary,   // ADD THIS
+    handleIntegrationNavigateToPlanning,
+    handleIntegrationNavigateToCanvas,
+    handleIntegrationNavigateToLibrary,
     IntegrationPageWithProvider,
     HistoryPageWithProvider,
     editorLoading,
@@ -852,23 +851,37 @@ case 'integrations':
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (event === 'SIGNED_OUT') {
-        setActiveView('write');
+        setActiveView('dashboard');
         setCurrentProject(null);
+        sessionStorage.removeItem('hasSeenWelcome');
+      } else if (event === 'SIGNED_IN') {
+        sessionStorage.removeItem('hasSeenWelcome');
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Show welcome modal on login
+  useEffect(() => {
+    if (user && !authLoading) {
+      const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
+      if (!hasSeenWelcome) {
+        setShowWelcomeModal(true);
+        sessionStorage.setItem('hasSeenWelcome', 'true');
+      }
+    }
+  }, [user, authLoading]);
+
   // Handle URL-based navigation for password reset
-useEffect(() => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const type = urlParams.get('type');
-  
-  if (type === 'recovery') {
-    setActiveView('reset-password');
-  }
-}, []);
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+    
+    if (type === 'recovery') {
+      setActiveView('reset-password');
+    }
+  }, []);
 
   // Show loading spinner while checking authentication
   if (authLoading) {
@@ -927,8 +940,8 @@ useEffect(() => {
               <div className="flex-1 flex justify-center mx-8">
                 <div className={`bg-[#FAF9F9] rounded-[20px] h-[29px] flex items-center px-3 gap-2 transition-all duration-200 ${
                   (activeView === 'write' || activeView === 'editor') 
-                    ? 'w-[240px]' // Wider search on Editor pages
-                    : 'w-[171px]' // Original width on other pages
+                    ? 'w-[240px]'
+                    : 'w-[171px]'
                 }`}>
                   <Search className="w-[17px] h-[17px] text-[#889096] flex-shrink-0" />
                   <input 
@@ -951,6 +964,15 @@ useEffect(() => {
 
         {renderContent()}
       </div>
+
+      {/* Welcome Modal */}
+      {showWelcomeModal && (
+        <WelcomeModal
+          onClose={() => setShowWelcomeModal(false)}
+          onNavigateToProject={handleNavigateToProjectFromWelcome}
+          onNavigateToKanban={handleNavigateToKanbanFromWelcome}
+        />
+      )}
     </div>
   );
 }
@@ -965,4 +987,5 @@ function App() {
     </ThemeProvider>
   );
 }
+
 export default App;
