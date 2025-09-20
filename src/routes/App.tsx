@@ -108,7 +108,7 @@ function AppContent() {
   const [authLoading, setAuthLoading] = useState(true);
 
   // State management
-  const [activeView, setActiveView] = useState('write');
+  const [activeView, setActiveView] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [notesPanelCollapsed, setNotesPanelCollapsed] = useState(false);
   
