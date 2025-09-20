@@ -57,6 +57,25 @@ export const userService = {
   },
   
   /**
+   * Get the user's first name
+   */
+  async getFirstName(): Promise<string> {
+    try {
+      const profile = await this.getCurrentUserProfile();
+      
+      if (!profile?.fullName) {
+        return 'Writer';
+      }
+      
+      // Extract first name from full name
+      return profile.fullName.split(' ')[0];
+    } catch (error) {
+      console.error('Error getting first name:', error);
+      return 'Writer';
+    }
+  },
+  
+  /**
    * Update the current user's profile
    */
   async updateUserProfile(updates: Partial<UserProfile>): Promise<UserProfile | null> {
