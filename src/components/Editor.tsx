@@ -177,7 +177,6 @@ export const Editor: React.FC<EditorProps> = ({
   const [localTitle, setLocalTitle] = useState(content.title);
   const [localContent, setLocalContent] = useState(content.content);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isLoadingChapter, setIsLoadingChapter] = useState(false);
   
   // Enhanced editor state
   const [currentFont, setCurrentFont] = useState('Inter, sans-serif');
@@ -185,7 +184,7 @@ export const Editor: React.FC<EditorProps> = ({
   const [currentAlignment, setCurrentAlignment] = useState('left');
   const [showWordCount, setShowWordCount] = useState(true);
   
-  // Get chapter number from the service or derive it
+  // Get chapter number from selected chapter
   const [chapterNumber, setChapterNumber] = useState<number | null>(null);
   
   // Helper function to get text content safely
@@ -237,83 +236,32 @@ export const Editor: React.FC<EditorProps> = ({
     }
   );
 
-  // FIXED: Fetch the most recent chapter details when selectedChapter changes
+  // FIXED: Simplified chapter initialization - no duplicate fetching
+  // WritePage handles loading, Editor just displays what it receives
   useEffect(() => {
-    const fetchChapterDetails = async () => {
-      if (selectedChapter?.id) {
-        setIsLoadingChapter(true);
-        try {
-          console.log('📖 Loading chapter from database:', selectedChapter.id);
-          const chapter = await chapterService.getChapter(selectedChapter.id);
-          
-          if (chapter) {
-            setChapterNumber(chapter.orderIndex || null);
-            
-            // Always load the most recent content from database
-            const mostRecentTitle = chapter.title || 'Untitled Chapter';
-            const mostRecentContent = chapter.content || '<p>Start writing here...</p>';
-            
-            console.log('✅ Loaded chapter:', {
-              title: mostRecentTitle,
-              contentLength: mostRecentContent.length,
-              wordCount: chapter.wordCount
-            });
-            
-            // Update local state with fresh data
-            setLocalTitle(mostRecentTitle);
-            setLocalContent(mostRecentContent);
-            
-            // Update the editor content
-            if (editorRef.current) {
-              editorRef.current.innerHTML = mostRecentContent;
-            }
-            
-            // Notify parent component
-            onChange({
-              title: mostRecentTitle,
-              content: mostRecentContent,
-              wordCount: chapter.wordCount || 0,
-              lastSaved: new Date(chapter.updatedAt)
-            });
-          }
-        } catch (error) {
-          console.error('❌ Error fetching chapter details:', error);
-          setChapterNumber(null);
-          
-          // Fallback to default content on error
-          setLocalTitle('Untitled Chapter');
-          setLocalContent('<p>Start writing here...</p>');
-          if (editorRef.current) {
-            editorRef.current.innerHTML = '<p>Start writing here...</p>';
-          }
-        } finally {
-          setIsLoadingChapter(false);
-        }
-      } else {
-        setChapterNumber(null);
-        setLocalTitle('Untitled');
-        setLocalContent('<p>Start writing here...</p>');
-      }
-    };
-
-    fetchChapterDetails();
-  }, [selectedChapter?.id, onChange]);
-
-  // Only update local state when external content actually changes
-  useEffect(() => {
-    if (content.title !== localTitle && !isLoadingChapter) {
+    if (selectedChapter) {
+      console.log('📝 Editor: Initializing with chapter:', selectedChapter.id);
+      
+      // Set chapter number from selected chapter if available
+      setChapterNumber(selectedChapter.number || null);
+      
+      // Sync local state with parent-provided content
       setLocalTitle(content.title);
-    }
-  }, [content.title, isLoadingChapter]);
-
-  useEffect(() => {
-    if (content.content !== localContent && !isLoadingChapter) {
       setLocalContent(content.content);
-      if (editorRef.current && editorRef.current.innerHTML !== content.content) {
+      
+      // Update editor innerHTML with fresh content from parent
+      if (editorRef.current && content.content !== editorRef.current.innerHTML) {
         editorRef.current.innerHTML = content.content;
       }
+      
+      console.log('✅ Editor: Chapter initialized with content length:', content.content.length);
+    } else {
+      // Reset when no chapter selected
+      setChapterNumber(null);
+      setLocalTitle('Untitled');
+      setLocalContent('<p>Start writing here...</p>');
     }
-  }, [content.content, isLoadingChapter]);
+  }, [selectedChapter, content]);
 
   // Keyboard shortcuts
   useKeyboard({
@@ -428,13 +376,14 @@ export const Editor: React.FC<EditorProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  if (isLoading || isLoadingChapter) {
+  // Only show loading from parent component (WritePage)
+  if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: '#f2eee2' }}>
         <div className="text-center p-8">
           <div className="w-16 h-16 border-4 border-[#A5F7AC] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-[#889096] font-inter">Loading chapter content...</p>
-          <p className="text-xs text-[#889096] mt-2 font-inter">Please wait while we retrieve your chapter from the database</p>
+          <p className="text-xs text-[#889096] mt-2 font-inter">Please wait while we retrieve your chapter</p>
         </div>
       </div>
     );
