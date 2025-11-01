@@ -7,9 +7,9 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  base: '/', // <-- Add this line
   server: {
     proxy: {
-      // Proxy Netlify functions during development
       '/.netlify/functions': {
         target: 'http://localhost:8888',
         changeOrigin: true,
@@ -19,7 +19,6 @@ export default defineConfig({
   },
   preview: {
     proxy: {
-      // Also proxy during preview mode
       '/.netlify/functions': {
         target: 'http://localhost:8888',
         changeOrigin: true,
